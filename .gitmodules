@@ -1,3 +1,6 @@
 [submodule "ncl_cmaps"]
 	path = ncl_cmaps
 	url = https://github.com/hhuangwx/cmaps.git
+[submodule "cmaps"]
+	path = cmaps
+	url = https://github.com/hhuangwx/cmaps.git
