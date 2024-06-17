@@ -77,10 +77,10 @@ cmap_dict = {"sst":cmaps.cmocean_tempo,
              "tc_days_anom":cm.PuOr,
              "tc_intensity_anom":cm.PiYG_r,
 
-             "storm_count":cmaps.cmocean_dense,
-             "storm_intensity":cmaps.cmocean_matter,
-             "storm_count_anom":cmaps.cmocean_balance_r,
-             "storm_intensity_anom": cmaps.cmocean_curl_r,
+             "xts_freq":cmaps.cmocean_dense,
+             "xts_intensity":cmaps.cmocean_matter,
+             "xts_freq_anom":cmaps.cmocean_balance_r,
+             "xts_intensity_anom": cmaps.cmocean_curl_r,
              
              "drought_severity": cm.RdYlGn_r,   
              "drought_duration":cmaps.hotres,
@@ -112,6 +112,7 @@ tick_dict = {"pr_annual":  [0, 50, 100, 200, 300, 400, 600, 1000, 1500, 2000, 30
              "pr_6mon":    [0, 50, 100, 200, 300, 400, 600,  900, 1200, 1800, 2400, 6000],
              "pr_3mon":  [0, 10,  25,  50, 100, 200, 300,  400,  600,  800, 1200, 2500],
              "pr_mon" :  [0,  1,   5,  10,  25,  50, 100,  200,  300,  400,  600, 1200],
+             "pr_hour" :  [0, 1,   2,   5,  10,  15,  20,   30,   50,   75,  100,  200,],
              "pr_days": [0, 2, 3, 5, 10, 20, 30, 40, 50, 75, 100, 125, 150, 175],
              "pr_anom_mon": [-1000, -400, -200, -100, -50, -25, -10, 0, 10, 25, 50, 100, 200, 400, 1000],
              "pr_anom_3mon": [-2000, -600, -400, -200, -100, -50, -25, 0, 25, 50, 100, 200, 400, 600, 2000],
@@ -127,6 +128,7 @@ tick_dict = {"pr_annual":  [0, 50, 100, 200, 300, 400, 600, 1000, 1500, 2000, 30
              "tas_anom_ann": np.arange(-3.5, 3.6, 0.5),
              "apparent_tas": np.arange(-6, 42, 3),
              "percent": np.arange(0,101,10),
+             "xts_freq":[0.00, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.12, 0.15]
             }            
      
 # # Load the State and Region shape files
@@ -174,7 +176,7 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
                         xlim = (110,170),
                         ylim = (-45, -5),
                         cmap = cm.Greens,
-                        cbar_extent = "both",
+                        cbar_extend = "neither",
                         ticks = None, 
                         cbar_label = "",
                         baseline = None,
@@ -204,7 +206,7 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
     area_linewidth defines the width of state/region borders only. All other linewidths are hardcoded
     xlim and ylim define the extent of the plot area
     cmap defines the colormap used for the data. See cmap_dict for suggested colormaps. If none, cmap set to cm.Greens. Please choose appropriate colormap for your data.
-    cbar_extent = "both" changes the ends of the colorbar to arrows to indicate that values are possible outside the scale show. If contour or contourf are True, then cbar_extent will be overridden to "none"
+    cbar_extend = "both" changes the ends of the colorbar to arrows to indicate that values are possible outside the scale show. Options: {'neither', 'both', 'min', 'max'}. If contour or contourf are True, then cbar_extend will be overridden to "none"
     ticks define the tick on the colorbar. Define any number of intervals. This will make the color for each interval one discrete color each, instead of a smooth color gradient.
     cbar_label defines the title for the color bar. This should indicate the variable name and the units eg "daily rainfall [mm]","annual rainfall [mm]", "monthly rainfall anomaly [mm]", "tas [\N{DEGREE SIGN}C]"
     baseline is a string to define the baseline period for anomalies, eg "1961-1990"
@@ -258,7 +260,7 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
                            cmap = cmap,
                            norm=norm,
                            levels=ticks, 
-                           extend = cbar_extent,
+                           extend = cbar_extend,
                            zorder=2, 
                            transform= ccrs.PlateCarree())
         else:
@@ -270,7 +272,7 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
 
         cbar = plt.colorbar(cont,
                             ax=ax, 
-                            extend = cbar_extent,
+                            extend = cbar_extend,
                             cax=ax.inset_axes([0.85,0.2, 0.03, 0.6]), 
                             ticks=ticks,
                             norm=norm,)
@@ -278,7 +280,7 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
         if contour:
             cont = plt.contour(data.lon, data.lat, data,
                                colors="grey", norm=norm, levels=ticks,
-                               extend = cbar_extent, linewidths=0.2, zorder=3,
+                               extend = cbar_extend, linewidths=0.2, zorder=3,
                                transform= ccrs.PlateCarree())
             cbar.add_lines(cont)
 
@@ -381,7 +383,7 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
     fig.set_figwidth(figsize[0])
 
     # Place logo in top left
-    ins = ax.inset_axes([0.,0.79,0.3,0.3],)
+    ins = ax.inset_axes([0.,0.78,0.3,0.3],)
     ins.set_xticks([])
     ins.set_yticks([])
     ins.imshow(logo,  ) 
