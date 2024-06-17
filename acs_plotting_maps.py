@@ -127,20 +127,19 @@ tick_dict = {"pr_annual":  [0, 50, 100, 200, 300, 400, 600, 1000, 1500, 2000, 30
              "tas_anom_ann": np.arange(-3.5, 3.6, 0.5),
              "apparent_tas": np.arange(-6, 42, 3),
              "percent": np.arange(0,101,10),
-             
             }            
      
 # # Load the State and Region shape files
 
 # write a dictionary of the shapefile geopandas dataframes. These will be used for state boundaries, LGAs, NRM, etc
-gdf_dict = {}
+regions_dict = {}
 
 shape_files = [ "aus_local_gov", "aus_states_territories", "australia", "nrm_regions", "river_regions"]
 for name in shape_files:
-    gdf_dict.update({name: gpd.read_file(f'/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/{name}/{name}.shp')})
-gdf_dict.update({"broadacre_regions" : gpd.read_file('/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/broadacre_regions/aagis_asgs16v1_g5a.shp')})
+    regions_dict.update({name: gpd.read_file(f'/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/{name}/{name}.shp')})
+regions_dict.update({"broadacre_regions" : gpd.read_file('/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/broadacre_regions/aagis_asgs16v1_g5a.shp')})
 try:
-    gdf_dict.update({"ncra_regions" : gpd.read_file('/g/data/mn51/users/mtb563/reference_data/shapefiles/NCRA/State_Territory_regions.shp')})
+    regions_dict.update({"ncra_regions" : gpd.read_file('/g/data/mn51/users/mtb563/reference_data/shapefiles/NCRA/State_Territory_regions.shp')})
 except:
     pass
 
@@ -149,7 +148,7 @@ except:
 # We will use this to hide data outside of the Australian land borders. 
 # note that this is not a data mask, the data under the masked area is still loaded and computed, but not visualised 
 
-australia = gdf_dict["australia"].copy()
+australia = regions_dict["australia"].copy()
 
 # Define the CRS of the shapefile manually
 australia.crs = crs
@@ -162,7 +161,7 @@ not_australia = gpd.GeoSeries(data = [box(*box(*australia.total_bounds).buffer(2
 # # Define single function for plotting maps
 # this is the function you call to plot all the graphs
 def plot_aus_shapefiles(name =  "aus_states_territories",
-                        gdf = None,
+                        regions = None,
                         data = None,
                         mask_not_australia = True,
                         facecolor = None, 
@@ -187,11 +186,13 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
                         select_area = None,
                         land_shadow = False,
                         watermark = "EXPERIMENTAL IMAGE ONLY",
+                        infile = None,
+                        outfile = None,
                         ):
     """This function takes a name of a Australian shapefile collection for data in /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/ 
     and plots a map of Australia with the shape outlines. 
     
-    gdf (geopandas.GeoDataFrame), if None, then will try to read from f'/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/{name}/{name}.shp'
+    regions (geopandas.GeoDataFrame), if None, then will try to read from f'/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/{name}/{name}.shp'
     data expects a 2D xarray DataArray which has already computed the average, sum, anomaly, metric or index you wish to visualise. This function is resolution agnostic. 
     mask_not_australia is a boolean which decides whether or not the area outside of Australian land is hidden. Default is True.
     facecolor defines the color of land when you plot the regions without climate data. facecolor reccommendations include "white", "lightgrey", "none"
@@ -212,16 +213,16 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
     label_states (bool) if set to True and Australian states are the shapefile selected, then each state is labeled with its three letter abbreviation.
     contourf (bool) if True then the gridded data is visualised as smoothed filled countours. Default is True.
     contour (bool) if True then the gridded data is visualised as smoothed unfilled  grey countours. Default is True. Using both contourf and contour results in smooth filled countours with grey outlines between the color levels.
-    select_area (list) expects a list of areas eg states which are in the geopandas.GeoDataFrame. Inspect the gdf for area names. eg ["Victoria", "New South Wales"]
+    select_area (list) expects a list of areas eg states which are in the geopandas.GeoDataFrame. Inspect the regions for area names. eg ["Victoria", "New South Wales"]
     land_shadow (bool) used with select_area. This option controls whether show Australian land area that is outside the select area in grey for visual context.
     watermark (str) red text over plot for images not in their final form. If plot is in final form, set to None. Suggestions include "PRELIMINARY DATA", "DRAFT ONLY", "SAMPLE ONLY (NOT A FORECAST)", "EXPERIMENTAL IMAGE ONLY"
 
     The map is saved as a png in your working directory.
     This function returns fig and ax.    
     """
-    if gdf is None:
+    if regions is None:
         try:
-            gdf = gpd.read_file(f'/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/{name}/{name}.shp')
+            regions = gpd.read_file(f'/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/{name}/{name}.shp')
         except:
             print(f"Could not read /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/{name}/{name}.shp")
 
@@ -235,7 +236,7 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
                 
         
     # Define the CRS of the shapefile manually
-    gdf = gdf.to_crs(crs.proj4_init)
+    regions = regions.to_crs(crs.proj4_init)
 
     # Set up the plot
     # sns.set_style("whitegrid")
@@ -293,7 +294,7 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
         for lon, lat, state in zip(lons, lats, states):
             ax.text(lon, lat, state, size=12, zorder=10, transform = ccrs.PlateCarree())
 
-    ax.add_geometries(gdf["geometry"],
+    ax.add_geometries(regions["geometry"],
                   crs=crs,
                   facecolor=facecolor,
                   edgecolor=edgecolor, 
@@ -306,8 +307,8 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
     else:
         assert isinstance(select_area, list), "select_area must be a list"
         # select state
-        name_column = [name for name in gdf.columns if 'NAME' in name.upper()][0]
-        area =gdf.loc[gdf[name_column].isin(select_area)] 
+        name_column = [name for name in regions.columns if 'NAME' in name.upper()][0]
+        area =regions.loc[regions[name_column].isin(select_area)] 
         map_total_bounds = area.total_bounds
         minx, miny, maxx, maxy = map_total_bounds
         mid_x = (minx+maxx)/2
@@ -385,6 +386,9 @@ def plot_aus_shapefiles(name =  "aus_states_territories",
     ins.set_yticks([])
     ins.imshow(logo,  ) 
 
-    plt.savefig(f"figures/{title.replace(' ', '_')}.png",)
+    if outfile is None:
+        outfile = f"figures/{title.replace(' ', '_')}.png"
+
+    plt.savefig(outfile)
     return fig, ax
 
