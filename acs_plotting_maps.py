@@ -1,8 +1,6 @@
 # # Standardising Australia Hazard Maps
- 
 # The goal of this script is to map climate hazards for Australia so that data can be consistently presented.
 # this code is designed to work with hh5 analysis3-24.04 venv
-
 
 import datetime
 
@@ -12,18 +10,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as image
-import seaborn as sns
 import xarray as xr
 import cartopy.crs as ccrs
 
 # import colormap packages
 import matplotlib.cm as cm
 import cmaps
-from matplotlib.colors import ListedColormap
-
-# to plot cmaps
-from pylab import *
-from numpy import outer
+from matplotlib.colors import ListedColormap, BoundaryNorm
 
 from shapely.geometry import box
 
@@ -269,7 +262,6 @@ def plot_aus_shapefiles(name = "aus_states_territories",
     regions = regions.to_crs(crs.proj4_init)
 
     # Set up the plot
-    # sns.set_style("whitegrid")
     fig = plt.figure(figsize=figsize, zorder=1, layout="constrained", )
     ax = plt.axes(projection = crs, )
     ax.set_global()
@@ -282,7 +274,7 @@ def plot_aus_shapefiles(name = "aus_states_territories",
         if ticks is None:
             norm=None
         else:    
-            norm = mpl.colors.BoundaryNorm(ticks, cmap.N)
+            norm = BoundaryNorm(ticks, cmap.N)
         
         # plot the hazard data
         if contourf:
