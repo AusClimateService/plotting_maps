@@ -52,9 +52,10 @@ You will now be able to access the functions, python scripts, and Jupyter notebo
 cd ~/plotting_maps
 ```
 
-2. **Import the ACS plotting maps function.** This will also import dependencies including xarray and pandas
+2. **Import the ACS plotting maps function and dictionaries and Xarray.** 
 ```python 
-from acs_plotting_maps import *
+from acs_plotting_maps import plot_aus_shapefiles, regions_dict, cmap_dict, tick_dict
+import xarray as xr
 ```
 
 3. **Load some data.** For example, this will load extratropical storm rx5day rainfall
