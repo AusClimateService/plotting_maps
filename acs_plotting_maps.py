@@ -78,11 +78,17 @@ cmap_dict = {"sst":cmaps.cmocean_tempo,
              "drought_duration":cmaps.hotres,
              
              "anom_BlueYellowRed":cmaps.BlueYellowRed,
+             "anom_BlueYellowRed_r":cmaps.BlueYellowRed_r,
              "anom":cmaps.BlueWhiteOrangeRed,
+             "anom_r":cmaps.BlueWhiteOrangeRed_r,
              "anom_b2r":cmaps.cmp_b2r,
+             "anom_b2r_r":cmaps.cmp_b2r_r,
              "anom_coolwarm":cmaps.MPL_coolwarm,
+             "anom_coolwarm_r":cmaps.MPL_coolwarm_r,
              "anom_deciles":cm.bwr,
-             "anom_veg_1":cmaps.NEO_div_vegetation_a,          
+             "anom_deciles_r":cm.bwr_r,
+             "anom_veg_1":cmaps.NEO_div_vegetation_a, 
+             "anom_veg_1_r":cmaps.NEO_div_vegetation_a_r,          
 
              "BuGnRd":cmaps.temp1,
 
