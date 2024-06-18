@@ -115,6 +115,7 @@ dict_keys(['aus_local_gov', 'aus_states_territories', 'australia', 'nrm_regions'
 
 ### cmap_dict
 These are suggested colormaps matched with possible variables to plot.  This includes color maps for total amount and for anomalies.
+
 ![colormaps_aus_maps](https://github.com/AusClimateService/plotting_maps/blob/main/colormaps_aus_maps.png)
 
 
