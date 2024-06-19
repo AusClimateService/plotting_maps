@@ -23,7 +23,7 @@ When starting a new ARE JupyterLab session (https://are.nci.org.au/pun/sys/dashb
 ![image](https://github.com/AusClimateService/plotting_maps/assets/45543810/6607e78a-8599-4eeb-8cee-4e910e067d5a)
 
 ## Cloning this repo
-Before you can ```import acs_plotting_maps``` to use the plotting function ```plot_aus_shapefiles```, you will need to clone a copy of this repository to your own working directory.
+Before you can ```import acs_plotting_maps``` to use the plotting function ```plot_acs_hazard```, you will need to clone a copy of this repository to your own working directory.
 
 If you are working in your home directory, navigate there:
 ```
@@ -62,7 +62,7 @@ cd ~/plotting_maps
 
 2. **Import the ACS plotting maps function and dictionaries and Xarray.** 
 ```python 
-from acs_plotting_maps import plot_aus_shapefiles, regions_dict, cmap_dict, tick_dict
+from acs_plotting_maps import plot_acs_hazard, regions_dict, cmap_dict, tick_dict
 import xarray as xr
 ```
 
