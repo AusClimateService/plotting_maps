@@ -153,94 +153,121 @@ not_australia = gpd.GeoSeries(data = [box(*box(*australia.total_bounds).buffer(2
 
 # # Define a function for plotting maps
 # This is the function you call to plot all the graphs
-def plot_aus_shapefiles(name = "aus_states_territories",
-                        regions = None,
-                        data = None,
-                        mask_not_australia = True,
-                        facecolor = None, 
-                        edgecolor = "black",
-                        figsize = (8,6),
-                        title = None,
-                        date_range = "",
-                        crs = None,
-                        area_linewidth = 0.3,
-                        xlim = (110,170),
-                        ylim = (-45, -5),
-                        cmap = cm.Greens,
-                        cbar_extend = "neither",
-                        ticks = None, 
-                        cbar_label = "",
-                        baseline = None,
-                        dataset_name = None,
-                        issued_date = None,                      
-                        label_states = False,
-                        contourf = True,
-                        contour = True,
-                        select_area = None,
-                        land_shadow = False,
-                        watermark = "EXPERIMENTAL IMAGE ONLY",
-                        infile = None,
-                        outfile = None,
-                        ):
-    """This function takes a name of an Australian shapefile collection for data in /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/ and data from a 2D Xarray data array
+def plot_acs_hazard(name = "aus_states_territories",
+                    regions = None,
+                    data = None,
+                    mask_not_australia = True,
+                    facecolor = None, 
+                    edgecolor = "black",
+                    figsize = (8,6),
+                    title = None,
+                    date_range = "",
+                    crs = None,
+                    area_linewidth = 0.3,
+                    xlim = (110,170),
+                    ylim = (-45, -5),
+                    cmap = cm.Greens,
+                    cbar_extend = "neither",
+                    ticks = None, 
+                    cbar_label = "",
+                    baseline = None,
+                    dataset_name = None,
+                    issued_date = None,                      
+                    label_states = False,
+                    contourf = True,
+                    contour = True,
+                    select_area = None,
+                    land_shadow = False,
+                    watermark = "EXPERIMENTAL IMAGE ONLY",
+                    infile = None,
+                    outfile = None,
+                    ):
+    """This function takes a name of an Australian shapefile collection for data in /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/ and hazard data from a 2D Xarray data array
     and plots the data on a map of Australia with the shape outlines. 
 
     Parameters
     ----------
     name: str
-        name of a shapefile collection in /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/ to get regions from
+        name of a shapefile collection in /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/ to get regions from.
+        
     regions: geopandas.GeoDataFrame
         if None, then will try to read from regions_dict[{name}].
+        
     data: xr.DataArray
         a 2D xarray DataArray which has already computed the average, sum, anomaly, metric or index you wish to visualise. This function is resolution agnostic. 
+        
     mask_not_australia: boolean
         decides whether or not the area outside of Australian land is hidden. Default is True.
+        
     facecolor: color
         color of land when you plot the regions without climate data. facecolorrecommendationss include "white", "lightgrey", "none".
+        
     edgecolor: color
         defines the color of the state/region borders. edgecolor recommendations include "black" and "white".
+        
     figsize: tuple
         defines the width and height of the figure in inches.I  Reccommend (8,6) for Australia-wide plots and (6,6) for individual states etc..
+        
     title: str
         defines the text inside the plot. If none is given, then will print the name of the shape file.
+        
     date_range: str
         decribes the start and end date of the data analysed. This is printed under the title. format: dd Month yyyy to dd Month yyy.
-    crs:
+        
+    crs: optional
         defines the coordinate reference system. Similar to transform or projection.
-    area_linewidth: float
+        
+    area_linewidth: float, optional
         the width of state/region borders only. All other linewidths are hardcoded.
-    xlim: tuple
+        
+    xlim: tuple, optional
         longitude min and max of the plot area.
-    ylim: tuple
+        
+    ylim: tuple, optional
         latitude min and max of the plot area.
+        
     cmap:
         defines the colormap used for the data. See cmap_dict for suggested colormaps. If none, cmap set to cm.Greens. Please choose appropriate colormap for your data.
+        
     cbar_extend: one of {'neither', 'both', 'min', 'max'}.
         eg "both" changes the ends of the colorbar to arrows to indicate that values are possible outside the scale show. If contour or contourfise True, then cbar_extend will be overridden to "none".
+        
     ticks: list or arraylike
         Define the ticks on the colorbar. Define any number of intervals. This will make the color for each interval one discrete coloh, instead of a smooth color gradient. If None, then linear ticks will be auto-generated to fit the data provided. 
+        
     cbar_label: string
         defines the title for the color bar. This should indicate the variable name and the units eg "daily rainfall [mm]", "annual rainfall [mm]", "monthly rainfall anomaly [mm]", "tas [\N{DEGREE SIGN}C]".
+        
     baseline: string
         the baseline period for anomalies, eg "1961 - 1990".
+        
     dataset_name: string
         describes the source of the data eg "AGCD v2" or "BARPA-R ACCESS-CM2"
+        
     issued_date: string
         The date of issue. If None is supplied, then today's date is printed.
+        
     label_states: bool
         if set to True and Australian states are the shapefile selected, then each state is labelled with its three-letter abbreviation. Default False.
+        
     contourf: bool
         if True then the gridded data is visualised as smoothed filled contours. Default is True.
+        
     contour: bool
         if True then the gridded data is visualised as smoothed unfilled grey contours. Default is True. Using both contourf and contour results in smooth filled contours with grey outlines between the color levels.
+        
     select_area: list
         A list of areas (eg states) that are in the geopandas.GeoDataFrame. Inspect the regions gdf for area names. eg ["Victoria", "New South Wales"]
+        
     land_shadow: bool
-        Used when select_area is not None. This option controls whether to show Australian land area that is outside the select area in grey for visual context.
+        Used when select_area is not None. This option controls whether to show Australian land area that is outside the select area in grey for visual context. Default False.
+        
     watermark: str
         red text over the plot for images not in their final form. If the plot is in final form, set to None. Suggestions include "PRELIMINARY DATA", "DRAFT ONLY", "SAMPLE ONLY (NOT A FORECAST)", "EXPERIMENTAL IMAGE ONLY"
+        
     infile: str
-        Not yet functional. The idea is to read in 2D netCDF data and use this as the mappable data
+        Not yet functional. The idea is to read in 2D netCDF data and use this as the mappable data.
+        
     outfile: str
         The location to save the figure. If None, then figure is saved here f"figures/{title.replace(' ', '_')}.png"
 
@@ -262,7 +289,6 @@ def plot_aus_shapefiles(name = "aus_states_territories",
             crs = ccrs.LambertConformal(central_latitude = -24.75, central_longitude = 134.0, cutoff=30, standard_parallels=(-10,-40))
         else:
             crs = ccrs.PlateCarree()
-                
         
     # Define the CRS of the shapefile manually
     regions = regions.to_crs(crs.proj4_init)
@@ -271,6 +297,9 @@ def plot_aus_shapefiles(name = "aus_states_territories",
     fig = plt.figure(figsize=figsize, zorder=1, layout="constrained", )
     ax = plt.axes(projection = crs, )
     ax.set_global()
+
+    if infile is not None:
+        data = xr.open_dataset(infile)
     
     if data is not None:
         data = data.squeeze()
