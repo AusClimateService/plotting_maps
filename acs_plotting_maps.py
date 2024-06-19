@@ -448,6 +448,6 @@ def plot_acs_hazard(name = "aus_states_territories",
     if outfile is None:
         outfile = f"figures/{title.replace(' ', '_')}.png"
 
-    plt.savefig(outfile)
+    plt.savefig(outfile, dpi = 300)
     return fig, ax
 
