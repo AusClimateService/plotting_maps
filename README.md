@@ -47,6 +47,14 @@ $ git clone https://github.com/AusClimateService/plotting_maps.git plotting_maps
 You will now be able to access the functions, python scripts, and Jupyter notebooks from your user.
 
 ## Usage in Jupyter notebook:
+
+See small, easy to follow example here: 
+- [https://github.com/AusClimateService/plotting_maps/blob/main/minimal_plotting_example_pr.ipynb]
+
+Other examples:
+- [https://github.com/AusClimateService/plotting_maps/blob/main/acs_plotting_maps_examples.ipynb]
+- [https://github.com/AusClimateService/plotting_maps/blob/main/plotting_example_xts.ipynb]
+
 1. **Navigate to the directory you cloned to:**
 ```
 cd ~/plotting_maps
