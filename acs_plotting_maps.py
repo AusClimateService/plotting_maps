@@ -266,7 +266,7 @@ def plot_acs_hazard(name = "aus_states_territories",
         red text over the plot for images not in their final form. If the plot is in final form, set to None. Suggestions include "PRELIMINARY DATA", "DRAFT ONLY", "SAMPLE ONLY (NOT A FORECAST)", "EXPERIMENTAL IMAGE ONLY"
         
     infile: str
-        Not yet functional. The idea is to read in 2D netCDF data and use this as the mappable data.
+        Not yet tested. The idea is to read in 2D netCDF data and use this as the mappable data.
         
     outfile: str
         The location to save the figure. If None, then figure is saved here f"figures/{title.replace(' ', '_')}.png"
