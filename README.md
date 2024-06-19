@@ -85,17 +85,17 @@ You will need to specify:
      * where you want the image outfile saved.
    
 ```python
-plot_aus_shapefiles(data = da["pr"],
-                    regions = regions_dict['ncra_regions'],
-                    cmap = cmap_dict["pr"],
-                    ticks = tick_dict['pr_mon'],
-                    cbar_label = "rainfall [mm]",
-                    cbar_extend = "max",
-                    title = "Extratropical storms Rx5day median",
-                    dataset_name = "BARPA-R ACCESS-CM2",
-                    date_range = '01 January 1960 to 01 January 2015',
-                    outfile = "figures/outfile.png",
-                   );
+plot_acs_hazard(data = da["pr"],
+                regions = regions_dict['ncra_regions'],
+                cmap = cmap_dict["pr"],
+                ticks = tick_dict['pr_mon'],
+                cbar_label = "rainfall [mm]",
+                cbar_extend = "max",
+                title = "Extratropical storms Rx5day median",
+                dataset_name = "BARPA-R ACCESS-CM2",
+                date_range = '01 January 1960 to 01 January 2015',
+                outfile = "figures/outfile.png",
+               );
 ```
 ![Extratropical_storms_Rx5day_median](https://github.com/AusClimateService/plotting_maps/assets/45543810/b5735647-c886-4d35-b230-aee7c8012a0c)
 
