@@ -99,6 +99,45 @@ plot_acs_hazard(data = da["pr"],
 ```
 ![Extratropical_storms_Rx5day_median](https://github.com/AusClimateService/plotting_maps/assets/45543810/b5735647-c886-4d35-b230-aee7c8012a0c)
 
+6. **Calculate summary statitics for the range of models.**
+```python 
+# import needed packages
+from acs_area_statistics import acs_regional_stats, regions
+```
+For Calculating the NCRA region stats, we want to compare the regional averages based on different models, eg what is the regional mean value from the coolest/driest model relisation, what is the mean, what is the regional mean from the hottest/wettest model for this, we want ds to have the 10th, median and 90th percentile values from each model, then we can find the range of the models and the MMM.
+
+```python
+# calculate the stats using the acs_region_fractional_stats function
+# Find the min, mean, max value for each region
+var="pr"
+mask_frac = regions.mask_3D_frac_approx(ds)
+dims = ("lat", "lon",)
+
+da_min = acs_regional_stats(ds=ds,var=var, mask=mask_frac, dims = dims, how = "min")
+da_mean = acs_regional_stats(ds=ds,var=var, mask=mask_frac, dims = dims, how = "mean")
+da_max = acs_regional_stats(ds=ds,var=var, mask=mask_frac, dims = dims, how = "max")
+
+# present the stats as a table with rows for each row and columns for each statistic
+da_stats = xr.merge([da_min, da_mean, da_max])
+da_stats.to_dataframe()
+```
+For example only, this would make a dataframe in this format:
+
+|   region | abbrevs   | names                   |   pr_min |   pr_mean |   pr_max |
+|---------:|:----------|:------------------------|---------:|----------:|---------:|
+|        0 | VIC       | Victoria                |  415.729 |   909.313 |  3005.45 |
+|        1 | NT        | Northern Territory      |  397.385 |   941.405 |  3934.81 |
+|        2 | TAS       | Tasmania                |  555.644 |  1760.66  |  4631.81 |
+|        3 | SA        | South Australia         |  284.455 |   575.952 |  1413.98 |
+|        4 | NSW       | New South Wales & ACT   |  294.329 |   768.1   |  3440.04 |
+|        5 | WAN       | Western Australia North |  123.651 |   921.906 |  3470.24 |
+|        6 | WAS       | Western Australia South |  249.566 |   545.317 |  1819.89 |
+|        7 | SQ        | Queensland South        |  287.613 |   584.155 |  1654.74 |
+|        8 | NQ        | Queensland North        |  264.447 |   766.444 |  7146.55 |
+|        9 | AUS       | Australia               |  123.614 |   742.735 |  7146.55 |
+
+
+
 ## Suggested regions, colormaps and scales for plotting
 Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
 
