@@ -169,6 +169,7 @@ def plot_acs_hazard(name = "aus_states_territories",
                     cmap = cm.Greens,
                     cbar_extend = "neither",
                     ticks = None, 
+                    tick_labels = None,
                     cbar_label = "",
                     baseline = None,
                     dataset_name = None,
@@ -233,7 +234,10 @@ def plot_acs_hazard(name = "aus_states_territories",
         eg "both" changes the ends of the colorbar to arrows to indicate that values are possible outside the scale show. If contour or contourfise True, then cbar_extend will be overridden to "none".
         
     ticks: list or arraylike
-        Define the ticks on the colorbar. Define any number of intervals. This will make the color for each interval one discrete coloh, instead of a smooth color gradient. If None, then linear ticks will be auto-generated to fit the data provided. 
+        Define the ticks on the colorbar. Define any number of intervals. This will make the color for each interval one discrete coloh, instead of a smooth color gradient. If None, linear ticks will be auto-generated to fit the provided data. 
+
+    tick_labels: list
+        Labels for categorical data. If tick_labels is used, then pcolormesh is used to plot data and does not allow contour or contourf to be used. Tick labels will correspond to the ticks. Ticks are assumed to be linear eg [101, 102, 103, 104] for four categories.
         
     cbar_label: string
         defines the title for the color bar. This should indicate the variable name and the units eg "daily rainfall [mm]", "annual rainfall [mm]", "monthly rainfall anomaly [mm]", "tas [\N{DEGREE SIGN}C]".
@@ -308,11 +312,20 @@ def plot_acs_hazard(name = "aus_states_territories",
         
         if ticks is None:
             norm=None
-        else:    
-            norm = BoundaryNorm(ticks, cmap.N)
+        else:   
+            if tick_labels is None:
+                norm = BoundaryNorm(ticks, cmap.N)
+            else:
+                step = ticks[1]-ticks[0] 
+                bounds = np.arange(ticks[0]-0.5*step, ticks[-1]+0.5*step+1,step)
+                norm = BoundaryNorm(bounds, cmap.N)
         
         # plot the hazard data
-        if contourf:
+        # rename coords if necessary:
+        if ("latitude" and "longitude") in list(data.coords):
+            data = data.rename({"latitude":"lat", "longitude": "lon"})
+        
+        if contourf and tick_labels is None:
             cont = ax.contourf(data.lon, data.lat, data,
                            cmap = cmap,
                            norm=norm,
@@ -327,14 +340,27 @@ def plot_acs_hazard(name = "aus_states_territories",
                                  zorder=2,
                                  transform= ccrs.PlateCarree())
 
-        cbar = plt.colorbar(cont,
-                            ax=ax, 
-                            extend = cbar_extend,
-                            cax=ax.inset_axes([0.85,0.2, 0.03, 0.6]), 
-                            ticks=ticks,
-                            norm=norm,)
+        if tick_labels is None:
+            cbar = plt.colorbar(cont,
+                                ax=ax, 
+                                extend = cbar_extend,
+                                cax=ax.inset_axes([0.85,0.2, 0.03, 0.6]), 
+                                ticks=ticks,
+                                norm=norm,)
+        else:
+            # for categorical data
+            cbar = plt.colorbar(cont,
+                                ax=ax, 
+                                extend = None,
+                                cax=ax.inset_axes([0.85,0.2, 0.03, 0.6]), 
+                                norm=norm,
+                               drawedges=True,
+                                ticks=ticks,
+                               )
+            cbar.ax.set_yticklabels(tick_labels)
+            
         cbar.ax.set_title(cbar_label, zorder=8, y=1.1, loc="center")
-        if contour:
+        if contour and tick_labels is None:
             cont = plt.contour(data.lon, data.lat, data,
                                colors="grey", norm=norm, levels=ticks,
                                extend = cbar_extend, linewidths=0.2, zorder=3,
