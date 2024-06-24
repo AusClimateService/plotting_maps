@@ -99,6 +99,30 @@ plot_acs_hazard(data = da["pr"],
 ```
 ![Extratropical_storms_Rx5day_median](https://github.com/AusClimateService/plotting_maps/assets/45543810/b5735647-c886-4d35-b230-aee7c8012a0c)
 
+6. **Calculate summary statitics for the range of models.**
+```python 
+# import needed packages
+from acs_area_statistics import acs_regional_stats, regions
+```
+For Calculating the NCRA region stats, we want to compare the regional averages based on different models, eg what is the regional mean value from the coolest/driest model relisation, what is the mean, what is the regional mean from the hottest/wettest model for this, we want ds to have the 10th, median and 90th percentile values from each model, then we can find the range of the models and the MMM.
+
+```python
+# calculate the stats using the acs_region_fractional_stats function
+# Find the min, mean, max value for each region
+var="pr"
+mask_frac = regions.mask_3D_frac_approx(ds)
+dims = ("lat", "lon",)
+
+da_min = acs_regional_stats(ds=ds,var=var, mask=mask_frac, dims = dims, how = "min")
+da_mean = acs_regional_stats(ds=ds,var=var, mask=mask_frac, dims = dims, how = "mean")
+da_max = acs_regional_stats(ds=ds,var=var, mask=mask_frac, dims = dims, how = "max")
+
+# present the stats as a table with rows for each row and columns for each statistic
+da_stats = xr.merge([da_min, da_mean, da_max])
+da_stats.to_dataframe()
+```
+
+
 ## Suggested regions, colormaps and scales for plotting
 Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
 
