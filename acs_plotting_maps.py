@@ -179,7 +179,7 @@ def plot_acs_hazard(name = "aus_states_territories",
                     contour = True,
                     select_area = None,
                     land_shadow = False,
-                    watermark = "EXPERIMENTAL IMAGE ONLY",
+                    watermark = "EXPERIMENTAL\nIMAGE ONLY",
                     infile = None,
                     outfile = None,
                     ):
@@ -344,7 +344,7 @@ def plot_acs_hazard(name = "aus_states_territories",
             cbar = plt.colorbar(cont,
                                 ax=ax, 
                                 extend = cbar_extend,
-                                cax=ax.inset_axes([0.85,0.2, 0.03, 0.6]), 
+                                cax=ax.inset_axes([0.8,0.2, 0.03, 0.6]), 
                                 ticks=ticks,
                                 norm=norm,)
         else:
@@ -352,9 +352,9 @@ def plot_acs_hazard(name = "aus_states_territories",
             cbar = plt.colorbar(cont,
                                 ax=ax, 
                                 extend = None,
-                                cax=ax.inset_axes([0.85,0.2, 0.03, 0.6]), 
+                                cax=ax.inset_axes([0.8,0.2, 0.03, 0.6]), 
                                 norm=norm,
-                               drawedges=True,
+                                drawedges=True,
                                 ticks=ticks,
                                )
             cbar.ax.set_yticklabels(tick_labels)
@@ -423,7 +423,6 @@ def plot_acs_hazard(name = "aus_states_territories",
         else:
             title = f"{data.name} {name}"
 
-    ax = plt.gca()
     ax.text(0.1,0.06,f"{title}\n{date_range}",
             fontsize = "large",
             horizontalalignment='left',
@@ -445,7 +444,7 @@ def plot_acs_hazard(name = "aus_states_territories",
 
     if watermark is not None:
          ax.text(x=0.45, y=0.5, s=watermark.upper(), 
-                 fontsize=42,
+                 fontsize=36,
                  transform=ax.transAxes,
                  horizontalalignment="center",
                  verticalalignment = "center",
