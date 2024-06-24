@@ -51,6 +51,7 @@ cmap_dict = {"sst":cmaps.cmocean_tempo,
              
              "AFDRS_category":ListedColormap(["white","green","orange", "red", "darkred"]),
              "ffdi_category":ListedColormap(["green", "blue", "yellow","orange", "red", "darkred"]),
+             "fire_climate":ListedColormap(["#84a19b", "#e0d7c6", "#486136", "#737932", "#a18a6e",]),
 
              "pr":cm.YlGnBu,
              "pr_1":cmaps.cmocean_deep,
@@ -126,7 +127,9 @@ tick_dict = {"pr_annual":  [0, 50, 100, 200, 300, 400, 600, 1000, 1500, 2000, 30
              "tas_anom_ann": np.arange(-3.5, 3.6, 0.5),
              "apparent_tas": np.arange(-6, 42, 3),
              "percent": np.arange(0,101,10),
-             "xts_freq":[0.00, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.12, 0.15]
+             "xts_freq":[0.00, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.12, 0.15],
+             "fire_climate_ticks":[100, 101, 102, 103, 104,],
+             "fire_climate_labels":["Tropical Savanna", "Arid grass \nand woodland", "Wet Forest", "Dry Forest", "Grassland",],
             }            
      
 # # Load the State and Region shape files
