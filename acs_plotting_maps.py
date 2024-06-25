@@ -326,9 +326,11 @@ def plot_acs_hazard(name = "aus_states_territories",
         if ticks is None:
             norm=None
         else:   
-            # if taicks are labelled or if there is one more tick than tick labels, do the usual normalisation
+            # if ticks are labelled or if there is one more tick than tick labels, do the usual normalisation
             if tick_labels is None or (len(tick_labels) == len(ticks)-1):
                 norm = BoundaryNorm(ticks, cmap.N)
+                if tick_labels is not None:
+                    middle_ticks = [(ticks[i+1]+ticks[i])/2 for i in range(len(ticks)-1)]
             else:
                 middle_ticks = [(ticks[i+1]+ticks[i])/2 for i in range(len(ticks)-1)]
                 outside_bound_first = [ticks[0]-(ticks[1]-ticks[0])/2]
@@ -379,7 +381,7 @@ def plot_acs_hazard(name = "aus_states_territories",
             if len(ticks)==len(tick_labels):
                 cbar.ax.set_yticks(ticks, tick_labels)
             elif len(middle_ticks)==len(tick_labels):
-                bar.ax.set_yticks(middle_ticks, tick_labels)
+                cbar.ax.set_yticks(middle_ticks, tick_labels)
             
             
         cbar.ax.set_title(cbar_label, zorder=8, y=1.1, loc="center")
