@@ -16,7 +16,7 @@ import cartopy.crs as ccrs
 # import colormap packages
 import matplotlib.cm as cm
 import cmaps
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
 
 from shapely.geometry import box
 
@@ -31,6 +31,9 @@ logo = image.imread("ACS_Logo_Blue_on_white_Stacked.png")
 # Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
 # - see many colormaps here: https://www.ncl.ucar.edu/Document/Graphics/color_table_gallery.shtml
 # This are a dictionary of suggested colormaps matched with possible variables to plot.  This includes color maps for total amount and for anomalies
+
+cmap_mustard = LinearSegmentedColormap.from_list("mustard", [(195/235,152/235,21/235), (229/235,208/235,147/235)],)
+cmap_mustard.set_bad(color="lightgrey")
 
 cmap_dict = {"sst":cmaps.cmocean_tempo,
              "sst_anom": cmaps.cmocean_balance_r,
@@ -75,8 +78,11 @@ cmap_dict = {"sst":cmaps.cmocean_tempo,
              "xts_freq_anom":cmaps.cmocean_balance_r,
              "xts_intensity_anom": cmaps.cmocean_curl_r,
              
-             "drought_severity": cm.RdYlGn_r,   
+             "drought_severity": cm.RdYlGn,   
+             "drought_severity_r": cm.RdYlGn_r,   
              "drought_duration":cmaps.hotres,
+             "drought_duration_r":cmaps.hotres_r,
+             "aridity":cmap_mustard,
              
              "anom_BlueYellowRed":cmaps.BlueYellowRed,
              "anom_BlueYellowRed_r":cmaps.BlueYellowRed_r,
@@ -98,6 +104,7 @@ cmap_dict = {"sst":cmaps.cmocean_tempo,
              "sunshine_diff_12lev":cmaps.sunshine_diff_12lev,
              "inferno":cm.inferno,
              "Oranges":cm.Oranges,
+             "Oranges_r":cm.Oranges_r,
              "OrRd":cm.OrRd,
              "Greens": cm.Greens,
 
@@ -130,6 +137,8 @@ tick_dict = {"pr_annual":  [0, 50, 100, 200, 300, 400, 600, 1000, 1500, 2000, 30
              "xts_freq":[0.00, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.12, 0.15],
              "fire_climate_ticks":[100, 101, 102, 103, 104,],
              "fire_climate_labels":["Tropical Savanna", "Arid grass \nand woodland", "Wet Forest", "Dry Forest", "Grassland",],
+             "aridity_index_ticks":[0., 0.05, 0.2, 0.5, 0.65],
+             "aridity_index_labels":["Hyper-arid", "Arid", "Semi-arid", "Dry sub-humid"],
             }            
      
 # # Load the State and Region shape files
@@ -283,6 +292,7 @@ def plot_acs_hazard(name = "aus_states_territories",
     The map is saved as a png in a "figures" file in your working directory.
     This function returns fig and ax.    
     """
+    middle_ticks=[]
     if regions is None:
         try:
             regions = regions_dict[name]
@@ -316,11 +326,14 @@ def plot_acs_hazard(name = "aus_states_territories",
         if ticks is None:
             norm=None
         else:   
-            if tick_labels is None:
+            # if taicks are labelled or if there is one more tick than tick labels, do the usual normalisation
+            if tick_labels is None or (len(tick_labels) == len(ticks)-1):
                 norm = BoundaryNorm(ticks, cmap.N)
             else:
-                step = ticks[1]-ticks[0] 
-                bounds = np.arange(ticks[0]-0.5*step, ticks[-1]+0.5*step+1,step)
+                middle_ticks = [(ticks[i+1]+ticks[i])/2 for i in range(len(ticks)-1)]
+                outside_bound_first = [ticks[0]-(ticks[1]-ticks[0])/2]
+                outside_bound_last = [ticks[-1]+(ticks[-1]-ticks[-2])/2]
+                bounds = outside_bound_first + middle_ticks + outside_bound_last
                 norm = BoundaryNorm(bounds, cmap.N)
         
         # plot the hazard data
@@ -360,7 +373,11 @@ def plot_acs_hazard(name = "aus_states_territories",
                                 drawedges=True,
                                 ticks=ticks,
                                )
-            cbar.ax.set_yticklabels(tick_labels)
+            if len(ticks)==len(tick_labels):
+                cbar.ax.set_yticks(ticks, tick_labels)
+            elif len(middle_ticks)==len(tick_labels):
+                bar.ax.set_yticks(middle_ticks, tick_labels)
+            
             
         cbar.ax.set_title(cbar_label, zorder=8, y=1.1, loc="center")
         if contour and tick_labels is None:
