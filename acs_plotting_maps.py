@@ -342,7 +342,7 @@ def plot_acs_hazard(name = "aus_states_territories",
             try:
                 data = data.rename({"latitude":"lat", "longitude": "lon"})
             except:
-                continue
+                pass
         
         if contourf and tick_labels is None:
             cont = ax.contourf(data.lon, data.lat, data,
