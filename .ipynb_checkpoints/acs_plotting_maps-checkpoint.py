@@ -16,7 +16,7 @@ import cartopy.crs as ccrs
 # import colormap packages
 import matplotlib.cm as cm
 import cmaps
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
 
 from shapely.geometry import box
 
@@ -31,6 +31,9 @@ logo = image.imread("ACS_Logo_Blue_on_white_Stacked.png")
 # Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
 # - see many colormaps here: https://www.ncl.ucar.edu/Document/Graphics/color_table_gallery.shtml
 # This are a dictionary of suggested colormaps matched with possible variables to plot.  This includes color maps for total amount and for anomalies
+
+cmap_mustard = LinearSegmentedColormap.from_list("mustard", [(195/235,152/235,21/235), (229/235,208/235,147/235)],)
+cmap_mustard.set_bad(color="lightgrey")
 
 cmap_dict = {"sst":cmaps.cmocean_tempo,
              "sst_anom": cmaps.cmocean_balance_r,
@@ -51,6 +54,7 @@ cmap_dict = {"sst":cmaps.cmocean_tempo,
              
              "AFDRS_category":ListedColormap(["white","green","orange", "red", "darkred"]),
              "ffdi_category":ListedColormap(["green", "blue", "yellow","orange", "red", "darkred"]),
+             "fire_climate":ListedColormap(["#84a19b", "#e0d7c6", "#486136", "#737932", "#a18a6e",]),
 
              "pr":cm.YlGnBu,
              "pr_1":cmaps.cmocean_deep,
@@ -74,8 +78,11 @@ cmap_dict = {"sst":cmaps.cmocean_tempo,
              "xts_freq_anom":cmaps.cmocean_balance_r,
              "xts_intensity_anom": cmaps.cmocean_curl_r,
              
-             "drought_severity": cm.RdYlGn_r,   
+             "drought_severity": cm.RdYlGn,   
+             "drought_severity_r": cm.RdYlGn_r,   
              "drought_duration":cmaps.hotres,
+             "drought_duration_r":cmaps.hotres_r,
+             "aridity":cmap_mustard,
              
              "anom_BlueYellowRed":cmaps.BlueYellowRed,
              "anom_BlueYellowRed_r":cmaps.BlueYellowRed_r,
@@ -97,6 +104,7 @@ cmap_dict = {"sst":cmaps.cmocean_tempo,
              "sunshine_diff_12lev":cmaps.sunshine_diff_12lev,
              "inferno":cm.inferno,
              "Oranges":cm.Oranges,
+             "Oranges_r":cm.Oranges_r,
              "OrRd":cm.OrRd,
              "Greens": cm.Greens,
 
@@ -126,7 +134,11 @@ tick_dict = {"pr_annual":  [0, 50, 100, 200, 300, 400, 600, 1000, 1500, 2000, 30
              "tas_anom_ann": np.arange(-3.5, 3.6, 0.5),
              "apparent_tas": np.arange(-6, 42, 3),
              "percent": np.arange(0,101,10),
-             "xts_freq":[0.00, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.12, 0.15]
+             "xts_freq":[0.00, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.12, 0.15],
+             "fire_climate_ticks":[100, 101, 102, 103, 104,],
+             "fire_climate_labels":["Tropical Savanna", "Arid grass \nand woodland", "Wet Forest", "Dry Forest", "Grassland",],
+             "aridity_index_ticks":[0., 0.05, 0.2, 0.5, 0.65],
+             "aridity_index_labels":["Hyper-arid", "Arid", "Semi-arid", "Dry sub-humid"],
             }            
      
 # # Load the State and Region shape files
@@ -169,6 +181,7 @@ def plot_acs_hazard(name = "aus_states_territories",
                     cmap = cm.Greens,
                     cbar_extend = "neither",
                     ticks = None, 
+                    tick_labels = None,
                     cbar_label = "",
                     baseline = None,
                     dataset_name = None,
@@ -178,7 +191,7 @@ def plot_acs_hazard(name = "aus_states_territories",
                     contour = True,
                     select_area = None,
                     land_shadow = False,
-                    watermark = "EXPERIMENTAL IMAGE ONLY",
+                    watermark = "EXPERIMENTAL\nIMAGE ONLY",
                     infile = None,
                     outfile = None,
                     ):
@@ -233,7 +246,10 @@ def plot_acs_hazard(name = "aus_states_territories",
         eg "both" changes the ends of the colorbar to arrows to indicate that values are possible outside the scale show. If contour or contourfise True, then cbar_extend will be overridden to "none".
         
     ticks: list or arraylike
-        Define the ticks on the colorbar. Define any number of intervals. This will make the color for each interval one discrete coloh, instead of a smooth color gradient. If None, then linear ticks will be auto-generated to fit the data provided. 
+        Define the ticks on the colorbar. Define any number of intervals. This will make the color for each interval one discrete coloh, instead of a smooth color gradient. If None, linear ticks will be auto-generated to fit the provided data. 
+
+    tick_labels: list
+        Labels for categorical data. If tick_labels is used, then pcolormesh is used to plot data and does not allow contour or contourf to be used. Tick labels will correspond to the ticks. Ticks are assumed to be linear eg [101, 102, 103, 104] for four categories.
         
     cbar_label: string
         defines the title for the color bar. This should indicate the variable name and the units eg "daily rainfall [mm]", "annual rainfall [mm]", "monthly rainfall anomaly [mm]", "tas [\N{DEGREE SIGN}C]".
@@ -276,6 +292,7 @@ def plot_acs_hazard(name = "aus_states_territories",
     The map is saved as a png in a "figures" file in your working directory.
     This function returns fig and ax.    
     """
+    middle_ticks=[]
     if regions is None:
         try:
             regions = regions_dict[name]
@@ -308,11 +325,28 @@ def plot_acs_hazard(name = "aus_states_territories",
         
         if ticks is None:
             norm=None
-        else:    
-            norm = BoundaryNorm(ticks, cmap.N)
+        else:   
+            # if ticks are labelled or if there is one more tick than tick labels, do the usual normalisation
+            if tick_labels is None or (len(tick_labels) == len(ticks)-1):
+                norm = BoundaryNorm(ticks, cmap.N)
+                if tick_labels is not None:
+                    middle_ticks = [(ticks[i+1]+ticks[i])/2 for i in range(len(ticks)-1)]
+            else:
+                middle_ticks = [(ticks[i+1]+ticks[i])/2 for i in range(len(ticks)-1)]
+                outside_bound_first = [ticks[0]-(ticks[1]-ticks[0])/2]
+                outside_bound_last = [ticks[-1]+(ticks[-1]-ticks[-2])/2]
+                bounds = outside_bound_first + middle_ticks + outside_bound_last
+                norm = BoundaryNorm(bounds, cmap.N)
         
         # plot the hazard data
-        if contourf:
+        # rename coords if necessary:
+        if (("lat" and "lon") not in list(data.coords)) and (("latitude" and "longitude") in list(data.coords)):
+            try:
+                data = data.rename({"latitude":"lat", "longitude": "lon"})
+            except:
+                pass
+        
+        if contourf and tick_labels is None:
             cont = ax.contourf(data.lon, data.lat, data,
                            cmap = cmap,
                            norm=norm,
@@ -327,14 +361,31 @@ def plot_acs_hazard(name = "aus_states_territories",
                                  zorder=2,
                                  transform= ccrs.PlateCarree())
 
-        cbar = plt.colorbar(cont,
-                            ax=ax, 
-                            extend = cbar_extend,
-                            cax=ax.inset_axes([0.85,0.2, 0.03, 0.6]), 
-                            ticks=ticks,
-                            norm=norm,)
+        if tick_labels is None:
+            cbar = plt.colorbar(cont,
+                                ax=ax, 
+                                extend = cbar_extend,
+                                cax=ax.inset_axes([0.8,0.2, 0.03, 0.6]), 
+                                ticks=ticks,
+                                norm=norm,)
+        else:
+            # for categorical data
+            cbar = plt.colorbar(cont,
+                                ax=ax, 
+                                extend = None,
+                                cax=ax.inset_axes([0.8,0.2, 0.03, 0.6]), 
+                                norm=norm,
+                                drawedges=True,
+                                ticks=ticks,
+                               )
+            if len(ticks)==len(tick_labels):
+                cbar.ax.set_yticks(ticks, tick_labels)
+            elif len(middle_ticks)==len(tick_labels):
+                cbar.ax.set_yticks(middle_ticks, tick_labels)
+            
+            
         cbar.ax.set_title(cbar_label, zorder=8, y=1.1, loc="center")
-        if contour:
+        if contour and tick_labels is None:
             cont = plt.contour(data.lon, data.lat, data,
                                colors="grey", norm=norm, levels=ticks,
                                extend = cbar_extend, linewidths=0.2, zorder=3,
@@ -397,7 +448,6 @@ def plot_acs_hazard(name = "aus_states_territories",
         else:
             title = f"{data.name} {name}"
 
-    ax = plt.gca()
     ax.text(0.1,0.06,f"{title}\n{date_range}",
             fontsize = "large",
             horizontalalignment='left',
@@ -419,7 +469,7 @@ def plot_acs_hazard(name = "aus_states_territories",
 
     if watermark is not None:
          ax.text(x=0.45, y=0.5, s=watermark.upper(), 
-                 fontsize=42,
+                 fontsize=36,
                  transform=ax.transAxes,
                  horizontalalignment="center",
                  verticalalignment = "center",
