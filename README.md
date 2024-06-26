@@ -112,18 +112,18 @@ For Calculating the NCRA region stats, we want to compare the regional averages 
 ```python
 # calculate the stats using the acs_region_fractional_stats function
 # Find the min, mean, max value for each region
-var="pr"
+
+ds = xr.open_dataset(filename)
 mask_frac = regions.mask_3D_frac_approx(ds)
 dims = ("lat", "lon",)
+how = ["min", "mean", "max"]
 
-da_min = acs_regional_stats(ds=ds,var=var, mask=mask_frac, dims = dims, how = "min")
-da_mean = acs_regional_stats(ds=ds,var=var, mask=mask_frac, dims = dims, how = "mean")
-da_max = acs_regional_stats(ds=ds,var=var, mask=mask_frac, dims = dims, how = "max")
+acs_regional_stats(ds=ds, infile = filename, mask=mask_frac, dims = dims, how = how,)
 
-# present the stats as a table with rows for each row and columns for each statistic
-da_stats = xr.merge([da_min, da_mean, da_max])
-da_stats.to_dataframe()
 ```
+
+The dataframe will be saved to: ```infile.replace(".nc", f"_summary-{'-'.join(how)}_ncra-regions.csv"```
+
 For example only, this would make a dataframe in this format:
 
 |   region | abbrevs   | names                   |   pr_min |   pr_mean |   pr_max |
