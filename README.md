@@ -51,7 +51,9 @@ You will now be able to access the functions, python scripts, and Jupyter notebo
 ## Usage in Jupyter notebook:
 
 See small, easy to follow example here: 
+- [https://github.com/AusClimateService/plotting_maps/blob/main/plotting_and_stats_examples.ipynb]
 - [https://github.com/AusClimateService/plotting_maps/blob/main/minimal_plotting_example_pr.ipynb]
+- [https://github.com/AusClimateService/plotting_maps/blob/main/area_statistics_example.ipynb]
 
 Other examples:
 - [https://github.com/AusClimateService/plotting_maps/blob/main/acs_plotting_maps_examples.ipynb]
