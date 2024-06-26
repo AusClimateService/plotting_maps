@@ -108,7 +108,7 @@ def acs_regional_stats(ds = None,
     da_mean = acs_regional_stats(ds=ds, var="pr", mask =mask_frac, start="1991", end="2010", dims = ("time", "lat", "lon"), how = "mean")
     """
     if ds is None and infile is not None:
-        ds = xr.open_dataset(filename, use_cftime = True,)
+        ds = xr.open_dataset(infile, use_cftime = True,)
     
     if isinstance(mask, xr.DataArray):
         # Prefered method: use precalculated xarray.DataArray 'mask'
@@ -116,17 +116,31 @@ def acs_regional_stats(ds = None,
     elif mask == "fractional":
         # !warning very slow!
         print("!warning very slow! Calculating fractional mask every time is very slow. \
-        \nPlease calculate ```mask = regions.mask_3D_frac_approx(ds)``` before this function.")
-        mask = regions.mask_3D_frac_approx(ds)
+        \nPlease consider calculating ```mask = regions.mask_3D_frac_approx(ds)``` before this function.")
+        # mask = regions.mask_3D_frac_approx(ds)
+        try:
+            mask = regions.mask_3D_frac_approx(ds)
+        except:
+            # This loop helps deal with rounding errors in lat lon that make the fractional mask fail
+            mask = None
+            i=6
+            while mask is None and i>0:
+                try:
+                    mask = regions.mask_3D_frac_approx(ds)
+                    print(f"rounded lat and lon to {i} decimal places")
+                except:
+                    # Adjust lat and lon to correct for float problems! 
+                    ds = ds.assign_coords(lat = ds.lat.astype("double").round(i), lon = ds.lon.astype("double").round(i))
+                    i-=1
     elif mask == "centred":
         # !warning slow!
         print("!warning slow! Calculating mask every time is slow. \
-        \nPlease calculate ```mask = regions.mask_3D(ds)``` before this function.")
+        \nPlease consider calculating ```mask = regions.mask_3D(ds)``` before this function.")
         mask = regions.mask_3D(ds)
     elif mask == "min_overlap":
         # !warning very slow!
         print("!warning very slow! Calculating fractional mask with minimum overlap every time is very slow. \
-        \nPlease calculate ```mask = regions.mask_3D_frac_approx(ds) >= overlap_threshold``` before this function.")
+        \nPlease consider calculating ```mask = regions.mask_3D_frac_approx(ds) >= overlap_threshold``` before this function.")
         assert (0. <= overlap_threshold <= 1.), "You have selected min_overlap mask. Please specify overlap_threshold between [0.,1.]"
         mask = regions.mask_3D_frac_approx(ds) >= overlap_threshold
     else:
@@ -147,6 +161,11 @@ def acs_regional_stats(ds = None,
     
     # calculate weights due to latitude
     lat_weights = np.cos(np.deg2rad(ds['lat']))
+    # drop redundant coords
+    redundant_coords = set(lat_weights.coords) - set(lat_weights.dims)
+    lat_weights = lat_weights.drop_vars(redundant_coords)
+    mask = mask.drop_vars(redundant_coords)
+    
     # create your weighted 3D xr.Dataset
     if var is None:
         try:
@@ -164,6 +183,7 @@ def acs_regional_stats(ds = None,
     if dims is None:
         dims = list(ds.coords)
 
+    # for every stat in the how list, add to summary list
     summary_list = []
     for stat in how:
         # perform a statistic calculation
@@ -185,13 +205,17 @@ def acs_regional_stats(ds = None,
         elif stat == "max":
             summary_list.append(ds_weighted.quantile(1., dim=dims).drop_vars("quantile").rename(f"{var}_max"))
         else:
-            print(f"{stat} statistic not calculated. Please provide valid how, one of: ['mean', 'median', 'min', 'max', 'sum', 'std', 'var', 'p10', 'p90']")
-    df_summary = xr.merge(summary_list).to_dataframe()
+            print(f"{stat} statistic not calculated. Please provide valid how as a list including, one of: ['mean', 'median', 'min', 'max', 'sum', 'std', 'var', 'p10', 'p90']")
+    df = xr.merge(summary_list).to_dataframe()
+    # drop columns with constant value
+    df_summary = df[[col for col in df.columns if df[col].nunique() != 1]]
+
+    if outfile is None and infile is not None and select_abbr is None and select_name is None:
+        outfile = infile.replace(".nc", f"_summary-{'-'.join(how)}_ncra-regions.csv")
     if outfile is not None:
         try:
             df_summary.to_csv(outfile)
         except:
             print(f"Could not save to {outfile}")
-
     return df_summary
 
