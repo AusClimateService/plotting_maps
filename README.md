@@ -118,8 +118,8 @@ mask_frac = regions.mask_3D_frac_approx(ds)
 dims = ("lat", "lon",)
 how = ["min", "mean", "max"]
 
-df_summary = acs_regional_stats(ds=ds, infile = filename, mask=mask_frac, dims = dims, how = how,)
-df_summary
+da_summary = acs_regional_stats(ds=ds, infile = filename, mask=mask_frac, dims = dims, how = how,)
+da_summary
 
 ```
 
