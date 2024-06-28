@@ -204,9 +204,13 @@ def acs_regional_stats(ds = None,
             summary_list.append(ds_weighted.quantile(0.5, dim=dims).drop_vars("quantile").rename(f"{var}_median"))
         elif stat == "max":
             summary_list.append(ds_weighted.quantile(1., dim=dims).drop_vars("quantile").rename(f"{var}_max"))
+        elif stat == "mode":
+            # mode cannot use the fractional masking in the same way as other statistics
+            summary_list.append(ds[var].where(mask).to_dataframe().groupby(['region'])[var].agg(pd.Series.mode).to_xarray().rename(f"{var}_mode"))
         else:
             print(f"{stat} statistic not calculated. Please provide valid how as a list including, one of: ['mean', 'median', 'min', 'max', 'sum', 'std', 'var', 'p10', 'p90']")
-    df = xr.merge(summary_list).to_dataframe()
+    ds_summary=xr.merge(summary_list)
+    df = ds_summary.to_dataframe()
     # drop columns with constant value
     df_summary = df[[col for col in df.columns if df[col].nunique() != 1]]
 
@@ -217,5 +221,5 @@ def acs_regional_stats(ds = None,
             df_summary.to_csv(outfile)
         except:
             print(f"Could not save to {outfile}")
-    return df_summary
+    return ds_summary
 
