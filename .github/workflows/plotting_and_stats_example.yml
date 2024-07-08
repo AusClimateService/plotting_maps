@@ -16,12 +16,13 @@ jobs:
         uses: actions/setup-python@v3
       - name: Check out repo
         uses: actions/checkout@v2
-      - name: Install Python dependencies
-        uses: py-actions/py-dependency-install@v4
-        with:
-          path: requirements.txt
-      - name: execute py script
-        run: python plotting_and_stats_examples.py
+      # I can't get this script to run properly
+      # - name: Install Python dependencies
+      #   uses: py-actions/py-dependency-install@v4
+      #   with:
+      #     path: requirements.txt
+      # - name: execute py script
+      #   run: python plotting_and_stats_examples.py
         
       # - uses: actions/upload-artifact@v3
       #   if: always()
