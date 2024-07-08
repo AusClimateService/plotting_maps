@@ -19,7 +19,7 @@ jobs:
       - name: Install Python dependencies
         uses: py-actions/py-dependency-install@v4
         with:
-          path: "requirements.txt"
+          path: /plotting_maps/requirements.txt
       - name: execute py script
         run: python plotting_and_stats_examples.py
         
