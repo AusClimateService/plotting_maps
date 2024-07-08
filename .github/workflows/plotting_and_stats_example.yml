@@ -14,7 +14,7 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v2
       - name: execute py script
-        run: python plotting_and_stats_example.py
+        run: python https://github.com/AusClimateService/plotting_maps/blob/main/plotting_and_stats_examples.py
       # - uses: actions/upload-artifact@v3
       #   if: always()
       
