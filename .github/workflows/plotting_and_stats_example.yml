@@ -17,7 +17,4 @@ jobs:
         run: python plotting_and_stats_example.py
       - uses: actions/upload-artifact@v3
         if: always()
-        with:
-          name: test-results
-          path: app/build/reports/tests
       
