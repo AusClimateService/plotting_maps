@@ -1,4 +1,4 @@
-name: Execute notebook
+name: Execute plotting_and_stats_example
 
 on: [push]
 
@@ -9,16 +9,6 @@ jobs:
     - uses: actions/checkout@v3
     - name: Set up Python
       uses: actions/setup-python@v3
-    - uses: yaananth/run-notebook@v2
-      env:
-        RUNNER: ${{ toJson(runner) }}
-        SECRETS: ${{ toJson(secrets) }}
-        GITHUB: ${{ toJson(github) }}
-      with:
-        notebook: "plotting_and_stats_examples.ipynb"
-        # params: "PATHTOPARAMS.json"
-        isReport: False
-        poll: True
     - uses: actions/upload-artifact@v3
       if: always()
       with:
