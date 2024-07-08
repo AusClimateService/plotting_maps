@@ -1,5 +1,8 @@
 name: Execute plotting_and_stats_example
 
+env:
+  DEVOPS_DIR: plotting_maps
+
 on:
   push:
     branches:
@@ -14,7 +17,7 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v2
       - name: execute py script
-        run: python /AusClimateService/plotting_maps/blob/main/plotting_and_stats_examples.py
+        run: python plotting_and_stats_examples.py
       # - uses: actions/upload-artifact@v3
       #   if: always()
       
