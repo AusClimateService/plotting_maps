@@ -30,7 +30,7 @@
 # In[1]:
 
 
-cd /g/data/mn51/users/gt3409/plotting_maps/
+# cd /g/data/mn51/users/gt3409/plotting_maps/
 
 
 # Then import the plotting function ```plot_acs_hazard``` and helpful dictionaries ```regions_dict, cmap_dict, tick_dict```
