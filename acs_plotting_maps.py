@@ -27,8 +27,8 @@ crs = ccrs.LambertConformal(
     standard_parallels=(-10, -40),
 )
 
-PATH = os.path.abspath(os.path.dirname(__file__))
-logo = image.imread(f"{PATH}/ACS_Logo_Blue_on_white_Stacked.png")
+from pathlib import Path
+logo = image.imread(f"{Path(__file__).parent}/ACS_Logo_Blue_on_white_Stacked.png")
 
 
 # # Suggested colormaps and scales
