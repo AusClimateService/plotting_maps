@@ -10,8 +10,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
     - name: execute py script # run file
-        run: |
-          python plotting_and_stats_example.py
+      run: python plotting_and_stats_example.py
     - uses: actions/upload-artifact@v3
       if: always()
       with:
