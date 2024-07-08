@@ -239,6 +239,7 @@ def plot_acs_hazard(
     select_area=None,
     land_shadow=False,
     watermark="EXPERIMENTAL\nIMAGE ONLY",
+    watermark_color = "r",
     infile=None,
     outfile=None,
 ):
@@ -365,10 +366,14 @@ def plot_acs_hazard(
         Default False.
 
     watermark: str
-        red text over the plot for images not in their final form. 
+        text over the plot for images not in their final form. 
         If the plot is in final form, set to None. 
         Suggestions include "PRELIMINARY DATA", "DRAFT ONLY", 
         "SAMPLE ONLY (NOT A FORECAST)", "EXPERIMENTAL IMAGE ONLY"
+
+    watermark_color: default "r"
+        for the watermark, this changes the colour of the text.
+        The default is red. Only change color if red is not visible. 
 
     infile: str
         Not yet tested. 
@@ -645,7 +650,7 @@ def plot_acs_hazard(
             zorder=10,
             wrap=True,
             alpha=0.5,
-            color="r",
+            color=watermark_color,
         )
 
     # remove any lat lon labels and ticks
