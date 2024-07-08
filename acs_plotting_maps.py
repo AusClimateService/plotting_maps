@@ -242,6 +242,7 @@ def plot_acs_hazard(
     watermark_color = "r",
     infile=None,
     outfile=None,
+    savefig=True,
 ):
     """This function takes a name of an Australian shapefile collection for data in 
     /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/ 
@@ -382,6 +383,10 @@ def plot_acs_hazard(
     outfile: str
         The location to save the figure. 
         If None, then figure is saved here f"figures/{title.replace(' ', '_')}.png"
+
+    savefig: bool
+        default is True
+        If set to False, then fig is not saved.
 
     Returns
     -------
@@ -686,5 +691,6 @@ def plot_acs_hazard(
         outfile = f"{PATH}/figures/{title.replace(' ', '_')}.png"
         os.makedirs(os.path.dirname(outfile), exist_ok=True)
 
-    plt.savefig(outfile, dpi=300)
+    if savefig:
+        plt.savefig(outfile, dpi=300)
     return fig, ax
