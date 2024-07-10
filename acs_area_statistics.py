@@ -120,6 +120,14 @@ def acs_regional_stats(
         If mask =  "min_overlap", you must provide an overlap_threshold value.
         If mask != "min_overlap", this value will be ignored.
 
+    bins: int, sequence of scalars, or IntervalIndex
+        For categorical data. The criteria to bin by using pandas.cut 'bins'
+
+    bin_labels: array or False, default None
+        For labeled categorical data.
+        passed to pandas.cut 'labels'
+        Specifies the labels for the returned bins. Must be the same length as the resulting bins. 
+
     Returns
     -------
     An xarray.DataArray (1D or 2D) with dimension called "region" and values of regional statistics.
@@ -137,10 +145,8 @@ def acs_regional_stats(
     da_mean = acs_regional_stats(ds=ds, 
                                  var="pr",
                                  mask=mask_frac,
-                                 start="1991",
-                                 end="2010", 
-                                 dims=("time", "lat", "lon"),
-                                 how="mean")
+                                 dims=("lat", "lon"),
+                                 how=["mean"])
     """
     # Open file if ds not provided and infile is provided
     if ds is None and infile is not None:
