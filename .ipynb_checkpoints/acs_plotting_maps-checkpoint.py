@@ -27,8 +27,8 @@ crs = ccrs.LambertConformal(
     standard_parallels=(-10, -40),
 )
 
-PATH = os.path.abspath(os.path.dirname(__file__))
-logo = image.imread(f"{PATH}/ACS_Logo_Blue_on_white_Stacked.png")
+from pathlib import Path
+logo = image.imread(f"{Path(__file__).parent}/ACS_Logo_Blue_on_white_Stacked.png")
 
 
 # # Suggested colormaps and scales
@@ -162,11 +162,11 @@ tick_dict = {
 regions_dict = {}
 
 shape_files = [
-    "aus_local_gov",
-    "aus_states_territories",
+    # "aus_local_gov",
+    # "aus_states_territories",
     "australia",
-    "nrm_regions",
-    "river_regions",
+    # "nrm_regions",
+    # "river_regions",
     "ncra_regions",
 ]
 PATH = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data"
@@ -234,13 +234,15 @@ def plot_acs_hazard(
     dataset_name=None,
     issued_date=None,
     label_states=False,
-    contourf=True,
+    contourf=False,
     contour=True,
     select_area=None,
     land_shadow=False,
     watermark="EXPERIMENTAL\nIMAGE ONLY",
+    watermark_color = "r",
     infile=None,
     outfile=None,
+    savefig=True,
 ):
     """This function takes a name of an Australian shapefile collection for data in 
     /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/ 
@@ -308,7 +310,7 @@ def plot_acs_hazard(
     cbar_extend: one of {'neither', 'both', 'min', 'max'}.
         eg "both" changes the ends of the colorbar to arrows to indicate that
         values are possible outside the scale show.
-        If contour or contourfise True, then cbar_extend will be overridden to "none".
+        If contour or contourf is True, then cbar_extend will be overridden to "none".
 
     ticks: list or arraylike
         Define the ticks on the colorbar. Define any number of intervals. 
@@ -365,10 +367,14 @@ def plot_acs_hazard(
         Default False.
 
     watermark: str
-        red text over the plot for images not in their final form. 
+        text over the plot for images not in their final form. 
         If the plot is in final form, set to None. 
         Suggestions include "PRELIMINARY DATA", "DRAFT ONLY", 
         "SAMPLE ONLY (NOT A FORECAST)", "EXPERIMENTAL IMAGE ONLY"
+
+    watermark_color: default "r"
+        for the watermark, this changes the colour of the text.
+        The default is red. Only change color if red is not visible. 
 
     infile: str
         Not yet tested. 
@@ -377,6 +383,10 @@ def plot_acs_hazard(
     outfile: str
         The location to save the figure. 
         If None, then figure is saved here f"figures/{title.replace(' ', '_')}.png"
+
+    savefig: bool
+        default is True
+        If set to False, then fig is not saved.
 
     Returns
     -------
@@ -415,7 +425,7 @@ def plot_acs_hazard(
     ax = plt.axes(
         projection=crs,
     )
-    ax.set_global()
+    # ax.set_global()
 
     if infile is not None:
         data = xr.open_dataset(infile)
@@ -447,17 +457,25 @@ def plot_acs_hazard(
 
         # plot the hazard data
         if contourf and tick_labels is None:
-            cont = ax.contourf(
-                data.lon,
-                data.lat,
-                data,
-                cmap=cmap,
-                norm=norm,
-                levels=ticks,
-                extend=cbar_extend,
-                zorder=2,
-                transform=ccrs.PlateCarree(),
-            )
+            cont = ax.contourf(data.lon,
+                               data.lat,
+                               data,
+                               cmap=cmap,
+                               levels=ticks,
+                               extend=cbar_extend,
+                               zorder=2,
+                               transform=ccrs.PlateCarree(),
+                            )
+            # # cannot get contourf to reliably work. possible related to https://github.com/SciTools/cartopy/issues/1076
+            # cont = ax.pcolormesh(
+            #     data.lon,
+            #     data.lat,
+            #     data,
+            #     cmap=cmap,
+            #     norm=norm,
+            #     zorder=2,
+            #     transform=ccrs.PlateCarree(),
+            # )
         else:
             cont = ax.pcolormesh(
                 data.lon,
@@ -645,7 +663,7 @@ def plot_acs_hazard(
             zorder=10,
             wrap=True,
             alpha=0.5,
-            color="r",
+            color=watermark_color,
         )
 
     # remove any lat lon labels and ticks
@@ -681,5 +699,6 @@ def plot_acs_hazard(
         outfile = f"{PATH}/figures/{title.replace(' ', '_')}.png"
         os.makedirs(os.path.dirname(outfile), exist_ok=True)
 
-    plt.savefig(outfile, dpi=300)
+    if savefig:
+        plt.savefig(outfile, dpi=300)
     return fig, ax

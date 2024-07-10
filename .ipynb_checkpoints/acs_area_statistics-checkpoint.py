@@ -36,7 +36,7 @@ gdf = pd.concat(
     ],
 )
 gdf.index = np.arange(0, 10)
-regions = regionmask.from_geopandas(gdf, names="NAME", abbrevs="abbrevs")
+regions = regionmask.from_geopandas(gdf, names="NAME", abbrevs="abbrevs", overlap=True)
 
 
 def acs_regional_stats(
@@ -222,7 +222,7 @@ def acs_regional_stats(
     lat_weights = lat_weights.drop_vars(redundant_coords)
     mask = mask.drop_vars(redundant_coords)
 
-    ds_masked = ds.where(mask)
+    ds_masked = ds.where(mask)[var]
 
     # create your weighted 3D xr.Dataset
     if var is None:
@@ -245,52 +245,68 @@ def acs_regional_stats(
     summary_list = []
     for stat in how:
         # perform a statistic calculation
-        if stat.replace("p", "").isnumeric() and (int(how[1:]) <= 100):
-            q = int(how[1:]) / 100
+        if stat.replace("p", "").isnumeric() and (int(stat.replace("p", "")) <= 100):
+            q = int(stat.replace("p", "")) / 100
             summary_list.append(
-                ds_weighted.quantile(q, dim=dims)
+                ds_weighted.quantile(q, dim=dims, skipna = True)
                 .drop_vars("quantile")
                 .rename(f"{var}_{stat}")
             )
         elif stat == "mean":
-            summary_list.append(ds_weighted.mean(dim=dims).rename(f"{var}_{stat}"))
+            summary_list.append(ds_weighted.mean(dim=dims, skipna = True).rename(f"{var}_{stat}"))
         elif stat == "sum":
-            summary_list.append(ds_weighted.sum(dim=dims).rename(f"{var}_{stat}"))
+            summary_list.append(ds_weighted.sum(dim=dims, skipna = True).rename(f"{var}_{stat}"))
         elif stat == "std":
-            summary_list.append(ds_weighted.std(dim=dims).rename(f"{var}_{stat}"))
+            summary_list.append(ds_weighted.std(dim=dims, skipna = True).rename(f"{var}_{stat}"))
         elif stat == "var":
-            summary_list.append(ds_weighted.var(dim=dims).rename(f"{var}_{stat}"))
+            summary_list.append(ds_weighted.var(dim=dims, skipna = True).rename(f"{var}_{stat}"))
         elif stat == "min":
             summary_list.append(
-                ds_masked.groupby("region").min(dim=dims)[var].rename(f"{var}_{stat}")
+                ds_masked.groupby("region").min(dim=dims, skipna = True).rename(f"{var}_{stat}")
             )
+            if bins is not None:
+                df_masked = ds_masked.to_dataframe()
+                df_masked["category"] = pd.cut(df_masked[var], bins, labels=bin_labels, ordered=True)
+                summary_list.append(
+                    df_masked.groupby("region")["category"]
+                    .min()
+                    .to_xarray()
+                    .rename(f"{var}_cat_{stat}")
+                )
         elif stat == "median":
             summary_list.append(
-                ds_weighted.quantile(0.5, dim=dims)
+                ds_weighted.quantile(0.5, dim=dims, skipna=True)
                 .drop_vars("quantile")
                 .rename(f"{var}_{stat}")
             )
         elif stat == "max":
             summary_list.append(
-                ds_masked.groupby("region").max(dim=dims)[var].rename(f"{var}_{stat}")
+                ds_masked.groupby("region").max(dim=dims, skipna = True).rename(f"{var}_{stat}")
             )
+            if bins is not None:
+                df_masked = ds_masked.to_dataframe()
+                df_masked["category"] = pd.cut(df_masked[var], bins, labels=bin_labels, ordered=True)
+                summary_list.append(
+                    df_masked.groupby("region")["category"]
+                    .max()
+                    .to_xarray()
+                    .rename(f"{var}_cat_{stat}")
+                )
+
         elif stat == "mode":
             if bins is not None:
-                df = ds_masked.to_dataframe()
-                df["category"] = pd.cut(df[var], bins, labels=bin_labels, ordered=True)
+                df_masked = ds_masked.to_dataframe()
+                df_masked["category"] = pd.cut(df_masked[var], bins, labels=bin_labels, ordered=True)
                 summary_list.append(
-                    df.groupby("region")["category"]
+                    df_masked.groupby("region")["category"]
                     .agg(pd.Series.mode)
                     .to_xarray()
-                    .rename(f"{var}_{stat}")
+                    .rename(f"{var}_cat_{stat}")
                 )
             else:
                 # mode cannot use the fractional masking in the same way as other statistics
                 summary_list.append(
-                    ds[var]
-                    .where(mask)
-                    .to_dataframe()
-                    .groupby(["region"])[var]
+                    ds_masked.to_dataframe().groupby(["region"])[var]
                     .agg(pd.Series.mode)
                     .to_xarray()
                     .rename(f"{var}_{stat}")
@@ -298,8 +314,8 @@ def acs_regional_stats(
         else:
             print(
                 f"{stat} statistic not calculated. \
-                Please provide valid how as a list including, one of: \
-                ['mean', 'median', 'min', 'max', 'sum', 'std', 'var', 'p10', 'p90']"
+Please provide valid how as a list including, one of: \
+['mean', 'median', 'min', 'max','mode', 'sum', 'std', 'var', 'p10', 'p90']"
             )
     ds_summary = xr.merge(summary_list)
     df = ds_summary.to_dataframe()
