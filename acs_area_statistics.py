@@ -1,7 +1,7 @@
 """ Cookie cutter - ACS area statistics
 Use this module to produce summary statistics for Hazards over NCRA regions,
 with the flexibility to apply the method to any shapefile region.
-Typical statistics include median, mean, min, max, 10th, 90th percentiles
+Typical statistics include median, mean, min, max, 10th, 90th percentiles.
 
 This method has used guidance from
 [https://github.com/aus-ref-clim-data-nci/shapefiles/blob/master/python_tutorial.ipynb]"""
@@ -61,6 +61,7 @@ def acs_regional_stats(
     then selects the time range between two years (start and end),
     and applies regions.mask_3D_frac_approx fractional mask (frac)
     to compute a regional statistic (how, eg "mean") over two or three dimensions.
+    Best used with numerical data without nans.
 
     Parameters
     ----------
@@ -248,21 +249,21 @@ def acs_regional_stats(
         if stat.replace("p", "").isnumeric() and (int(stat.replace("p", "")) <= 100):
             q = int(stat.replace("p", "")) / 100
             summary_list.append(
-                ds_weighted.quantile(q, dim=dims, skipna = True)
+                ds_weighted.quantile(q, dim=dims, )
                 .drop_vars("quantile")
                 .rename(f"{var}_{stat}")
             )
         elif stat == "mean":
-            summary_list.append(ds_weighted.mean(dim=dims, skipna = True).rename(f"{var}_{stat}"))
+            summary_list.append(ds_weighted.mean(dim=dims,).rename(f"{var}_{stat}"))
         elif stat == "sum":
-            summary_list.append(ds_weighted.sum(dim=dims, skipna = True).rename(f"{var}_{stat}"))
+            summary_list.append(ds_weighted.sum(dim=dims,).rename(f"{var}_{stat}"))
         elif stat == "std":
-            summary_list.append(ds_weighted.std(dim=dims, skipna = True).rename(f"{var}_{stat}"))
+            summary_list.append(ds_weighted.std(dim=dims,).rename(f"{var}_{stat}"))
         elif stat == "var":
-            summary_list.append(ds_weighted.var(dim=dims, skipna = True).rename(f"{var}_{stat}"))
+            summary_list.append(ds_weighted.var(dim=dims,).rename(f"{var}_{stat}"))
         elif stat == "min":
             summary_list.append(
-                ds_masked.groupby("region").min(dim=dims, skipna = True).rename(f"{var}_{stat}")
+                ds_masked.groupby("region").min(dim=dims,).rename(f"{var}_{stat}")
             )
             if bins is not None:
                 df_masked = ds_masked.to_dataframe()
@@ -275,13 +276,13 @@ def acs_regional_stats(
                 )
         elif stat == "median":
             summary_list.append(
-                ds_weighted.quantile(0.5, dim=dims, skipna=True)
+                ds_weighted.quantile(0.5, dim=dims,)
                 .drop_vars("quantile")
                 .rename(f"{var}_{stat}")
             )
         elif stat == "max":
             summary_list.append(
-                ds_masked.groupby("region").max(dim=dims, skipna = True).rename(f"{var}_{stat}")
+                ds_masked.groupby("region").max(dim=dims,).rename(f"{var}_{stat}")
             )
             if bins is not None:
                 df_masked = ds_masked.to_dataframe()
