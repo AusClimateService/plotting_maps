@@ -234,7 +234,7 @@ def plot_acs_hazard(
     dataset_name=None,
     issued_date=None,
     label_states=False,
-    contourf=True,
+    contourf=False,
     contour=True,
     select_area=None,
     land_shadow=False,
@@ -348,7 +348,9 @@ def plot_acs_hazard(
 
     contourf: bool
         if True then the gridded data is visualised as smoothed filled contours. 
-        Default is True.
+        Default is False.
+        Use with caution when plotting data with negative and positive values;
+        Check output for NaNs and misaligned values.  
 
     contour: bool
         if True then the gridded data is visualised as smoothed unfilled grey contours.
@@ -457,6 +459,8 @@ def plot_acs_hazard(
 
         # plot the hazard data
         if contourf and tick_labels is None:
+            if data.max()>0 and data.min()<0: 
+                print("Using contourf to plot data. Use with caution and check output for data crossing zero")
             cont = ax.contourf(
                 data.lon,
                 data.lat,
