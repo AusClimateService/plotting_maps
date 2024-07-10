@@ -459,7 +459,7 @@ def plot_acs_hazard(
 
         # plot the hazard data
         if contourf and tick_labels is None:
-            if data.max()>0 and data.min()<0: 
+            if data.max()>=0 and data.min()<=0: 
                 print("Using contourf to plot data. Use with caution and check output for data crossing zero")
             cont = ax.contourf(
                 data.lon,
