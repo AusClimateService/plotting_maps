@@ -162,11 +162,11 @@ tick_dict = {
 regions_dict = {}
 
 shape_files = [
-    # "aus_local_gov",
-    # "aus_states_territories",
+    "aus_local_gov",
+    "aus_states_territories",
     "australia",
-    # "nrm_regions",
-    # "river_regions",
+    "nrm_regions",
+    "river_regions",
     "ncra_regions",
 ]
 PATH = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data"
@@ -310,7 +310,7 @@ def plot_acs_hazard(
     cbar_extend: one of {'neither', 'both', 'min', 'max'}.
         eg "both" changes the ends of the colorbar to arrows to indicate that
         values are possible outside the scale show.
-        If contour or contourf is True, then cbar_extend will be overridden to "none".
+        If contour or contourfise True, then cbar_extend will be overridden to "none".
 
     ticks: list or arraylike
         Define the ticks on the colorbar. Define any number of intervals. 
@@ -348,7 +348,9 @@ def plot_acs_hazard(
 
     contourf: bool
         if True then the gridded data is visualised as smoothed filled contours. 
-        Default is True.
+        Default is False.
+        Use with caution when plotting data with negative and positive values;
+        Check output for NaNs and misaligned values.  
 
     contour: bool
         if True then the gridded data is visualised as smoothed unfilled grey contours.
@@ -425,7 +427,7 @@ def plot_acs_hazard(
     ax = plt.axes(
         projection=crs,
     )
-    # ax.set_global()
+    ax.set_global()
 
     if infile is not None:
         data = xr.open_dataset(infile)
@@ -457,25 +459,19 @@ def plot_acs_hazard(
 
         # plot the hazard data
         if contourf and tick_labels is None:
-            cont = ax.contourf(data.lon,
-                               data.lat,
-                               data,
-                               cmap=cmap,
-                               levels=ticks,
-                               extend=cbar_extend,
-                               zorder=2,
-                               transform=ccrs.PlateCarree(),
-                            )
-            # # cannot get contourf to reliably work. possible related to https://github.com/SciTools/cartopy/issues/1076
-            # cont = ax.pcolormesh(
-            #     data.lon,
-            #     data.lat,
-            #     data,
-            #     cmap=cmap,
-            #     norm=norm,
-            #     zorder=2,
-            #     transform=ccrs.PlateCarree(),
-            # )
+            if data.max()>=0 and data.min()<=0: 
+                print("Using contourf to plot data. Use with caution and check output for data crossing zero")
+            cont = ax.contourf(
+                data.lon,
+                data.lat,
+                data,
+                cmap=cmap,
+                norm=norm,
+                levels=ticks,
+                extend=cbar_extend,
+                zorder=2,
+                transform=ccrs.PlateCarree(),
+            )
         else:
             cont = ax.pcolormesh(
                 data.lon,
