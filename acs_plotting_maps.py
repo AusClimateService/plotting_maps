@@ -443,7 +443,7 @@ def plot_acs_hazard(
             # if ticks are labelled or if there is one more tick than tick labels,
             # do the usual normalisation
             if tick_labels is None or (len(tick_labels) == len(ticks) - 1):
-                norm = BoundaryNorm(ticks, cmap.N)
+                norm = BoundaryNorm(ticks, cmap.N, extend = cbar_extend)
                 if tick_labels is not None:
                     middle_ticks = [
                         (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
@@ -455,7 +455,7 @@ def plot_acs_hazard(
                 outside_bound_first = [ticks[0] - (ticks[1] - ticks[0]) / 2]
                 outside_bound_last = [ticks[-1] + (ticks[-1] - ticks[-2]) / 2]
                 bounds = outside_bound_first + middle_ticks + outside_bound_last
-                norm = BoundaryNorm(bounds, cmap.N)
+                norm = BoundaryNorm(bounds, cmap.N, extend = cbar_extend)
 
         # plot the hazard data
         if contourf and tick_labels is None:
