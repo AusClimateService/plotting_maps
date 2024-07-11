@@ -215,6 +215,7 @@ def plot_acs_hazard(
     name="aus_states_territories",
     regions=None,
     data=None,
+    station_df=None,
     mask_not_australia=True,
     facecolor=None,
     edgecolor="black",
@@ -402,7 +403,7 @@ def plot_acs_hazard(
         except:
             print(f"Could not read regions_dict[{name}]")
 
-    # Set default crs for Australia maps and selction maps
+    # Set default crs for Australia maps and selection maps
     if crs is None:
         if select_area is None:
             # Default for Australian map
@@ -431,6 +432,23 @@ def plot_acs_hazard(
 
     if infile is not None:
         data = xr.open_dataset(infile)
+
+    # for station data
+    if station_df is not None:
+        # assuming columns are named "lon", "lat", variable, "geometry"
+        gdf = gpd.GeoDataFrame(
+            station_df, geometry=gpd.points_from_xy(station_df.lon, station_df.lat), crs=ccrs.PlateCarree()
+            )
+        var = gdf.columns[[2]][0]
+
+        cont = ax.scatter(x= station_df.lon, y=station_df.lat, s=100, c=station_df[var], edgecolors="k", alpha = 0.8, zorder=12, 
+                   transform=ccrs.PlateCarree(), cmap= cmap_dict["Greens"],norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend))
+        plt.colorbar(
+                    cont,
+                    ax=ax,
+                    extend=cbar_extend,
+                    cax=ax.inset_axes([0.8, 0.2, 0.03, 0.6]),
+                )
 
     if data is not None:
         data = data.squeeze()
