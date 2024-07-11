@@ -440,15 +440,26 @@ def plot_acs_hazard(
             station_df, geometry=gpd.points_from_xy(station_df.lon, station_df.lat), crs=ccrs.PlateCarree()
             )
         var = gdf.columns[[2]][0]
+        norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
+        cont = ax.scatter(x= station_df.lon,
+                          y=station_df.lat,
+                          s=100, 
+                          c=station_df[var],
+                          edgecolors="k", 
+                          alpha = 0.8,
+                          zorder=6,
+                          transform=ccrs.PlateCarree(), 
+                          cmap= cmap,
+                          norm = norm)
 
-        cont = ax.scatter(x= station_df.lon, y=station_df.lat, s=100, c=station_df[var], edgecolors="k", alpha = 0.8, zorder=12, 
-                   transform=ccrs.PlateCarree(), cmap= cmap_dict["Greens"],norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend))
-        plt.colorbar(
-                    cont,
-                    ax=ax,
-                    extend=cbar_extend,
-                    cax=ax.inset_axes([0.8, 0.2, 0.03, 0.6]),
-                )
+        cbar = plt.colorbar(
+                cont,
+                ax=ax,
+                extend=cbar_extend,
+                cax=ax.inset_axes([0.8, 0.2, 0.03, 0.6]),
+                ticks=ticks,
+                norm=norm,
+            )
 
     if data is not None:
         data = data.squeeze()
@@ -526,7 +537,6 @@ def plot_acs_hazard(
             elif len(middle_ticks) == len(tick_labels):
                 cbar.ax.set_yticks(middle_ticks, tick_labels)
 
-        cbar.ax.set_title(cbar_label, zorder=8, y=1.1, loc="center")
         if contour and tick_labels is None:
             cont = plt.contour(
                 data.lon,
@@ -620,6 +630,9 @@ def plot_acs_hazard(
         transform=ax.transAxes,
         zorder=10,
     )
+
+    # Label colorbar
+    cbar.ax.set_title(cbar_label, zorder=8, y=1.1, loc="center")
 
     if baseline is not None:
         # print base period inside bottom left corner
