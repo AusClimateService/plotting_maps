@@ -229,8 +229,6 @@ def acs_regional_stats(
     lat_weights = lat_weights.drop_vars(redundant_coords)
     mask = mask.drop_vars(redundant_coords)
 
-    ds_masked = ds.where(mask)[var]
-
     # create your weighted 3D xr.Dataset
     if var is None:
         try:
@@ -242,6 +240,8 @@ def acs_regional_stats(
         except:
             print(f"Please enter var. One of {list(ds.keys())}")
             return None
+
+    ds_masked = ds.where(mask)[var]
     ds_weighted = ds[var].weighted(mask * lat_weights)
 
     # if calculating stats over all dims:
