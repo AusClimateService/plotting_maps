@@ -215,6 +215,7 @@ def plot_acs_hazard(
     name="aus_states_territories",
     regions=None,
     data=None,
+    stippling=None,
     mask_not_australia=True,
     facecolor=None,
     edgecolor="black",
@@ -263,6 +264,10 @@ def plot_acs_hazard(
         a 2D xarray DataArray which has already computed the 
         average, sum, anomaly, metric or index you wish to visualise.
         This function is resolution agnostic.
+
+    stippling: xr.DataArray
+        a True/False to define regions of stippling hatching. 
+        Intended to show model agreement, eg for direction of change.
 
     mask_not_australia: boolean
         decides whether or not the area outside of Australian land is hidden.
@@ -524,15 +529,24 @@ def plot_acs_hazard(
             )
             cbar.add_lines(cont)
 
-        if mask_not_australia:
-            # outside the shape, fill white
-            ax.add_geometries(
-                not_australia,
-                crs=not_australia.crs,
-                facecolor="white",
-                linewidth=0,
-                zorder=5,
-            )
+    if stippling is not None:
+        ax.contourf(stippling.lat,
+                    stiplling.lon,
+                    stippling,
+                    hatches = [".."],
+                    zorder=4,
+                    transform=ccrs.PlateCarree(),
+                   )
+
+    if mask_not_australia:
+        # outside the shape, fill white
+        ax.add_geometries(
+            not_australia,
+            crs=not_australia.crs,
+            facecolor="white",
+            linewidth=0,
+            zorder=5,
+        )
 
     if label_states and name == "aus_states_territories":
         # label the states with their name in the centre of the state
