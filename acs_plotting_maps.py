@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib import image, cm
 import xarray as xr
 import cartopy.crs as ccrs
+from glob import glob
 
 # import colormap packages
 import cmaps
@@ -156,11 +157,33 @@ tick_dict = {
     "aridity_index_labels": ["Hyper-arid", "Arid", "Semi-arid", "Dry sub-humid"],
 }
 
-# # Load the State and Region shape files
-# write a dictionary of the shapefile geopandas dataframes.
-# hese will be used for state boundaries, LGAs, NRM, etc
-regions_dict = {}
 
+# # Load the State and Region shape files
+# a function that loads the data when you call its name
+def load_region(name):
+    """
+    This function takes the name of a shape file and returns the geopandas dataframe.
+    Wraps geopandas.read_file
+    returns a geopandas dataframe
+
+    Parameters
+    -----------
+    name: str
+        one of "aus_local_gov", "aus_states_territories", "australia", 
+        "nrm_regions", "river_regions", "ncra_regions","broadacre_regions"
+
+    Returns
+    -------
+    geopandas dataframe
+    
+    """
+    PATH = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data"
+
+    return gpd.read_file(glob(f"{PATH}/{name}/*.shp")[0])
+
+
+# write a dictionary of the shapefile geopandas dataframes.
+# these will be used for state boundaries, LGAs, NRM, etc
 shape_files = [
     "aus_local_gov",
     "aus_states_territories",
@@ -168,30 +191,20 @@ shape_files = [
     "nrm_regions",
     "river_regions",
     "ncra_regions",
+    "broadacre_regions",
 ]
-PATH = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data"
-for name in shape_files:
-    regions_dict.update(
-        {
-            name: gpd.read_file(
-                f"{PATH}/{name}/{name}.shp"
-            )
-        }
-    )
-regions_dict.update(
-    {
-        "broadacre_regions": gpd.read_file(
-            f"{PATH}/broadacre_regions/aagis_asgs16v1_g5a.shp"
-        )
-    }
-)
+
+regions_dict = {}
+# for name in shape_files:
+#     regions_dict.update({name: load_region(name)})
+    
 
 # define a white mask for the area outside of Australian land
-# We will use this to hide data outside of the Australian land borders.
+# We will use this to hide data outside the Australian land borders.
 # note that this is not a data mask,
 # the data under the masked area is still loaded and computed, but not visualised
 
-australia = regions_dict["australia"].copy()
+australia = load_region("australia")
 
 # Define the CRS of the shapefile manually
 australia.crs = crs
@@ -257,7 +270,7 @@ def plot_acs_hazard(
         to get regions from.
 
     regions: geopandas.GeoDataFrame
-        if None, then will try to read from regions_dict[{name}].
+        if None, then will try to read using load_region(name).
 
     data: xr.DataArray
         a 2D xarray DataArray which has already computed the 
@@ -398,11 +411,11 @@ def plot_acs_hazard(
     middle_ticks = []
     if regions is None:
         try:
-            regions = regions_dict[name]
+            regions = load_region(name)
         except:
-            print(f"Could not read regions_dict[{name}]")
+            print(f"Could not load_region(name)")
 
-    # Set default crs for Australia maps and selction maps
+    # Set default crs for Australia maps and selection maps
     if crs is None:
         if select_area is None:
             # Default for Australian map
