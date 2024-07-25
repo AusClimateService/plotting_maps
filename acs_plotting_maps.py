@@ -530,10 +530,11 @@ def plot_acs_hazard(
             cbar.add_lines(cont)
 
     if stippling is not None:
-        ax.contourf(stippling.lat,
-                    stiplling.lon,
+        ax.contourf(stippling.lon,
+                    stippling.lat,
                     stippling,
-                    hatches = [".."],
+                    alpha=0,
+                    hatches = ["",".."],
                     zorder=4,
                     transform=ccrs.PlateCarree(),
                    )
