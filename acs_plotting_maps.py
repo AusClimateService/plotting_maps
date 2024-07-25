@@ -68,6 +68,11 @@ cmap_dict = {
     "fire_climate": ListedColormap(
         [ "#84a19b", "#e0d7c6", "#486136", "#737932", "#a18a6e", ]
     ),
+    'tasmax': ListedColormap(
+        [ '#E3F4FB','#C8DEE8','#91C4EA','#56B6DC','#00A2AC','#30996C',
+         '#7FC69A','#B9DA88','#DCE799', '#FCE850','#EACD44','#FED98E',
+         '#F89E64','#E67754','#D24241', '#AD283B','#832D57','#A2667A','#AB9487']
+    ),
     "pr": cm.YlGnBu,
     "pr_1": cmaps.cmocean_deep,
     "pr_days": cm.Blues,
