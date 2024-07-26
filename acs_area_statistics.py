@@ -323,7 +323,7 @@ def acs_regional_stats(
                 df_masked = ds_masked.to_dataframe()
                 df_masked["category"] = pd.cut(df_masked[var], bins, labels=bin_labels, ordered=True)
                 proportion_dict = {}
-                props = ds_masked.to_dataframe().groupby("region").value_counts(["category"], normalize=True).round(4)
+                props = df_masked.groupby("region").value_counts(["category"], normalize=True).round(4)
                 for i in range(len(ds_masked.region)):
                     proportion_dict[i] = props[i].to_dict() 
                     # limit to first 20 categories
@@ -341,7 +341,7 @@ def acs_regional_stats(
             else:
                 df_masked = ds_masked.to_dataframe()
                 proportion_dict = {}
-                props = ds_masked.to_dataframe().groupby("region").value_counts([var], normalize=True).round(4)
+                props = df_masked.groupby("region").value_counts([var], normalize=True).round(4)
                 for i in range(len(ds_masked.region)):
                     proportion_dict[i] = props[i].to_dict() 
                     # limit to first 20 categories
