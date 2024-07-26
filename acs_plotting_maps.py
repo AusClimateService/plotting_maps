@@ -265,6 +265,12 @@ def plot_acs_hazard(
         average, sum, anomaly, metric or index you wish to visualise.
         This function is resolution agnostic.
 
+    station_df: pd.DataFrame, optional
+        a pandas.DataFrame with columns ["lon", "lat", variable]. 
+        If station_df is given, then variable values are represented as dots on 
+        the map accoring to at the lat lon coordinates  and colored according to
+        cmap colors and ticks.
+
     mask_not_australia: boolean
         decides whether or not the area outside of Australian land is hidden.
         Default is True.
@@ -396,6 +402,8 @@ def plot_acs_hazard(
     The map is saved as a png in a "figures" file in your working directory.
     This function returns fig and ax.
     """
+    cbar = None
+    
     middle_ticks = []
     if regions is None:
         try:
@@ -435,13 +443,13 @@ def plot_acs_hazard(
 
     # for station data
     if station_df is not None:
-        # assuming columns are named "lon", "lat", variable, "geometry"
+        # assuming columns are named "lon", "lat", variable,
         gdf = gpd.GeoDataFrame(
             station_df, geometry=gpd.points_from_xy(station_df.lon, station_df.lat), crs=ccrs.PlateCarree()
             )
         var = gdf.columns[[2]][0]
         norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
-        cont = ax.scatter(x= station_df.lon,
+        cont = ax.scatter(x=station_df.lon,
                           y=station_df.lat,
                           s=100, 
                           c=station_df[var],
@@ -460,6 +468,7 @@ def plot_acs_hazard(
                 ticks=ticks,
                 norm=norm,
             )
+        facecolor = "lightgrey"
 
     if data is not None:
         data = data.squeeze()
@@ -552,15 +561,15 @@ def plot_acs_hazard(
             )
             cbar.add_lines(cont)
 
-        if mask_not_australia:
-            # outside the shape, fill white
-            ax.add_geometries(
-                not_australia,
-                crs=not_australia.crs,
-                facecolor="white",
-                linewidth=0,
-                zorder=5,
-            )
+    if mask_not_australia:
+        # outside the shape, fill white
+        ax.add_geometries(
+            not_australia,
+            crs=not_australia.crs,
+            facecolor="white",
+            linewidth=0,
+            zorder=5,
+        )
 
     if label_states and name == "aus_states_territories":
         # label the states with their name in the centre of the state
@@ -632,7 +641,8 @@ def plot_acs_hazard(
     )
 
     # Label colorbar
-    cbar.ax.set_title(cbar_label, zorder=8, y=1.1, loc="center")
+    if cbar is not None:
+        cbar.ax.set_title(cbar_label, zorder=8, y=1.1, loc="center")
 
     if baseline is not None:
         # print base period inside bottom left corner
