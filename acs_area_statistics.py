@@ -101,7 +101,7 @@ def acs_regional_stats(
 
     how: list of str
         List of statistics to reduce data. 
-        List of ['mean', 'median', 'min', 'max', 'sum', 'std', 'var', 'p10', 'p90']. 
+        List of ['mean', 'median', 'min', 'max', 'mode', 'sum', 'std', 'var', 'proportions', 'p10', 'p90', ]. 
         (any pxx where xx is between 0 and 100)
 
     quantile: float [0.0,1.], optional
@@ -318,16 +318,56 @@ def acs_regional_stats(
                     .to_xarray()
                     .rename(f"{var}_{stat}")
                 )
+        elif stat == "proportions":
+            if bins is not None:
+                df_masked = ds_masked.to_dataframe()
+                df_masked["category"] = pd.cut(df_masked[var], bins, labels=bin_labels, ordered=True)
+                proportion_dict = {}
+                props = df_masked.groupby("region").value_counts(["category"], normalize=True).round(4)
+                for i in range(len(ds_masked.region)):
+                    proportion_dict[i] = props[i].to_dict() 
+                    # limit to first 20 categories
+                    proportion_dict[i]  = dict(list(proportion_dict[i].items())[0: 20]) 
+                    
+                d = {"coords": {
+                        "region": {"dims": "region", "data": list(proportion_dict.keys()),}
+                    },
+                     "dims": "region",
+                    "data":list(proportion_dict.values()),
+                    "name": stat}
+                summary_list.append(
+                    xr.DataArray.from_dict(d).rename(f"{var}_cat_{stat}")
+                )
+            else:
+                df_masked = ds_masked.to_dataframe()
+                proportion_dict = {}
+                props = df_masked.groupby("region").value_counts([var], normalize=True).round(4)
+                for i in range(len(ds_masked.region)):
+                    proportion_dict[i] = props[i].to_dict() 
+                    # limit to first 20 categories
+                    proportion_dict[i]  = dict(list(proportion_dict[i].items())[0: 20]) 
+                    
+                d = {"coords": {
+                        "region": {"dims": "region", "data": list(proportion_dict.keys()),}
+                    },
+                     "dims": "region",
+                    "data":list(proportion_dict.values()),
+                    "name": stat}
+                summary_list.append(
+                    xr.DataArray.from_dict(d).rename(f"{var}_{stat}")
+                )
+
         else:
             print(
                 f"{stat} statistic not calculated. \
 Please provide valid how as a list including, one of: \
-['mean', 'median', 'min', 'max','mode', 'sum', 'std', 'var', 'p10', 'p90']"
+['mean', 'median', 'min', 'max', 'mode', 'sum', 'std', 'var', 'p10', 'p90', 'proportions']"
             )
     ds_summary = xr.merge(summary_list)
     df = ds_summary.to_dataframe()
     # drop columns with constant value
-    df_summary = df[[col for col in df.columns if df[col].nunique() != 1]]
+    # df_summary = df[[col for col in df.columns if df[col].nunique() != 1]]
+    df_summary = df
 
     if (
         outfile is None
