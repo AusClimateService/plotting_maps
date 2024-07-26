@@ -101,7 +101,7 @@ def acs_regional_stats(
 
     how: list of str
         List of statistics to reduce data. 
-        List of ['mean', 'median', 'min', 'max', 'sum', 'std', 'var', 'p10', 'p90']. 
+        List of ['mean', 'median', 'min', 'max', 'mode', 'sum', 'std', 'var', 'proportions', 'p10', 'p90', ]. 
         (any pxx where xx is between 0 and 100)
 
     quantile: float [0.0,1.], optional
@@ -361,7 +361,7 @@ def acs_regional_stats(
             print(
                 f"{stat} statistic not calculated. \
 Please provide valid how as a list including, one of: \
-['mean', 'median', 'min', 'max', 'mode', 'sum', 'std', 'var', 'p10', 'p90']"
+['mean', 'median', 'min', 'max', 'mode', 'sum', 'std', 'var', 'p10', 'p90', 'proportions']"
             )
     ds_summary = xr.merge(summary_list)
     df = ds_summary.to_dataframe()
