@@ -68,6 +68,11 @@ cmap_dict = {
     "fire_climate": ListedColormap(
         [ "#84a19b", "#e0d7c6", "#486136", "#737932", "#a18a6e", ]
     ),
+    'tasmax': ListedColormap(
+        [ '#E3F4FB','#C8DEE8','#91C4EA','#56B6DC','#00A2AC','#30996C',
+         '#7FC69A','#B9DA88','#DCE799', '#FCE850','#EACD44','#FED98E',
+         '#F89E64','#E67754','#D24241', '#AD283B','#832D57','#A2667A','#AB9487']
+    ),
     "pr": cm.YlGnBu,
     "pr_1": cmaps.cmocean_deep,
     "pr_days": cm.Blues,
@@ -216,6 +221,7 @@ def plot_acs_hazard(
     regions=None,
     data=None,
     station_df=None,
+    stippling=None,
     mask_not_australia=True,
     facecolor=None,
     edgecolor="black",
@@ -270,6 +276,10 @@ def plot_acs_hazard(
         If station_df is given, then variable values are represented as dots on 
         the map accoring to at the lat lon coordinates  and colored according to
         cmap colors and ticks.
+
+    stippling: xr.DataArray
+        a True/False to define regions of stippling hatching. 
+        Intended to show model agreement, eg for direction of change.
 
     mask_not_australia: boolean
         decides whether or not the area outside of Australian land is hidden.
@@ -481,7 +491,7 @@ def plot_acs_hazard(
             # if ticks are labelled or if there is one more tick than tick labels,
             # do the usual normalisation
             if tick_labels is None or (len(tick_labels) == len(ticks) - 1):
-                norm = BoundaryNorm(ticks, cmap.N)
+                norm = BoundaryNorm(ticks, cmap.N, extend = cbar_extend)
                 if tick_labels is not None:
                     middle_ticks = [
                         (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
@@ -493,7 +503,7 @@ def plot_acs_hazard(
                 outside_bound_first = [ticks[0] - (ticks[1] - ticks[0]) / 2]
                 outside_bound_last = [ticks[-1] + (ticks[-1] - ticks[-2]) / 2]
                 bounds = outside_bound_first + middle_ticks + outside_bound_last
-                norm = BoundaryNorm(bounds, cmap.N)
+                norm = BoundaryNorm(bounds, cmap.N, extend = cbar_extend)
 
         # plot the hazard data
         if contourf and tick_labels is None:
@@ -560,6 +570,16 @@ def plot_acs_hazard(
                 transform=ccrs.PlateCarree(),
             )
             cbar.add_lines(cont)
+
+    if stippling is not None:
+        ax.contourf(stippling.lon,
+                    stippling.lat,
+                    stippling,
+                    alpha=0,
+                    hatches = ["",".."],
+                    zorder=4,
+                    transform=ccrs.PlateCarree(),
+                   )
 
     if mask_not_australia:
         # outside the shape, fill white
