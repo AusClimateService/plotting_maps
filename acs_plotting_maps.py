@@ -220,6 +220,7 @@ def plot_acs_hazard(
     name="aus_states_territories",
     regions=None,
     data=None,
+    station_df=None,
     stippling=None,
     mask_not_australia=True,
     facecolor=None,
@@ -269,6 +270,12 @@ def plot_acs_hazard(
         a 2D xarray DataArray which has already computed the 
         average, sum, anomaly, metric or index you wish to visualise.
         This function is resolution agnostic.
+
+    station_df: pd.DataFrame, optional
+        a pandas.DataFrame with columns ["lon", "lat", variable]. 
+        If station_df is given, then variable values are represented as dots on 
+        the map accoring to at the lat lon coordinates  and colored according to
+        cmap colors and ticks.
 
     stippling: xr.DataArray
         a True/False to define regions of stippling hatching. 
@@ -405,6 +412,8 @@ def plot_acs_hazard(
     The map is saved as a png in a "figures" file in your working directory.
     This function returns fig and ax.
     """
+    cbar = None
+    
     middle_ticks = []
     if regions is None:
         try:
@@ -412,7 +421,7 @@ def plot_acs_hazard(
         except:
             print(f"Could not read regions_dict[{name}]")
 
-    # Set default crs for Australia maps and selction maps
+    # Set default crs for Australia maps and selection maps
     if crs is None:
         if select_area is None:
             # Default for Australian map
@@ -441,6 +450,35 @@ def plot_acs_hazard(
 
     if infile is not None:
         data = xr.open_dataset(infile)
+
+    # for station data
+    if station_df is not None:
+        # assuming columns are named "lon", "lat", variable,
+        gdf = gpd.GeoDataFrame(
+            station_df, geometry=gpd.points_from_xy(station_df.lon, station_df.lat), crs=ccrs.PlateCarree()
+            )
+        var = gdf.columns[[2]][0]
+        norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
+        cont = ax.scatter(x=station_df.lon,
+                          y=station_df.lat,
+                          s=100, 
+                          c=station_df[var],
+                          edgecolors="k", 
+                          alpha = 0.8,
+                          zorder=6,
+                          transform=ccrs.PlateCarree(), 
+                          cmap= cmap,
+                          norm = norm)
+
+        cbar = plt.colorbar(
+                cont,
+                ax=ax,
+                extend=cbar_extend,
+                cax=ax.inset_axes([0.8, 0.2, 0.03, 0.6]),
+                ticks=ticks,
+                norm=norm,
+            )
+        facecolor = "lightgrey"
 
     if data is not None:
         data = data.squeeze()
@@ -518,7 +556,6 @@ def plot_acs_hazard(
             elif len(middle_ticks) == len(tick_labels):
                 cbar.ax.set_yticks(middle_ticks, tick_labels)
 
-        cbar.ax.set_title(cbar_label, zorder=8, y=1.1, loc="center")
         if contour and tick_labels is None:
             cont = plt.contour(
                 data.lon,
@@ -622,6 +659,10 @@ def plot_acs_hazard(
         transform=ax.transAxes,
         zorder=10,
     )
+
+    # Label colorbar
+    if cbar is not None:
+        cbar.ax.set_title(cbar_label, zorder=8, y=1.1, loc="center")
 
     if baseline is not None:
         # print base period inside bottom left corner
