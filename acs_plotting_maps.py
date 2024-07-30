@@ -240,6 +240,7 @@ def plot_acs_hazard(
     figsize=(8, 6),
     title=None,
     date_range="",
+    text_centre="",
     crs=None,
     area_linewidth=0.3,
     xlim=(110, 170),
@@ -474,7 +475,7 @@ def plot_acs_hazard(
         norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
         cont = ax.scatter(x=station_df.lon,
                           y=station_df.lat,
-                          s=100, 
+                          s=(100 - 80*len(station_df)/5000)*(figsize[0]*figsize[1])/48, 
                           c=station_df[var],
                           # edgecolors="k",
                           edgecolors="none",
@@ -488,7 +489,7 @@ def plot_acs_hazard(
                 cont,
                 ax=ax,
                 extend=cbar_extend,
-                cax=ax.inset_axes([0.8, 0.2, 0.03, 0.6]),
+                cax=ax.inset_axes([0.77, 0.2, 0.03, 0.6]),
                 ticks=ticks,
                 norm=norm,
             )
@@ -502,8 +503,14 @@ def plot_acs_hazard(
             zorder=7,
         )
         facecolor = "lightgrey"
-
-
+        
+    # for text in the centre of the plot
+    ax.text(0.4, 0.5, text_centre,
+            horizontalalignment='center',
+            verticalalignment='center',
+            transform=ax.transAxes, 
+            zorder=10)
+    
     if data is not None:
         data = data.squeeze()
 
@@ -560,7 +567,7 @@ def plot_acs_hazard(
                 cont,
                 ax=ax,
                 extend=cbar_extend,
-                cax=ax.inset_axes([0.8, 0.2, 0.03, 0.6]),
+                cax=ax.inset_axes([0.77, 0.2, 0.03, 0.6]),
                 ticks=ticks,
                 norm=norm,
             )
@@ -570,7 +577,7 @@ def plot_acs_hazard(
                 cont,
                 ax=ax,
                 extend=None,
-                cax=ax.inset_axes([0.8, 0.2, 0.03, 0.6]),
+                cax=ax.inset_axes([0.77, 0.2, 0.03, 0.6]),
                 norm=norm,
                 drawedges=True,
                 ticks=ticks,
