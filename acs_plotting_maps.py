@@ -10,12 +10,14 @@ import geopandas as gpd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import image, cm
+from palettable import colorbrewer
 import xarray as xr
 import cartopy.crs as ccrs
 
 # import colormap packages
 import cmaps
 from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
+
 
 from shapely.geometry import box
 
@@ -61,18 +63,21 @@ cmap_dict = {
     "EHF_days": cm.YlOrRd,
     "EHF_days_1": cm.YlOrBr,
     "EHF_duration": cm.hot_r,
+    'EHF': ListedColormap(colors=['#FEFEFE','#FEFEBE','#FEAC00','#EC5000','#EC5000'],name='EHF'),
     "AFDRS_category": ListedColormap(["white", "green", "orange", "red", "darkred"]),
     "ffdi_category": ListedColormap(
         ["green", "blue", "yellow", "orange", "red", "darkred"]
     ),
+    'FFDI': colorbrewer.sequential.YlOrRd_9.mpl_colormap,
     "fire_climate": ListedColormap(
         [ "#84a19b", "#e0d7c6", "#486136", "#737932", "#a18a6e", ]
     ),
+    "fire_climate_shift":ListedColormap(["palegreen", "grey",]),
     'tasmax': ListedColormap(
         [ '#E3F4FB','#C8DEE8','#91C4EA','#56B6DC','#00A2AC','#30996C',
          '#7FC69A','#B9DA88','#DCE799', '#FCE850','#EACD44','#FED98E',
          '#F89E64','#E67754','#D24241', '#AD283B','#832D57','#A2667A','#AB9487']
-    ),
+    ),   
     "pr": cm.YlGnBu,
     "pr_1": cmaps.cmocean_deep,
     "pr_days": cm.Blues,
@@ -122,6 +127,7 @@ cmap_dict = {
     "Greens": cm.Greens,
     "topo": cmaps.OceanLakeLandSnow,
     "gmt_relief": cmaps.GMT_relief,
+    "hot_r": LinearSegmentedColormap.from_list('trunc_hot_r', cm.hot_r(np.linspace(0.05, 0.95, 100)))
 }
 
 
@@ -147,6 +153,12 @@ tick_dict = {
     "tas_anom_mon": np.arange(-7, 7.1, 1),
     "tas_anom_ann": np.arange(-3.5, 3.6, 0.5),
     "apparent_tas": np.arange(-6, 42, 3),
+    'HWN':   [1,2,3,4,5,6,7,8,9,10], 
+    'HWF':  [15,30,45,60,75,90,105,120,135,150,165], 
+    'HWAtx': [18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52],
+    'HWD':   [10,20,30,40,50,60,70,80,90,100],
+    'TXge35': [1,5,10,15,20,40,80,120,160,200],
+    'TNle02':   [1,5,10,15,20,40,80,120,160,200],
     "percent": np.arange(0, 101, 10),
     "xts_freq": [0.00, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.12, 0.15],
     "fire_climate_ticks": [ 100, 101, 102, 103, 104, ],
@@ -245,6 +257,7 @@ def plot_acs_hazard(
     contour=True,
     select_area=None,
     land_shadow=False,
+    show_logo=True,
     watermark="EXPERIMENTAL\nIMAGE ONLY",
     watermark_color = "r",
     infile=None,
@@ -463,7 +476,8 @@ def plot_acs_hazard(
                           y=station_df.lat,
                           s=100, 
                           c=station_df[var],
-                          edgecolors="k", 
+                          # edgecolors="k",
+                          edgecolors="none",
                           alpha = 0.8,
                           zorder=6,
                           transform=ccrs.PlateCarree(), 
@@ -478,7 +492,17 @@ def plot_acs_hazard(
                 ticks=ticks,
                 norm=norm,
             )
+        # add outlines above dots
+        ax.add_geometries(
+            regions["geometry"],
+            crs=crs,
+            facecolor="none",
+            edgecolor=edgecolor,
+            linewidth=area_linewidth,
+            zorder=7,
+        )
         facecolor = "lightgrey"
+
 
     if data is not None:
         data = data.squeeze()
@@ -679,7 +703,7 @@ def plot_acs_hazard(
         x=0.01,
         y=-0.03,
         s=f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, \
-        Australian Climate Service",
+Australian Climate Service",
         fontsize=6,
         transform=ax.transAxes,
         zorder=10,
@@ -741,15 +765,16 @@ def plot_acs_hazard(
     fig.set_figheight(figsize[1])
     fig.set_figwidth(figsize[0])
 
-    # Place logo in top left
-    ins = ax.inset_axes(
-        [0.0, 0.78, 0.3, 0.3],
-    )
-    ins.set_xticks([])
-    ins.set_yticks([])
-    ins.imshow(
-        logo,
-    )
+    if show_logo:
+        # Place logo in top left
+        ins = ax.inset_axes(
+            [0.0, 0.78, 0.3, 0.3],
+        )
+        ins.set_xticks([])
+        ins.set_yticks([])
+        ins.imshow(
+            logo,
+        )
 
     if outfile is None:
         PATH = os.path.abspath(os.getcwd())
