@@ -448,6 +448,8 @@ def plot_acs_hazard(
     )
     ax.set_global()
 
+    cbar_ax = ax.inset_axes([0.8, 0.2, 0.03, 0.6])
+
     if infile is not None:
         data = xr.open_dataset(infile)
 
@@ -474,7 +476,7 @@ def plot_acs_hazard(
                 cont,
                 ax=ax,
                 extend=cbar_extend,
-                cax=ax.inset_axes([0.8, 0.2, 0.03, 0.6]),
+                cax=cbar_ax,
                 ticks=ticks,
                 norm=norm,
             )
@@ -536,7 +538,7 @@ def plot_acs_hazard(
                 cont,
                 ax=ax,
                 extend=cbar_extend,
-                cax=ax.inset_axes([0.8, 0.2, 0.03, 0.6]),
+                cax=cbar_ax,
                 ticks=ticks,
                 norm=norm,
             )
@@ -545,11 +547,11 @@ def plot_acs_hazard(
             cbar = plt.colorbar(
                 cont,
                 ax=ax,
-                extend=None,
-                cax=ax.inset_axes([0.8, 0.2, 0.03, 0.6]),
+                extend='neither',
+                cax=cbar_ax,
+                ticks=ticks,
                 norm=norm,
                 drawedges=True,
-                ticks=ticks,
             )
             if len(ticks) == len(tick_labels):
                 cbar.ax.set_yticks(ticks, tick_labels)
@@ -570,6 +572,10 @@ def plot_acs_hazard(
                 transform=ccrs.PlateCarree(),
             )
             cbar.add_lines(cont)
+
+    # Label colorbar
+    if cbar is not None:
+        cbar.ax.set_title(cbar_label, zorder=8, loc="center", verticalalignment="bottom")
 
     if stippling is not None:
         ax.contourf(stippling.lon,
@@ -659,10 +665,6 @@ def plot_acs_hazard(
         transform=ax.transAxes,
         zorder=10,
     )
-
-    # Label colorbar
-    if cbar is not None:
-        cbar.ax.set_title(cbar_label, zorder=8, y=1.1, loc="center")
 
     if baseline is not None:
         # print base period inside bottom left corner
