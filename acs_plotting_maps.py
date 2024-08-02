@@ -167,11 +167,11 @@ tick_dict = {
 regions_dict = {}
 
 shape_files = [
-    "aus_local_gov",
-    "aus_states_territories",
+    # "aus_local_gov",
+    # "aus_states_territories",
     "australia",
-    "nrm_regions",
-    "river_regions",
+    # "nrm_regions",
+    # "river_regions",
     "ncra_regions",
 ]
 PATH = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data"
@@ -183,13 +183,13 @@ for name in shape_files:
             )
         }
     )
-regions_dict.update(
-    {
-        "broadacre_regions": gpd.read_file(
-            f"{PATH}/broadacre_regions/aagis_asgs16v1_g5a.shp"
-        )
-    }
-)
+# regions_dict.update(
+#     {
+#         "broadacre_regions": gpd.read_file(
+#             f"{PATH}/broadacre_regions/aagis_asgs16v1_g5a.shp"
+#         )
+#     }
+# )
 
 # define a white mask for the area outside of Australian land
 # We will use this to hide data outside of the Australian land borders.
@@ -230,8 +230,8 @@ def plot_acs_hazard(
     date_range="",
     crs=None,
     area_linewidth=0.3,
-    xlim=(110, 170),
-    ylim=(-45, -5),
+    xlim=(114, 162),
+    ylim=(-43, -8),
     cmap=cm.Greens,
     cbar_extend="neither",
     ticks=None,
@@ -242,11 +242,12 @@ def plot_acs_hazard(
     issued_date=None,
     label_states=False,
     contourf=False,
-    contour=True,
+    contour=False,
     select_area=None,
     land_shadow=False,
     watermark="EXPERIMENTAL\nIMAGE ONLY",
     watermark_color = "r",
+    show_logo = False,
     infile=None,
     outfile=None,
     savefig=True,
@@ -413,6 +414,7 @@ def plot_acs_hazard(
     This function returns fig and ax.
     """
     cbar = None
+    cbar_bounds = [0.82, 0.15, 0.03, 0.7] #[x0, y0, width, height]
     
     middle_ticks = []
     if regions is None:
@@ -448,8 +450,6 @@ def plot_acs_hazard(
     )
     ax.set_global()
 
-    cbar_ax = ax.inset_axes([0.8, 0.2, 0.03, 0.6])
-
     if infile is not None:
         data = xr.open_dataset(infile)
 
@@ -476,7 +476,7 @@ def plot_acs_hazard(
                 cont,
                 ax=ax,
                 extend=cbar_extend,
-                cax=cbar_ax,
+                cax=ax.inset_axes(cbar_bounds),
                 ticks=ticks,
                 norm=norm,
             )
@@ -538,7 +538,7 @@ def plot_acs_hazard(
                 cont,
                 ax=ax,
                 extend=cbar_extend,
-                cax=cbar_ax,
+                cax=ax.inset_axes(cbar_bounds),
                 ticks=ticks,
                 norm=norm,
             )
@@ -548,7 +548,7 @@ def plot_acs_hazard(
                 cont,
                 ax=ax,
                 extend='neither',
-                cax=cbar_ax,
+                cax=ax.inset_axes(cbar_bounds),
                 ticks=ticks,
                 norm=norm,
                 drawedges=True,
@@ -681,7 +681,7 @@ def plot_acs_hazard(
         x=0.01,
         y=-0.03,
         s=f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, \
-        Australian Climate Service",
+Australian Climate Service",
         fontsize=6,
         transform=ax.transAxes,
         zorder=10,
@@ -712,7 +712,7 @@ def plot_acs_hazard(
 
     if watermark is not None:
         ax.text(
-            x=0.45,
+            x=0.4,
             y=0.5,
             s=watermark.upper(),
             fontsize=36,
@@ -743,15 +743,16 @@ def plot_acs_hazard(
     fig.set_figheight(figsize[1])
     fig.set_figwidth(figsize[0])
 
-    # Place logo in top left
-    ins = ax.inset_axes(
-        [0.0, 0.78, 0.3, 0.3],
-    )
-    ins.set_xticks([])
-    ins.set_yticks([])
-    ins.imshow(
-        logo,
-    )
+    if show_logo:
+        # Place logo in top left
+        ins = ax.inset_axes(
+            [0.0, 0.78, 0.3, 0.3],
+        )
+        ins.set_xticks([])
+        ins.set_yticks([])
+        ins.imshow(
+            logo,
+        )
 
     if outfile is None:
         PATH = os.path.abspath(os.getcwd())
