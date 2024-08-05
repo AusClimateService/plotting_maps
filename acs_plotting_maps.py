@@ -170,7 +170,8 @@ def load_region(name):
     -----------
     name: str
         one of "aus_local_gov", "aus_states_territories", "australia", 
-        "nrm_regions", "river_regions", "ncra_regions","broadacre_regions"
+        "nrm_regions", "river_regions", "ncra_regions","broadacre_regions",
+        "NCRA_regions_coastal_waters_GDA94"
 
     Returns
     -------
@@ -192,6 +193,7 @@ shape_files = [
     "river_regions",
     "ncra_regions",
     "broadacre_regions",
+    "NCRA_regions_coastal_waters_GDA94"
 ]
 
 regions_dict = {}
@@ -248,7 +250,7 @@ def plot_acs_hazard(
     issued_date=None,
     label_states=False,
     contourf=False,
-    contour=True,
+    contour=False,
     select_area=None,
     land_shadow=False,
     watermark="EXPERIMENTAL\nIMAGE ONLY",
@@ -367,7 +369,7 @@ def plot_acs_hazard(
 
     contour: bool
         if True then the gridded data is visualised as smoothed unfilled grey contours.
-        Default is True.
+        Default is False.
         Using both contourf and contour results in smooth filled contours
         with grey outlines between the color levels.
 
