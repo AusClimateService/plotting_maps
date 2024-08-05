@@ -11,32 +11,66 @@ import geopandas as gpd
 import regionmask
 import numpy as np
 import pandas as pd
+from glob import glob
+
+shapefile_list = ["aus_local_gov",
+                  "aus_states_territories",
+                  "australia", 
+                  "broadacre_regions", 
+                  "ncra_regions", 
+                  "NCRA_regions_coastal_waters_GDA94", 
+                  "nrm_regions", ]
+
+name_dict = {"aus_local_gov":"LGA_NAME22", 
+             "aus_states_territories":"STE_NAME21",
+             "australia": "AUS_NAME21",
+             "broadacre_regions": "name",
+             "ncra_regions": "regionname", 
+             "NCRA_regions_coastal_waters_GDA94": "regionname",
+             "nrm_regions":"SubClusNm",
+            }
+
+
+abbr_dict = {"aus_local_gov":"LGA_CODE22", 
+             "aus_states_territories":"ABBREV",
+             "australia": "AUS_CODE21",
+             "broadacre_regions": "aagis",
+             "ncra_regions": "short_name", 
+             "NCRA_regions_coastal_waters_GDA94": "NCRA",
+             "nrm_regions": "SubClusAb",
+            }
+
+def get_regions(shapefiles):
+    """
+    This function takes a list of names of shape files from ia39 and
+    returns a combined regionmask.
+    
+    Parameters
+    -----------
+    name: str
+        one of "aus_local_gov", "aus_states_territories", "australia", 
+        "nrm_regions", "ncra_regions","broadacre_regions",
+        "NCRA_regions_coastal_waters_GDA94"
+
+    Returns
+    -------
+    geopandas dataframe
+    
+    """
+    gdfs = {}
+    PATH = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data"
+    
+    for i, shapefile in enumerate(shapefiles):
+        gdfs[i] = gpd.read_file(glob(f"{PATH}/{shapefile}/*.shp")[0]).rename(columns = {name_dict[shapefile]:"NAME", abbr_dict[shapefile]:"abbrevs"}).to_crs(crs = "GDA2020")
+    gdf = pd.concat(gdfs)
+    gdf.index = np.arange(0, len(gdf))
+    return regionmask.from_geopandas(gdf, names="NAME", abbrevs="abbrevs", name= "-".join(shapefiles), overlap=True) 
+
+
 
 # read in the shapefile with regions you will use Australia and NCRA regions
 # from acs_plotting_maps import regions_dict
-ncra_gdf = gpd.read_file(
-    "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/ncra_regions/ncra_regions.shp"
-)
-ncra_gdf["abbrevs"] = ncra_gdf["short_name"]
-ncra_gdf["NAME"] = ncra_gdf["regionname"]
-
-aus_gdf = gpd.read_file(
-    "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/australia/australia.shp"
-)
-aus_gdf["abbrevs"] = ["AUS"]
-aus_gdf["NAME"] = ["Australia"]
-
-# make sure the projections are the same
-ncra_gdf = ncra_gdf.to_crs(aus_gdf.crs)
-
-gdf = pd.concat(
-    [
-        ncra_gdf[["NAME", "abbrevs", "geometry"]],
-        aus_gdf[["NAME", "abbrevs", "geometry"]],
-    ],
-)
-gdf.index = np.arange(0, 10)
-regions = regionmask.from_geopandas(gdf, names="NAME", abbrevs="abbrevs", overlap=True)
+# regions = get_regions(["ncra_regions", "australia"])
 
 
 def acs_regional_stats(
@@ -44,6 +78,7 @@ def acs_regional_stats(
     infile=None,
     var=None,
     mask=None,
+    regions=get_regions(["ncra_regions", "australia"]),
     start=None,
     end=None,
     dims=None,
