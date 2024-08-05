@@ -657,7 +657,7 @@ def plot_acs_hazard(
             title = f"{data.name} {name}"
 
     ax.text(
-        0.1,
+        0.06,
         0.06,
         f"{title}\n{date_range}",
         fontsize="large",
