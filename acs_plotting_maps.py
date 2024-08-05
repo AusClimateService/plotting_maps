@@ -233,7 +233,7 @@ def plot_acs_hazard(
     xlim=(114, 162),
     ylim=(-43, -8),
     cmap=cm.Greens,
-    cbar_extend="neither",
+    cbar_extend="both",
     ticks=None,
     tick_labels=None,
     cbar_label="",
@@ -328,7 +328,7 @@ def plot_acs_hazard(
     cbar_extend: one of {'neither', 'both', 'min', 'max'}.
         eg "both" changes the ends of the colorbar to arrows to indicate that
         values are possible outside the scale show.
-        If contour or contourfise True, then cbar_extend will be overridden to "none".
+        If contour or contourf is True, then cbar_extend will be overridden to "none".
 
     ticks: list or arraylike
         Define the ticks on the colorbar. Define any number of intervals. 
