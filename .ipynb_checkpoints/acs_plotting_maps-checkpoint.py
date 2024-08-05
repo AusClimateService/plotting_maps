@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib import image, cm
 import xarray as xr
 import cartopy.crs as ccrs
+from glob import glob
 
 # import colormap packages
 import cmaps
@@ -156,11 +157,34 @@ tick_dict = {
     "aridity_index_labels": ["Hyper-arid", "Arid", "Semi-arid", "Dry sub-humid"],
 }
 
-# # Load the State and Region shape files
-# write a dictionary of the shapefile geopandas dataframes.
-# hese will be used for state boundaries, LGAs, NRM, etc
-regions_dict = {}
 
+# # Load the State and Region shape files
+# a function that loads the data when you call its name
+def load_region(name):
+    """
+    This function takes the name of a shape file and returns the geopandas dataframe.
+    Wraps geopandas.read_file
+    returns a geopandas dataframe
+
+    Parameters
+    -----------
+    name: str
+        one of "aus_local_gov", "aus_states_territories", "australia", 
+        "nrm_regions", "river_regions", "ncra_regions","broadacre_regions",
+        "NCRA_regions_coastal_waters_GDA94"
+
+    Returns
+    -------
+    geopandas dataframe
+    
+    """
+    PATH = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data"
+
+    return gpd.read_file(glob(f"{PATH}/{name}/*.shp")[0])
+
+
+# write a dictionary of the shapefile geopandas dataframes.
+# these will be used for state boundaries, LGAs, NRM, etc
 shape_files = [
     "aus_local_gov",
     "aus_states_territories",
@@ -168,30 +192,21 @@ shape_files = [
     "nrm_regions",
     "river_regions",
     "ncra_regions",
+    "broadacre_regions",
+    "NCRA_regions_coastal_waters_GDA94"
 ]
-PATH = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data"
-for name in shape_files:
-    regions_dict.update(
-        {
-            name: gpd.read_file(
-                f"{PATH}/{name}/{name}.shp"
-            )
-        }
-    )
-regions_dict.update(
-    {
-        "broadacre_regions": gpd.read_file(
-            f"{PATH}/broadacre_regions/aagis_asgs16v1_g5a.shp"
-        )
-    }
-)
+
+regions_dict = {}
+# for name in shape_files:
+#     regions_dict.update({name: load_region(name)})
+    
 
 # define a white mask for the area outside of Australian land
-# We will use this to hide data outside of the Australian land borders.
+# We will use this to hide data outside the Australian land borders.
 # note that this is not a data mask,
 # the data under the masked area is still loaded and computed, but not visualised
 
-australia = regions_dict["australia"].copy()
+australia = load_region("australia")
 
 # Define the CRS of the shapefile manually
 australia.crs = crs
@@ -235,7 +250,7 @@ def plot_acs_hazard(
     issued_date=None,
     label_states=False,
     contourf=False,
-    contour=True,
+    contour=False,
     select_area=None,
     land_shadow=False,
     watermark="EXPERIMENTAL\nIMAGE ONLY",
@@ -257,7 +272,7 @@ def plot_acs_hazard(
         to get regions from.
 
     regions: geopandas.GeoDataFrame
-        if None, then will try to read from regions_dict[{name}].
+        if None, then will try to read using load_region(name).
 
     data: xr.DataArray
         a 2D xarray DataArray which has already computed the 
@@ -354,7 +369,7 @@ def plot_acs_hazard(
 
     contour: bool
         if True then the gridded data is visualised as smoothed unfilled grey contours.
-        Default is True.
+        Default is False.
         Using both contourf and contour results in smooth filled contours
         with grey outlines between the color levels.
 
@@ -398,11 +413,11 @@ def plot_acs_hazard(
     middle_ticks = []
     if regions is None:
         try:
-            regions = regions_dict[name]
+            regions = load_region(name)
         except:
-            print(f"Could not read regions_dict[{name}]")
+            print(f"Could not load_region(name)")
 
-    # Set default crs for Australia maps and selction maps
+    # Set default crs for Australia maps and selection maps
     if crs is None:
         if select_area is None:
             # Default for Australian map
@@ -443,7 +458,7 @@ def plot_acs_hazard(
             # if ticks are labelled or if there is one more tick than tick labels,
             # do the usual normalisation
             if tick_labels is None or (len(tick_labels) == len(ticks) - 1):
-                norm = BoundaryNorm(ticks, cmap.N)
+                norm = BoundaryNorm(ticks, cmap.N, extend = cbar_extend)
                 if tick_labels is not None:
                     middle_ticks = [
                         (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
@@ -455,7 +470,7 @@ def plot_acs_hazard(
                 outside_bound_first = [ticks[0] - (ticks[1] - ticks[0]) / 2]
                 outside_bound_last = [ticks[-1] + (ticks[-1] - ticks[-2]) / 2]
                 bounds = outside_bound_first + middle_ticks + outside_bound_last
-                norm = BoundaryNorm(bounds, cmap.N)
+                norm = BoundaryNorm(bounds, cmap.N, extend = cbar_extend)
 
         # plot the hazard data
         if contourf and tick_labels is None:
