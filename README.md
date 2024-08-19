@@ -67,6 +67,10 @@ cd ~/plotting_maps
 ```python 
 from acs_plotting_maps import plot_acs_hazard, regions_dict, cmap_dict, tick_dict
 import xarray as xr
+from acs_area_statistics import get_regions # this line has been updated 19 August 2024
+regions = get_regions(["ncra_regions", "australia"]) # this line has been updated 19 August 2024
+```
+
 ```
 
 3. **Load some data.** For example, this will load extratropical storm rx5day rainfall
@@ -89,7 +93,7 @@ You will need to specify:
    
 ```python
 plot_acs_hazard(data = da["pr"],
-                regions = regions_dict['ncra_regions'],
+                regions = regions, # this line has been updated 19 August 2024
                 cmap = cmap_dict["pr"],
                 ticks = tick_dict['pr_mon'],
                 cbar_label = "rainfall [mm]",
@@ -102,7 +106,15 @@ plot_acs_hazard(data = da["pr"],
 ```
 ![Extratropical_storms_Rx5day_median](https://github.com/AusClimateService/plotting_maps/assets/45543810/b5735647-c886-4d35-b230-aee7c8012a0c)
 
-6. **Calculate summary statitics for the range of models.**
+6. **Calculate summary statistics for the range of models.**
+
+```python 
+# Import needed packages
+from acs_area_statistics import acs_regional_stats, get_regions
+regions = get_regions(["ncra_regions", "australia"])
+```
+
+**this has changed. Previously**
 ```python 
 # import needed packages
 from acs_area_statistics import acs_regional_stats, regions
@@ -145,7 +157,7 @@ For example only, this would make a dataframe in this format:
 ## Suggested regions, colormaps and scales for plotting
 Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
 
-We have provided dictionaries with suggested region shapefiles, cmap colormaps, and tick intervals. Using the suggested items may help making plotting between users more consistent, but if they are not fit for your purpose, you may specify whatever you like.
+We have provided dictionaries with suggested region shapefiles, cmap colormaps, and tick intervals. Using the recommended items may help make plotting between users more consistent, but if they are not fit for your purpose, you may specify whatever you like.
 
 ### regions_dict
 Region shape files are stored here: /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/
