@@ -117,6 +117,7 @@ regions = get_regions(["ncra_regions", "australia"])
 **this has changed. Previously**
 
 "# import needed packages
+
 from acs_area_statistics import acs_regional_stats, regions"
 
 For Calculating the NCRA region stats, we want to compare the regional averages based on different models, eg what is the regional mean value from the coolest/driest model relisation, what is the mean, what is the regional mean from the hottest/wettest model for this, we want ds to have the 10th, median and 90th percentile values from each model, then we can find the range of the models and the MMM.
