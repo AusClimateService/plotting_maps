@@ -1,7 +1,7 @@
 # plotting_maps
-The aim of this repo is to plot standardised maps of ACS climate hazard data. We will develop and provide examples of mapping climate hazards for Australia so that data can be consistently presented.
+This repo aims to plot standardised maps of ACS climate hazard data. We will develop and provide examples of mapping climate hazards for Australia so that data can be consistently presented.
 
-Examples will include maps for Australia and for selected states or regions. 
+Examples will include maps for Australia and selected states or regions. 
 
 Intended uses include taking netcdf or xarray dataarrays of hazards and indices such as Rx1day, TXx, FFDI and plotting the data on a map of Australia. 
 
@@ -22,7 +22,10 @@ When starting a new ARE JupyterLab session (https://are.nci.org.au/pun/sys/dashb
 
 ![image](https://github.com/AusClimateService/plotting_maps/assets/45543810/e0d93235-c0a7-4a24-adb5-8bf99f3febe0)
 
+## Access shapefiles
+This code references shapefiles stored in ```/g/data/ia39/```. You will need to be a member of this project to access the data. Request membership https://my.nci.org.au/mancini/project/ia39
 
+See https://github.com/aus-ref-clim-data-nci/shapefiles for more information on the shapefiles.
 
 ## Cloning this repo
 Before you can ```import acs_plotting_maps``` to use the plotting function ```plot_acs_hazard```, you will need to clone a copy of this repository to your own working directory.
@@ -41,16 +44,16 @@ $ cd /scratch/PROJECT/USER/
 $ cd /g/data/PROJECT/USER/
 ```
 
-Then, you can clone this repository to access the python code and notebooks. \
-If you want the new directory to be called anything other than "plotting_maps" please replace the final argument to your choice of directory name:
+Then, you can clone this repository to access the Python code and notebooks. \
+If you want the new directory to be called anything other than "plotting_maps" please replace the final argument with your choice of directory name:
 ```
 $ git clone https://github.com/AusClimateService/plotting_maps.git plotting_maps
 ```
 You will now be able to access the functions, python scripts, and Jupyter notebooks from your user.
 
-## Usage in Jupyter notebook:
+## Usage in Jupyter Notebook:
 
-See small, easy to follow example here: 
+See a small, easy-to-follow example here: 
 - [https://github.com/AusClimateService/plotting_maps/blob/main/minimal_plotting_example_pr.ipynb]
 - [https://github.com/AusClimateService/plotting_maps/blob/main/area_statistics_example.ipynb]
 
