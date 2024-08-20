@@ -15,15 +15,17 @@ In your terminal, this may look like:
 
 ```
 $ module use /g/data/hh5/public/modules
-$ module load conda_concept/analysis3-24.04
+$ module load conda/analysis3-24.04
 ```
 
 When starting a new ARE JupyterLab session (https://are.nci.org.au/pun/sys/dashboard/batch_connect/sys/jupyter/ncigadi/session_contexts/new, requires NCI login), selecting the hh5 analysis3-24.04 virtual environment might look like this:
 
-![image](https://github.com/AusClimateService/plotting_maps/assets/45543810/6607e78a-8599-4eeb-8cee-4e910e067d5a)
+![image](https://github.com/AusClimateService/plotting_maps/assets/45543810/e0d93235-c0a7-4a24-adb5-8bf99f3febe0)
+
+
 
 ## Cloning this repo
-Before you can ```import acs_plotting_maps``` to use the plotting function ```plot_aus_shapefiles```, you will need to clone a copy of this repository to your own working directory.
+Before you can ```import acs_plotting_maps``` to use the plotting function ```plot_acs_hazard```, you will need to clone a copy of this repository to your own working directory.
 
 If you are working in your home directory, navigate there:
 ```
@@ -47,14 +49,28 @@ $ git clone https://github.com/AusClimateService/plotting_maps.git plotting_maps
 You will now be able to access the functions, python scripts, and Jupyter notebooks from your user.
 
 ## Usage in Jupyter notebook:
+
+See small, easy to follow example here: 
+- [https://github.com/AusClimateService/plotting_maps/blob/main/minimal_plotting_example_pr.ipynb]
+- [https://github.com/AusClimateService/plotting_maps/blob/main/area_statistics_example.ipynb]
+
+Other examples:
+- [https://github.com/AusClimateService/plotting_maps/blob/main/plotting_and_stats_examples.ipynb]
+- [https://github.com/AusClimateService/plotting_maps/blob/main/acs_plotting_maps_examples.ipynb]
+
 1. **Navigate to the directory you cloned to:**
 ```
 cd ~/plotting_maps
 ```
 
-2. **Import the ACS plotting maps function.** This will also import dependencies including xarray and pandas
+2. **Import the ACS plotting maps function and dictionaries and Xarray.** 
 ```python 
-from acs_plotting_maps import *
+from acs_plotting_maps import plot_acs_hazard, regions_dict, cmap_dict, tick_dict
+import xarray as xr
+from acs_area_statistics import get_regions # this line has been updated 19 August 2024
+regions = get_regions(["ncra_regions", "australia"]) # this line has been updated 19 August 2024
+```
+
 ```
 
 3. **Load some data.** For example, this will load extratropical storm rx5day rainfall
@@ -76,24 +92,73 @@ You will need to specify:
      * where you want the image outfile saved.
    
 ```python
-plot_aus_shapefiles(data = da["pr"],
-                    regions = regions_dict['ncra_regions'],
-                    cmap = cmap_dict["pr"],
-                    ticks = tick_dict['pr_mon'],
-                    cbar_label = "rainfall [mm]",
-                    cbar_extend = "max",
-                    title = "Extratropical storms Rx5day median",
-                    dataset_name = "BARPA-R ACCESS-CM2",
-                    date_range = '01 January 1960 to 01 January 2015',
-                    outfile = "figures/outfile.png",
-                   );
+plot_acs_hazard(data = da["pr"],
+                regions = regions, # this line has been updated 19 August 2024
+                cmap = cmap_dict["pr"],
+                ticks = tick_dict['pr_mon'],
+                cbar_label = "rainfall [mm]",
+                cbar_extend = "max",
+                title = "Extratropical storms Rx5day median",
+                dataset_name = "BARPA-R ACCESS-CM2",
+                date_range = '01 January 1960 to 01 January 2015',
+                outfile = "figures/outfile.png",
+               );
 ```
 ![Extratropical_storms_Rx5day_median](https://github.com/AusClimateService/plotting_maps/assets/45543810/b5735647-c886-4d35-b230-aee7c8012a0c)
+
+6. **Calculate summary statistics for the range of models.**
+
+```python 
+# Import needed packages
+from acs_area_statistics import acs_regional_stats, get_regions
+regions = get_regions(["ncra_regions", "australia"])
+```
+
+**this has changed. Previously**
+
+"# import needed packages
+
+from acs_area_statistics import acs_regional_stats, regions"
+
+For Calculating the NCRA region stats, we want to compare the regional averages based on different models, eg what is the regional mean value from the coolest/driest model relisation, what is the mean, what is the regional mean from the hottest/wettest model for this, we want ds to have the 10th, median and 90th percentile values from each model, then we can find the range of the models and the MMM.
+
+```python
+# calculate the stats using the acs_region_fractional_stats function
+# Find the min, mean, max value for each region
+
+ds = xr.open_dataset(filename)
+mask_frac = regions.mask_3D_frac_approx(ds)
+dims = ("lat", "lon",)
+how = ["min", "mean", "max"]
+
+da_summary = acs_regional_stats(ds=ds, infile = filename, mask=mask_frac, dims = dims, how = how,)
+da_summary
+
+```
+
+The dataframe will be saved to: ```infile.replace(".nc", f"_summary-{'-'.join(how)}_ncra-regions.csv"```
+
+For example only, this would make a dataframe in this format:
+
+|   region | abbrevs   | names                   |   pr_min |   pr_mean |   pr_max |
+|---------:|:----------|:------------------------|---------:|----------:|---------:|
+|        0 | VIC       | Victoria                |  415.729 |   909.313 |  3005.45 |
+|        1 | NT        | Northern Territory      |  397.385 |   941.405 |  3934.81 |
+|        2 | TAS       | Tasmania                |  555.644 |  1760.66  |  4631.81 |
+|        3 | SA        | South Australia         |  284.455 |   575.952 |  1413.98 |
+|        4 | NSW       | New South Wales & ACT   |  294.329 |   768.1   |  3440.04 |
+|        5 | WAN       | Western Australia North |  123.651 |   921.906 |  3470.24 |
+|        6 | WAS       | Western Australia South |  249.566 |   545.317 |  1819.89 |
+|        7 | SQ        | Queensland South        |  287.613 |   584.155 |  1654.74 |
+|        8 | NQ        | Queensland North        |  264.447 |   766.444 |  7146.55 |
+|        9 | AUS       | Australia               |  123.614 |   742.735 |  7146.55 |
+
+
 
 ## Suggested regions, colormaps and scales for plotting
 Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
 
-We have provided dictionaries with suggested region shapefiles, cmap colormaps, and tick intervals. Using the suggested items may help making plotting between users more consistent, but if they are not fit for your purpose, you may specify whatever you like.
+We have provided dictionaries with suggested region shapefiles, cmap colormaps, and tick intervals. Using the recommended items may help make plotting between users more consistent, but if they are not fit for your purpose, you may specify whatever you like.
 
 ### regions_dict
 Region shape files are stored here: /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/
