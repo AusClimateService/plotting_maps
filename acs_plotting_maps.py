@@ -631,8 +631,8 @@ def plot_acs_hazard(
     if mask_not_australia:
         # outside the shape, fill white
         ax.add_geometries(
-            not_australia,
-            crs=not_australia.crs,
+            regions_dict["not_australia"],
+            crs=regions_dict["not_australia"].crs,
             facecolor="white",
             linewidth=0,
             zorder=5,
