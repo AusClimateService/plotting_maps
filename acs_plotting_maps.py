@@ -214,16 +214,384 @@ not_australia = gpd.GeoSeries(
 )
 
 
+# Define subfunctions for different parts of the plotting 
+# so that they can be reused for single panel and multi panel plots
+def plot_data(regions=None,
+              data=None, 
+              station_df = None,
+              xlim=(114, 162),
+              ylim=(-43, -8),
+              cmap=cm.Greens,
+              cbar_extend="both",
+              ticks=None,
+              tick_labels=None,
+              contourf=False,
+              contour=False,
+              ax=None,
+              subtitle = "",
+              facecolor="none",
+              edgecolor="k",
+              mask_not_australia = False,
+              mask_australia=False,
+              area_linewidth=0.3,
+              stippling=None,
+             ):
+    """This function takes an axis and plots the hazard data to a map of Australia"""
+   
+    # for station data
+    if station_df is not None:
+        # assuming columns are named "lon", "lat", variable,
+        gdf = gpd.GeoDataFrame(
+            station_df, geometry=gpd.points_from_xy(station_df.lon, station_df.lat), crs=ccrs.PlateCarree()
+            )
+        var = gdf.columns[[2]][0]
+        norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
+        cont = ax.scatter(x=station_df.lon,
+                          y=station_df.lat,
+                          s=100, 
+                          c=station_df[var],
+                          edgecolors="k", 
+                          alpha = 0.8,
+                          zorder=6,
+                          transform=ccrs.PlateCarree(), 
+                          cmap= cmap,
+                          norm = norm)
+        # facecolor = "lightgrey"
+
+    middle_ticks=[]
+    
+    if data is None:
+        return
+    else:
+        data = data.squeeze()
+    
+        # facecolor = "none"
+    
+        if ticks is None:
+            norm = None
+        else:
+            # if ticks are labelled or if there is one more tick than tick labels,
+            # do the usual normalisation
+            if tick_labels is None or (len(tick_labels) == len(ticks) - 1):
+                norm = BoundaryNorm(ticks, cmap.N, extend = cbar_extend)
+                if tick_labels is not None:
+                    middle_ticks = [
+                        (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
+                    ]
+                else:
+                    middle_ticks = []
+            else:
+                middle_ticks = [
+                    (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
+                ]
+                outside_bound_first = [ticks[0] - (ticks[1] - ticks[0]) / 2]
+                outside_bound_last = [ticks[-1] + (ticks[-1] - ticks[-2]) / 2]
+                bounds = outside_bound_first + middle_ticks + outside_bound_last
+                norm = BoundaryNorm(bounds, cmap.N, extend = cbar_extend)
+    
+        # plot the hazard data
+        if contourf and tick_labels is None:
+            if data.max()>=0 and data.min()<=0: 
+                print("Using contourf to plot data. Use with caution and check output for data crossing zero")
+            cont = ax.contourf(
+                data.lon,
+                data.lat,
+                data,
+                cmap=cmap,
+                norm=norm,
+                levels=ticks,
+                extend=cbar_extend,
+                zorder=2,
+                transform=ccrs.PlateCarree(),
+            )
+        else:
+            cont = ax.pcolormesh(
+                data.lon,
+                data.lat,
+                data,
+                cmap=cmap,
+                norm=norm,
+                zorder=2,
+                transform=ccrs.PlateCarree(),
+            )
+       
+        if contour and tick_labels is None:
+            cont = ax.contour(
+                data.lon,
+                data.lat,
+                data,
+                colors="grey",
+                norm=norm,
+                levels=ticks,
+                extend=cbar_extend,
+                linewidths=0.2,
+                zorder=3,
+                transform=ccrs.PlateCarree(),
+            )
+
+    ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
+    
+    if stippling is not None:
+        ax.contourf(stippling.lon,
+                    stippling.lat,
+                    stippling,
+                    alpha=0,
+                    hatches = ["",".."],
+                    zorder=5,
+                    transform=ccrs.PlateCarree(),
+                   )
+
+    if mask_not_australia:
+        # outside the shape, fill white
+        ax.add_geometries(
+            not_australia,
+            crs=ccrs.PlateCarree(),
+            facecolor="white",
+            linewidth=0,
+            zorder=5,
+        )
+
+    # cover australia land area eg for ocean data
+    if mask_australia:
+        # inside the shape, fill white
+        ax.add_geometries(
+            australia,
+            crs=ccrs.PlateCarree(),
+            facecolor="white",
+            linewidth=0,
+            zorder=4,
+        )
+
+    # add region borders
+    ax.add_geometries(
+        regions["geometry"],
+        crs=ccrs.PlateCarree(),
+        facecolor=facecolor,
+        edgecolor=edgecolor,
+        linewidth=area_linewidth,
+        zorder=5,
+    )
+
+    # subtitle
+    ax.text(
+        x=0.1,
+        y=0.07,
+        s=subtitle,
+        fontsize=10,
+        horizontalalignment="left",
+        transform=ax.transAxes,
+        zorder=10,
+    )
+
+    return ax, norm, cont, middle_ticks
+
+def plot_cbar(cont=None,
+              norm=None,
+              ax=None,
+              cbar_extend=None, 
+              cbar_label=None,
+              ticks=None, 
+              tick_labels=None,
+              middle_ticks=[], 
+              cax_bounds = [0.82, 0.15, 0.03, 0.7],
+             contour=False,
+             contourf=False,):
+    """This function defines and plots the colorbar"""
+    cbar = None
+    
+    if tick_labels is None:
+        cbar = plt.colorbar(
+            cont,
+            ax=ax,
+            extend=cbar_extend,
+            cax=ax.inset_axes(cax_bounds),
+            ticks=ticks,
+            norm=norm,
+        )
+    else:
+        # for categorical data
+        cbar = plt.colorbar(
+            cont,
+            ax=ax,
+            extend='neither',
+            cax=ax.inset_axes(cax_bounds),
+            ticks=ticks,
+            norm=norm,
+            drawedges=True,
+        )
+        if len(ticks) == len(tick_labels):
+            cbar.ax.set_yticks(ticks, tick_labels)
+        elif len(middle_ticks) == len(tick_labels):
+            cbar.ax.set_yticks(middle_ticks, tick_labels)
+
+    cbar.ax.tick_params(labelsize=10)
+    if contour and tick_labels is None:
+        cbar.add_lines(cont)
+    
+    # Label colorbar
+    if cbar is not None:
+        cbar.ax.set_title(cbar_label, zorder=8, loc="center", fontsize=10, verticalalignment="bottom")
+    return ax
+
+def plot_select_area(select_area=None,
+                     ax=None, 
+                     xlim=None,
+                     ylim=None,
+                     regions=None,
+                     crs=None, 
+                     land_shadow=False):
+    # if select a specific area
+    if select_area is None:
+        ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
+    else:
+        assert isinstance(select_area, list), "select_area must be a list"
+        # select state
+        name_column = [name for name in regions.columns if "NAME" in name.upper()][0]
+        area = regions.loc[regions[name_column].isin(select_area)]
+        map_total_bounds = area.total_bounds
+        minx, miny, maxx, maxy = map_total_bounds
+        mid_x = (minx + maxx) / 2
+        mid_y = (miny + maxy) / 2
+        max_range = np.max([(maxy - miny), (maxx - minx)])
+        buffer = 0.1 * max_range
+    
+        not_area = gpd.GeoSeries(
+            data=[
+                box(*box(*map_total_bounds).buffer(10 * buffer).bounds).difference(
+                    area.dissolve()["geometry"].values[0]
+                )
+            ],
+            crs=crs,
+        )
+    
+        # mask outside selected area
+        if land_shadow:
+            # show land as light grey
+            not_area.plot(ax=ax, facecolor="lightgrey", linewidth=0, zorder=4)
+        else:
+            # mask white
+            not_area.plot(ax=ax, facecolor="white", linewidth=0, zorder=4)
+    
+        ax.xlim(mid_x - 0.6 * max_range, mid_x + 0.8 * max_range)
+        ax.ylim(mid_y - 0.7 * max_range, mid_y + 0.7 * max_range)
+    return ax
+
+def plot_titles(title="title",
+                date_range = "DD Mon YYY to DD Mon YYYY", 
+                baseline = None, 
+                dataset_name= "dataset_name",
+                issued_date=None,
+                watermark="", 
+                watermark_color="r",
+                ax=None,
+                text_xy = None,
+                title_ha = "left"):
+    """Set the plot title and axis labels"""
+    
+    ax.text(
+        x=text_xy["title"][0],
+        y=text_xy["title"][1],
+        s=f"{title}",
+        fontsize=16,
+        weight="bold",
+        horizontalalignment=title_ha,
+        verticalalignment="bottom",
+        transform=ax.transAxes,
+        zorder=10,
+    )
+
+    ax.text(
+        x=text_xy["date_range"][0],
+        y=text_xy["date_range"][1],
+        s=f"{date_range}",
+        fontsize=10,
+        horizontalalignment=title_ha,
+        verticalalignment="top",
+        transform=ax.transAxes,
+        zorder=10,
+    )
+    
+    if baseline is not None:
+        # print base period inside bottom left corner
+        ax.text(
+            x=0.01,
+            y=0.01,
+            s=f"Base period: {baseline}",
+            fontsize=7,
+            verticalalignment="bottom",
+            transform=ax.transAxes,
+            zorder=10,
+        )
+    # print copyright outside bottom left corner
+    ax.text(
+        x=0.01,
+        y=-0.01,
+        s=f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, Australian Climate Service",
+        fontsize=7,
+        transform=ax.transAxes,
+        verticalalignment="top",
+        zorder=10,
+    )
+    # print data source inside bottom right
+    ax.text(
+        x=0.99,
+        y=0.01,
+        s=f"Dataset: {dataset_name}",
+        fontsize=7,
+        transform=ax.transAxes,
+        horizontalalignment="right",
+        verticalalignment="bottom",
+        zorder=10,
+    )
+    # print issued date on bottom right under the border.
+    # Set to today's date if None supplied
+    if issued_date is None:
+        issued_date = datetime.datetime.today().date().strftime("%d %B %Y")
+    ax.text(
+        x=0.99,
+        y=-0.01,
+        s=f"Issued: {issued_date}",
+        fontsize=7,
+        transform=ax.transAxes,
+        horizontalalignment="right",
+        verticalalignment="top",
+        zorder=10,
+    )
+    
+    if watermark is not None:
+        ax.text(
+            x=text_xy["watermark"][0],
+            y=text_xy["watermark"][1],
+            s=watermark.upper(),
+            fontsize=36,
+            transform=ax.transAxes,
+            horizontalalignment="center",
+            verticalalignment="center",
+            zorder=10,
+            wrap=True,
+            alpha=0.5,
+            color=watermark_color,
+        )
+    ax.axis('off')
+    return ax
+
+
+
+
+                   
+
+
 # # Define a function for plotting maps
 # This is the function you call to plot all the graphs
 def plot_acs_hazard(
-    name="aus_states_territories",
-    regions=None,
+    name='ncra_regions',
+    regions=regions_dict['ncra_regions'],
     data=None,
     station_df=None,
     stippling=None,
     mask_not_australia=True,
-    facecolor=None,
+    mask_australia=False,
+    facecolor="none",
     edgecolor="black",
     figsize=(8, 6),
     title=None,
@@ -283,8 +651,14 @@ def plot_acs_hazard(
         Intended to show model agreement, eg for direction of change.
 
     mask_not_australia: boolean
-        decides whether or not the area outside of Australian land is hidden.
+        decides whether or not the area outside of Australian land is hidden 
+        under white shape.
         Default is True.
+
+    mask_australia: boolean
+        decides whether or not Australian land is hidden under white shape.
+        Eg, use when plotting ocean only.
+        Default is False.
 
     facecolor: color
         color of land when you plot the regions without climate data. 
@@ -413,15 +787,15 @@ def plot_acs_hazard(
     The map is saved as a png in a "figures" file in your working directory.
     This function returns fig and ax.
     """
-    cbar = None
-    cbar_bounds = [0.82, 0.15, 0.03, 0.7] #[x0, y0, width, height]
     
-    middle_ticks = []
+    
     if regions is None:
         try:
             regions = regions_dict[name]
         except:
             print(f"Could not read regions_dict[{name}]")
+
+    regions = regions.to_crs(crs = "GDA2020")
 
     # Set default crs for Australia maps and selection maps
     if crs is None:
@@ -436,323 +810,244 @@ def plot_acs_hazard(
         else:
             crs = ccrs.PlateCarree()
 
-    # Define the CRS of the shapefile manually
-    regions = regions.to_crs(crs.proj4_init)
-
     # Set up the plot
     fig = plt.figure(
         figsize=figsize,
         zorder=1,
         layout="constrained",
+        frameon=False,
     )
     ax = plt.axes(
         projection=crs,
+        frameon=False,
     )
     ax.set_global()
 
     if infile is not None:
         data = xr.open_dataset(infile)
 
-    # for station data
-    if station_df is not None:
-        # assuming columns are named "lon", "lat", variable,
-        gdf = gpd.GeoDataFrame(
-            station_df, geometry=gpd.points_from_xy(station_df.lon, station_df.lat), crs=ccrs.PlateCarree()
-            )
-        var = gdf.columns[[2]][0]
-        norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
-        cont = ax.scatter(x=station_df.lon,
-                          y=station_df.lat,
-                          s=100, 
-                          c=station_df[var],
-                          edgecolors="k", 
-                          alpha = 0.8,
-                          zorder=6,
-                          transform=ccrs.PlateCarree(), 
-                          cmap= cmap,
-                          norm = norm)
+    # plot hazard data ------------------------
+    ax, norm, cont, middle_ticks =plot_data(regions=regions,
+                                              data=data, 
+                                              station_df = station_df,
+                                              xlim=xlim,
+                                              ylim=ylim,
+                                              cmap=cmap,
+                                              cbar_extend=cbar_extend,
+                                              ticks=ticks,
+                                              tick_labels=tick_labels,
+                                              contourf=contourf,
+                                              contour=contour,
+                                              ax=ax,
+                                              subtitle="",
+                                              facecolor=facecolor,
+                                              mask_not_australia = mask_not_australia,
+                                              mask_australia=mask_australia,
+                                              area_linewidth=area_linewidth,
+                                              stippling=stippling)
+                    
+    # ---------------------------------
 
-        cbar = plt.colorbar(
-                cont,
-                ax=ax,
-                extend=cbar_extend,
-                cax=ax.inset_axes(cbar_bounds),
-                ticks=ticks,
-                norm=norm,
-            )
-        facecolor = "lightgrey"
+    # if select a specific area -----------
+    ax = plot_select_area(select_area=select_area, 
+                          ax=ax,
+                          xlim=xlim,
+                          ylim=ylim,
+                          regions=regions,
+                          crs=crs,
+                          land_shadow=land_shadow)
+    # ---------------------------------------------
 
-    if data is not None:
-        data = data.squeeze()
+    # colorbar------------------------
+    ax = plot_cbar(cont=cont,
+                  norm=norm,
+                  ax=ax,
+                  cbar_extend=cbar_extend, 
+                  cbar_label=cbar_label,
+                  ticks=ticks, 
+                  tick_labels=tick_labels,
+                  middle_ticks=middle_ticks,
+                  cax_bounds = [0.82, 0.15, 0.03, 0.7],)
+    # ---------------------------------------
 
-        facecolor = "none"
-
-        if ticks is None:
-            norm = None
-        else:
-            # if ticks are labelled or if there is one more tick than tick labels,
-            # do the usual normalisation
-            if tick_labels is None or (len(tick_labels) == len(ticks) - 1):
-                norm = BoundaryNorm(ticks, cmap.N, extend = cbar_extend)
-                if tick_labels is not None:
-                    middle_ticks = [
-                        (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
-                    ]
-            else:
-                middle_ticks = [
-                    (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
-                ]
-                outside_bound_first = [ticks[0] - (ticks[1] - ticks[0]) / 2]
-                outside_bound_last = [ticks[-1] + (ticks[-1] - ticks[-2]) / 2]
-                bounds = outside_bound_first + middle_ticks + outside_bound_last
-                norm = BoundaryNorm(bounds, cmap.N, extend = cbar_extend)
-
-        # plot the hazard data
-        if contourf and tick_labels is None:
-            if data.max()>=0 and data.min()<=0: 
-                print("Using contourf to plot data. Use with caution and check output for data crossing zero")
-            cont = ax.contourf(
-                data.lon,
-                data.lat,
-                data,
-                cmap=cmap,
-                norm=norm,
-                levels=ticks,
-                extend=cbar_extend,
-                zorder=2,
-                transform=ccrs.PlateCarree(),
-            )
-        else:
-            cont = ax.pcolormesh(
-                data.lon,
-                data.lat,
-                data,
-                cmap=cmap,
-                norm=norm,
-                zorder=2,
-                transform=ccrs.PlateCarree(),
-            )
-
-        if tick_labels is None:
-            cbar = plt.colorbar(
-                cont,
-                ax=ax,
-                extend=cbar_extend,
-                cax=ax.inset_axes(cbar_bounds),
-                ticks=ticks,
-                norm=norm,
-            )
-        else:
-            # for categorical data
-            cbar = plt.colorbar(
-                cont,
-                ax=ax,
-                extend='neither',
-                cax=ax.inset_axes(cbar_bounds),
-                ticks=ticks,
-                norm=norm,
-                drawedges=True,
-            )
-            if len(ticks) == len(tick_labels):
-                cbar.ax.set_yticks(ticks, tick_labels)
-            elif len(middle_ticks) == len(tick_labels):
-                cbar.ax.set_yticks(middle_ticks, tick_labels)
-
-        if contour and tick_labels is None:
-            cont = plt.contour(
-                data.lon,
-                data.lat,
-                data,
-                colors="grey",
-                norm=norm,
-                levels=ticks,
-                extend=cbar_extend,
-                linewidths=0.2,
-                zorder=3,
-                transform=ccrs.PlateCarree(),
-            )
-            cbar.add_lines(cont)
-
-    # Label colorbar
-    if cbar is not None:
-        cbar.ax.set_title(cbar_label, zorder=8, loc="center", verticalalignment="bottom")
-
-    if stippling is not None:
-        ax.contourf(stippling.lon,
-                    stippling.lat,
-                    stippling,
-                    alpha=0,
-                    hatches = ["",".."],
-                    zorder=4,
-                    transform=ccrs.PlateCarree(),
-                   )
-
-    if mask_not_australia:
-        # outside the shape, fill white
-        ax.add_geometries(
-            not_australia,
-            crs=not_australia.crs,
-            facecolor="white",
-            linewidth=0,
-            zorder=5,
-        )
-
-    if label_states and name == "aus_states_territories":
-        # label the states with their name in the centre of the state
-        states = ["WA", "NT", "SA", "QLD", "NSW", "VIC", "TAS"]
-        lats = [-26.06, -19.7, -29.0, -24.2, -32.3, -37.1, -42.4]
-        lons = [119.9, 133, 133, 143.6, 143.7, 142.0, 145.3]
-        for lon, lat, state in zip(lons, lats, states):
-            ax.text(lon, lat, state, size=12, zorder=10, transform=ccrs.PlateCarree())
-
-    ax.add_geometries(
-        regions["geometry"],
-        crs=crs,
-        facecolor=facecolor,
-        edgecolor=edgecolor,
-        linewidth=area_linewidth,
-        zorder=4,
-    )
-
-    # if select a specific area
-    if select_area is None:
-        ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
-    else:
-        assert isinstance(select_area, list), "select_area must be a list"
-        # select state
-        name_column = [name for name in regions.columns if "NAME" in name.upper()][0]
-        area = regions.loc[regions[name_column].isin(select_area)]
-        map_total_bounds = area.total_bounds
-        minx, miny, maxx, maxy = map_total_bounds
-        mid_x = (minx + maxx) / 2
-        mid_y = (miny + maxy) / 2
-        max_range = np.max([(maxy - miny), (maxx - minx)])
-        buffer = 0.1 * max_range
-
-        not_area = gpd.GeoSeries(
-            data=[
-                box(*box(*map_total_bounds).buffer(10 * buffer).bounds).difference(
-                    area.dissolve()["geometry"].values[0]
-                )
-            ],
-            crs=crs,
-        )
-
-        # mask outside selected area
-        if land_shadow:
-            # show land as light grey
-            not_area.plot(ax=ax, facecolor="lightgrey", linewidth=0, zorder=4)
-        else:
-            # mask white
-            not_area.plot(ax=ax, facecolor="white", linewidth=0, zorder=4)
-
-        plt.xlim(mid_x - 0.6 * max_range, mid_x + 0.8 * max_range)
-        plt.ylim(mid_y - 0.7 * max_range, mid_y + 0.7 * max_range)
-
-    # Set the plot title and axis labels
+    # Annotations and titles ---------------------
     if title is None:
         if data is None:
             title = name
         else:
             title = f"{data.name} {name}"
 
-    ax.text(
-        0.06,
-        0.06,
-        f"{title}\n{date_range}",
-        fontsize="large",
-        horizontalalignment="left",
-        transform=ax.transAxes,
-        zorder=10,
-    )
+    #plot border and annotations
+    ax111 = fig.add_axes([0.,0.,1,1], facecolor="none", xticks=[], yticks=[]) #(left, bottom, width, height)
 
-    if baseline is not None:
-        # print base period inside bottom left corner
-        ax.text(
-            x=0.01,
-            y=0.01,
-            s=f"Base period: {baseline}",
-            fontsize=6,
-            transform=ax.transAxes,
-            zorder=10,
-        )
-    # print copyright outside bottom left corner
-    ax.text(
-        x=0.01,
-        y=-0.03,
-        s=f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, \
-Australian Climate Service",
-        fontsize=6,
-        transform=ax.transAxes,
-        zorder=10,
-    )
-    # print data source inside bottom right
-    ax.text(
-        x=0.99,
-        y=0.01,
-        s=f"Dataset: {dataset_name}",
-        fontsize=6,
-        transform=ax.transAxes,
-        horizontalalignment="right",
-        zorder=10,
-    )
-    # print issued date on bottom right under the border.
-    # Set to today's date if None supplied
-    if issued_date is None:
-        issued_date = datetime.datetime.today().date().strftime("%d %B %Y")
-    ax.text(
-        x=0.99,
-        y=-0.03,
-        s=f"Issued: {issued_date}",
-        fontsize=6,
-        transform=ax.transAxes,
-        horizontalalignment="right",
-        zorder=10,
-    )
+    # text annotation xy locations for 1-panel plot
+    text_xy_1pp = {"title": (0.04, 0.06),
+                   "date_range": (0.04, 0.05),
+                   "watermark": (0.4, 0.5),}
+    
+    ax111 = plot_titles(title=title,
+                        date_range = date_range, 
+                        baseline = baseline, 
+                        dataset_name= dataset_name,
+                        issued_date=issued_date,
+                        watermark=watermark, 
+                        watermark_color=watermark_color,
+                        ax=ax111,
+                        text_xy = text_xy_1pp,
+                        title_ha = "left")
+    ax111.axis(True)
 
-    if watermark is not None:
-        ax.text(
-            x=0.4,
-            y=0.5,
-            s=watermark.upper(),
-            fontsize=36,
-            transform=ax.transAxes,
-            horizontalalignment="center",
-            verticalalignment="center",
-            zorder=10,
-            wrap=True,
-            alpha=0.5,
-            color=watermark_color,
-        )
+    # -----------------------------------------------
 
-    # remove any lat lon labels and ticks
-    plt.xlabel("")
-    plt.ylabel("")
-    plt.tick_params(
-        axis="both",
-        which="both",
-        bottom=False,
-        left=False,
-        labelbottom=False,
-        labelleft=False,
-    )
 
-    ax.patch.set_edgecolor("black")
-    ax.patch.set_linewidth(2)
+    if outfile is None:
+        PATH = os.path.abspath(os.getcwd())
+        outfile = f"{PATH}/figures/{title.replace(' ', '_')}.png"
+        os.makedirs(os.path.dirname(outfile), exist_ok=True)
 
-    fig.set_figheight(figsize[1])
-    fig.set_figwidth(figsize[0])
+    if savefig:
+        plt.savefig(outfile, dpi=300)
+    return fig, ax
 
-    if show_logo:
-        # Place logo in top left
-        ins = ax.inset_axes(
-            [0.0, 0.78, 0.3, 0.3],
-        )
-        ins.set_xticks([])
-        ins.set_yticks([])
-        ins.imshow(
-            logo,
-        )
+
+# # Define a function for plotting maps
+# This is the function you call to plot all the graphs
+def plot_acs_hazard_3pp(
+    name='ncra_regions',
+    regions=regions_dict['ncra_regions'],
+    ds_gwl15=None,
+    ds_gwl20=None,
+    ds_gwl30=None,
+    station_df=None,
+    stippling=None,
+    mask_not_australia=True,
+    mask_australia=False,
+    facecolor="none",
+    edgecolor="black",
+    figsize=(10, 4),
+    title=None,
+    date_range="",
+    crs=None,
+    area_linewidth=0.3,
+    xlim=(114,154),
+    ylim=(-43, -8),
+    cmap=cm.Greens,
+    cbar_extend="both",
+    ticks=None,
+    tick_labels=None,
+    cbar_label="",
+    baseline=None,
+    dataset_name=None,
+    issued_date=None,
+    label_states=False,
+    contourf=False,
+    contour=False,
+    select_area=None,
+    land_shadow=False,
+    watermark="EXPERIMENTAL\nIMAGE ONLY",
+    watermark_color = "r",
+    show_logo = False,
+    infile=None,
+    outfile=None,
+    savefig=True,
+):
+    """Three panel plot
+    """
+
+    if regions is None:
+        try:
+            regions = regions_dict[name]
+        except:
+            print(f"Could not read regions_dict[{name}]")
+
+    regions = regions.to_crs(crs = "GDA2020")
+
+    # Set default crs for Australia maps and selection maps
+    if crs is None:
+        if select_area is None:
+            # Default for Australian map
+            crs = ccrs.LambertConformal(
+                central_latitude=-24.75,
+                central_longitude=134.0,
+                cutoff=30,
+                standard_parallels=(-10, -40),
+            )
+        else:
+            crs = ccrs.PlateCarree()
+        
+    fig, axs = plt.subplots(nrows=1, ncols=3,  sharey=True, sharex=True, figsize=figsize, subplot_kw={'projection': crs, "frame_on":False},)
+
+    for i, ds in enumerate([ds_gwl15, ds_gwl20, ds_gwl30]):
+        ax, norm, cont, middle_ticks = plot_data(regions=regions,
+                                              data=ds, 
+                                              station_df = station_df,
+                                              xlim=xlim,
+                                              ylim=ylim,
+                                              cmap=cmap,
+                                              cbar_extend=cbar_extend,
+                                              ticks=ticks,
+                                              tick_labels=tick_labels,
+                                              contourf=contourf,
+                                              contour=contour,
+                                              ax=axs[i],
+                                              subtitle=f"GWL{[1.5,2.0,3.0][i]}",
+                                              facecolor=facecolor,
+                                              mask_not_australia = mask_not_australia,
+                                              mask_australia=mask_australia,
+                                              area_linewidth=area_linewidth,
+                                              stippling=stippling)
+        
+        # if select a specific area -----------
+        ax = plot_select_area(select_area=select_area, 
+                              ax=ax,
+                              xlim=xlim,
+                              ylim=ylim,
+                              regions=regions,
+                              crs=crs,
+                              land_shadow=land_shadow)
+        # ---------------------------------------------
+
+                    
+        ax.axis('off')
+
+    # colorbar -----------------------------------------------------------
+    fig.subplots_adjust(left=0.05, bottom=0, right=0.85, top=0.95, wspace=0.05, hspace=0.05)
+    cbar_ax = fig.add_axes([0.87, 0.2, 0.03, 0.5]) #left bottom width height
+    cbar_ax.axis('off')
+
+    ax = plot_cbar(cont=cont,
+                  norm=norm,
+                  ax=cbar_ax,
+                  cbar_extend=cbar_extend, 
+                  cbar_label=cbar_label,
+                  ticks=ticks, 
+                  tick_labels=tick_labels,
+                  middle_ticks=middle_ticks,
+                  cax_bounds = [0.1,0,0.5,1],)
+    #------------------------------------------
+
+    
+    # plot border and annotations -----------------
+    ax111 = fig.add_axes([0.01,0.1,0.98,0.9], facecolor="none", xticks=[], yticks=[]) #(left, bottom, width, height)
+
+    # text annotation xy locations for 3-panel plot
+    text_xy_3pp = {"title": (0.5, 0.9),
+               "date_range": (0.5, 0.87),
+               "watermark": (0.45, 0.41),}
+    
+    ax111 = plot_titles(title=title,
+                        date_range = date_range, 
+                        baseline = baseline, 
+                        dataset_name= dataset_name,
+                        issued_date=issued_date,
+                        watermark=watermark, 
+                        watermark_color=watermark_color,
+                        ax=ax111,
+                        text_xy = text_xy_3pp,
+                        title_ha = "center",
+                   )
+    ax111.axis(True)
+    # --------------------------------------------
 
     if outfile is None:
         PATH = os.path.abspath(os.getcwd())
