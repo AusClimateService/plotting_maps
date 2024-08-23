@@ -30,7 +30,6 @@ crs = ccrs.LambertConformal(
 from pathlib import Path
 logo = image.imread(f"{Path(__file__).parent}/ACS_Logo_Blue_on_white_Stacked.png")
 
-
 # # Suggested colormaps and scales
 # Using suggested colormaps and scales will improve the consistency across teams
 # producing similar variables. This will support comparison across different plots.
