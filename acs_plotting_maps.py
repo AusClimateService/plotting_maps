@@ -198,7 +198,7 @@ for name in shape_files:
 australia = regions_dict["australia"].copy()
 
 # Define the CRS of the shapefile manually
-australia.crs = crs
+australia = australia.to_crs(crs = "GDA2020")
 
 # This mask is a rectangular box around the maximum land extent of Australia
 # with a buffer of 10 degrees on every side,
@@ -230,9 +230,9 @@ def plot_data(regions=None,
               subtitle = "",
               facecolor="none",
               edgecolor="k",
+              area_linewidth=0.3,
               mask_not_australia = False,
               mask_australia=False,
-              area_linewidth=0.3,
               stippling=None,
              ):
     """This function takes an axis and plots the hazard data to a map of Australia"""
@@ -260,7 +260,9 @@ def plot_data(regions=None,
     middle_ticks=[]
     
     if data is None:
-        return
+        norm=None
+        cont=None
+        pass
     else:
         data = data.squeeze()
     
@@ -340,24 +342,26 @@ def plot_data(regions=None,
                     transform=ccrs.PlateCarree(),
                    )
 
+    # cover area outside australia land area eg mask ocean
     if mask_not_australia:
-        # outside the shape, fill white
+        # inside the shape, fill white
         ax.add_geometries(
             not_australia,
             crs=ccrs.PlateCarree(),
             facecolor="white",
             linewidth=0,
-            zorder=5,
+            zorder=4,
         )
 
     # cover australia land area eg for ocean data
     if mask_australia:
         # inside the shape, fill white
         ax.add_geometries(
-            australia,
+            australia["geometry"],
             crs=ccrs.PlateCarree(),
-            facecolor="white",
-            linewidth=0,
+            facecolor="lightgrey",
+            linewidth=0.3,
+            edgecolor="k",
             zorder=4,
         )
 
@@ -396,6 +400,9 @@ def plot_cbar(cont=None,
              contour=False,
              contourf=False,):
     """This function defines and plots the colorbar"""
+    if norm is None:
+        return ax
+    
     cbar = None
     
     if tick_labels is None:
@@ -471,8 +478,8 @@ def plot_select_area(select_area=None,
             # mask white
             not_area.plot(ax=ax, facecolor="white", linewidth=0, zorder=4)
     
-        ax.xlim(mid_x - 0.6 * max_range, mid_x + 0.8 * max_range)
-        ax.ylim(mid_y - 0.7 * max_range, mid_y + 0.7 * max_range)
+        ax.set_xlim(mid_x - 0.6 * max_range, mid_x + 0.8 * max_range)
+        ax.set_ylim(mid_y - 0.7 * max_range, mid_y + 0.7 * max_range)
     return ax
 
 def plot_titles(title="title",
@@ -827,23 +834,24 @@ def plot_acs_hazard(
 
     # plot hazard data ------------------------
     ax, norm, cont, middle_ticks =plot_data(regions=regions,
-                                              data=data, 
-                                              station_df = station_df,
-                                              xlim=xlim,
-                                              ylim=ylim,
-                                              cmap=cmap,
-                                              cbar_extend=cbar_extend,
-                                              ticks=ticks,
-                                              tick_labels=tick_labels,
-                                              contourf=contourf,
-                                              contour=contour,
-                                              ax=ax,
-                                              subtitle="",
-                                              facecolor=facecolor,
-                                              mask_not_australia = mask_not_australia,
-                                              mask_australia=mask_australia,
-                                              area_linewidth=area_linewidth,
-                                              stippling=stippling)
+                                            data=data, 
+                                            station_df = station_df,
+                                            xlim=xlim,
+                                            ylim=ylim,
+                                            cmap=cmap,
+                                            cbar_extend=cbar_extend,
+                                            ticks=ticks,
+                                            tick_labels=tick_labels,
+                                            contourf=contourf,
+                                            contour=contour,
+                                            ax=ax,
+                                            subtitle="",
+                                            facecolor=facecolor,
+                                            mask_not_australia = mask_not_australia,
+                                            mask_australia=mask_australia,
+                                            area_linewidth=area_linewidth,
+                                            stippling=stippling,
+                                            )
                     
     # ---------------------------------
 
@@ -870,18 +878,13 @@ def plot_acs_hazard(
     # ---------------------------------------
 
     # Annotations and titles ---------------------
-    if title is None:
-        if data is None:
-            title = name
-        else:
-            title = f"{data.name} {name}"
 
     #plot border and annotations
     ax111 = fig.add_axes([0.,0.,1,1], facecolor="none", xticks=[], yticks=[]) #(left, bottom, width, height)
 
     # text annotation xy locations for 1-panel plot
-    text_xy_1pp = {"title": (0.04, 0.06),
-                   "date_range": (0.04, 0.05),
+    text_xy_1pp = {"title": (0.04, 0.07),
+                   "date_range": (0.04, 0.06),
                    "watermark": (0.4, 0.5),}
     
     ax111 = plot_titles(title=title,
