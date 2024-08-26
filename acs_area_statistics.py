@@ -5,7 +5,6 @@ Typical statistics include median, mean, min, max, 10th, 90th percentiles.
 
 This method has used guidance from
 [https://github.com/aus-ref-clim-data-nci/shapefiles/blob/master/python_tutorial.ipynb]"""
-
 import xarray as xr
 import geopandas as gpd
 import regionmask
@@ -17,17 +16,22 @@ shapefile_list = ["aus_local_gov",
                   "aus_states_territories",
                   "australia", 
                   "broadacre_regions", 
+                  "NCRA_Marine_region",
                   "ncra_regions", 
                   "NCRA_regions_coastal_waters_GDA94", 
-                  "nrm_regions", ]
+                  "nrm_regions",
+                  "plantations"]
+
 
 name_dict = {"aus_local_gov":"LGA_NAME22", 
              "aus_states_territories":"STE_NAME21",
              "australia": "AUS_NAME21",
              "broadacre_regions": "name",
+             "NCRA_Marine_region":"Label",
              "ncra_regions": "regionname", 
              "NCRA_regions_coastal_waters_GDA94": "regionname",
              "nrm_regions":"SubClusNm",
+             "plantations":"CodeName",
             }
 
 
@@ -35,9 +39,11 @@ abbr_dict = {"aus_local_gov":"LGA_CODE22",
              "aus_states_territories":"ABBREV",
              "australia": "AUS_CODE21",
              "broadacre_regions": "aagis",
+             "NCRA_Marine_region":"RegionID",
              "ncra_regions": "short_name", 
              "NCRA_regions_coastal_waters_GDA94": "NCRA",
              "nrm_regions": "SubClusAb",
+             "plantations":"REGCODE",
             }
 
 def get_regions(shapefiles):
