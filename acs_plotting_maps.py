@@ -450,19 +450,22 @@ def plot_select_area(select_area=None,
                      area_linewidth=0.3,
                     ):
     # if select a specific area
+    ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]], crs=ccrs.PlateCarree())
     if select_area is None:
-        ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
+        # ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
+        pass
     else:
         assert isinstance(select_area, list), "select_area must be a list"
         # select state
         name_column = [name for name in regions.columns if "NAME" in name.upper()][0]
         area = regions.loc[regions[name_column].isin(select_area)]
+        area= area.to_crs(crs = "GDA2020")
         map_total_bounds = area.total_bounds
         minx, miny, maxx, maxy = map_total_bounds
         mid_x = (minx + maxx) / 2
         mid_y = (miny + maxy) / 2
         max_range = np.max([(maxy - miny), (maxx - minx)])
-        buffer = 0.1 * max_range
+        buffer = 0.1 * max_range        
     
         not_area = gpd.GeoSeries(
             data=[
@@ -476,13 +479,28 @@ def plot_select_area(select_area=None,
         # mask outside selected area
         if land_shadow:
             # show land as light grey
-            not_area.plot(ax=ax, facecolor="lightgrey", linewidth=area_linewidth, edgecolor="k", zorder=4)
+            ax.add_geometries(not_area,
+                              crs=ccrs.PlateCarree(),
+                              facecolor="lightgrey",
+                              linewidth=area_linewidth,
+                              edgecolor="k", 
+                              zorder=4)
         else:
             # mask white
-            not_area.plot(ax=ax, facecolor="white", linewidth=area_linewidth, edgecolor="k", zorder=4)
+            ax.add_geometries(not_area,
+                              crs=ccrs.PlateCarree(),
+                              facecolor="white",
+                              linewidth=area_linewidth, 
+                              edgecolor="k", 
+                              zorder=4)
     
-        ax.set_xlim(mid_x - 0.6 * max_range, mid_x + 0.8 * max_range)
-        ax.set_ylim(mid_y - 0.7 * max_range, mid_y + 0.7 * max_range)
+        # ax.set_xlim(mid_x - 0.6 * max_range, mid_x + 0.8 * max_range)
+        # ax.set_ylim(mid_y - 0.7 * max_range, mid_y + 0.7 * max_range)
+        ax.set_extent([mid_x - 0.6 * max_range,
+                       mid_x + 0.8 * max_range,
+                       mid_y - 0.7 * max_range,
+                       mid_y + 0.7 * max_range],
+                      crs=ccrs.PlateCarree())
     return ax
 
 def plot_titles(title="title",
@@ -1007,8 +1025,9 @@ def plot_acs_hazard_3pp(
                               xlim=xlim,
                               ylim=ylim,
                               regions=regions,
-                              crs=crs,
-                              land_shadow=land_shadow)
+                              land_shadow=land_shadow,
+                              area_linewidth=area_linewidth,
+                              )
         # ---------------------------------------------
 
                     
