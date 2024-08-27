@@ -290,6 +290,7 @@ def plot_data(regions=None,
               contourf=False,
               contour=False,
               ax=None,
+              figsize=(8,6),
               subtitle = "",
               facecolor="none",
               edgecolor="k",
@@ -311,15 +312,14 @@ def plot_data(regions=None,
         norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
         cont = ax.scatter(x=station_df.lon,
                           y=station_df.lat,
-                          s=100, 
+                          s=(100 - 80*len(station_df)/5000)*(figsize[0]*figsize[1])/48, 
                           c=station_df[var],
-                          edgecolors="k", 
+                          # edgecolors="k", 
                           alpha = 0.8,
                           zorder=7,
                           transform=ccrs.PlateCarree(), 
                           cmap= cmap,
                           norm = norm)
-        # facecolor = "lightgrey"
 
     middle_ticks=[]
     
@@ -924,6 +924,7 @@ def plot_acs_hazard(
                                             contourf=contourf,
                                             contour=contour,
                                             ax=ax,
+                                            figsize=figsize,
                                             subtitle="",
                                             facecolor=facecolor,
                                             mask_not_australia = mask_not_australia,
@@ -1072,6 +1073,7 @@ def plot_acs_hazard_3pp(
                                               contourf=contourf,
                                               contour=contour,
                                               ax=axs[i],
+                                              figsize=figsize,
                                               subtitle=f"GWL{[1.5,2.0,3.0][i]}",
                                               facecolor=facecolor,
                                               mask_not_australia = mask_not_australia,
