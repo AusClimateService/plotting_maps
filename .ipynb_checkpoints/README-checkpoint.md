@@ -1,7 +1,7 @@
 # plotting_maps
-The aim of this repo is to plot standardised maps of ACS climate hazard data. We will develop and provide examples of mapping climate hazards for Australia so that data can be consistently presented.
+This repo aims to plot standardised maps of ACS climate hazard data. We will develop and provide examples of mapping climate hazards for Australia so that data can be consistently presented.
 
-Examples will include maps for Australia and for selected states or regions. 
+Examples will include maps for Australia and selected states or regions. 
 
 Intended uses include taking netcdf or xarray dataarrays of hazards and indices such as Rx1day, TXx, FFDI and plotting the data on a map of Australia. 
 
@@ -22,6 +22,14 @@ When starting a new ARE JupyterLab session (https://are.nci.org.au/pun/sys/dashb
 
 ![image](https://github.com/AusClimateService/plotting_maps/assets/45543810/e0d93235-c0a7-4a24-adb5-8bf99f3febe0)
 
+## Access shapefiles
+This code references shapefiles stored in ```/g/data/ia39/```. You will need to be a member of this project to access the data. Request membership https://my.nci.org.au/mancini/project/ia39
+
+See https://github.com/aus-ref-clim-data-nci/shapefiles for more information on the shapefiles.
+
+Include the projects you need when you start an ARE session. Eg, storage: "gdata/ia39+gdata/hh5+gdata/mn51"
+
+![image](https://github.com/user-attachments/assets/97b5b23d-4d21-45ab-bbc0-feeff5d74388)
 
 
 ## Cloning this repo
@@ -41,16 +49,16 @@ $ cd /scratch/PROJECT/USER/
 $ cd /g/data/PROJECT/USER/
 ```
 
-Then, you can clone this repository to access the python code and notebooks. \
-If you want the new directory to be called anything other than "plotting_maps" please replace the final argument to your choice of directory name:
+Then, you can clone this repository to access the Python code and notebooks. \
+If you want the new directory to be called anything other than "plotting_maps" please replace the final argument with your choice of directory name:
 ```
 $ git clone https://github.com/AusClimateService/plotting_maps.git plotting_maps
 ```
 You will now be able to access the functions, python scripts, and Jupyter notebooks from your user.
 
-## Usage in Jupyter notebook:
+## Usage in Jupyter Notebook:
 
-See small, easy to follow example here: 
+See a small, easy-to-follow example here: 
 - [https://github.com/AusClimateService/plotting_maps/blob/main/minimal_plotting_example_pr.ipynb]
 - [https://github.com/AusClimateService/plotting_maps/blob/main/area_statistics_example.ipynb]
 
@@ -105,6 +113,36 @@ plot_acs_hazard(data = da["pr"],
                );
 ```
 ![Extratropical_storms_Rx5day_median](https://github.com/AusClimateService/plotting_maps/assets/45543810/b5735647-c886-4d35-b230-aee7c8012a0c)
+
+
+**Plot a three-panel plot**
+```python
+%%time
+var = "HWAtx"
+
+ds_gwl12 =xr.open_dataset("/g/data/ia39/ncra/heat/data/HWAtx/bias-corrected/ensemble/GWL-average/HWAtx_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL12.nc")
+ds_gwl15 = xr.open_dataset("/g/data/ia39/ncra/heat/data/HWAtx/bias-corrected/ensemble/GWL-average/HWAtx_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL15.nc")
+ds_gwl20 = xr.open_dataset("/g/data/ia39/ncra/heat/data/HWAtx/bias-corrected/ensemble/GWL-average/HWAtx_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL20.nc")
+ds_gwl30 = xr.open_dataset("/g/data/ia39/ncra/heat/data/HWAtx/bias-corrected/ensemble/GWL-average/HWAtx_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL30.nc")
+
+plot_acs_hazard_3pp(ds_gwl15 = ds_gwl15[var], 
+                    ds_gwl20 = ds_gwl20[var],
+                    ds_gwl30 = ds_gwl30[var],
+                    regions = regions_dict['ncra_regions'],
+                    cbar_label=f"Temperature [degC]",
+                    title=f"Maximum Temperature of Hottest Heatwave for future warming scenarios", 
+                    date_range = "Insert subtitle - should include the date range of the data \nand then the dataset below that", 
+                    # baseline = "GWL1.2", 
+                    dataset_name= "MME50_ssp370",
+                    issued_date=None,
+                    watermark="EXPERIMENTAL IMAGE ONLY", 
+                    watermark_color="k",
+                    cmap = cmap_dict["tasmax"],
+                    ticks = np.arange(18,53,2),)
+```
+
+
+
 
 6. **Calculate summary statistics for the range of models.**
 
