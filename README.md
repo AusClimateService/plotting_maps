@@ -73,23 +73,22 @@ cd ~/plotting_maps
 
 2. **Import the ACS plotting maps function and dictionaries and Xarray.** 
 ```python 
-from acs_plotting_maps import plot_acs_hazard, regions_dict, cmap_dict, tick_dict
+from acs_plotting_maps import plot_acs_hazard, regions_dict, cmap_dict, tick_dict, plot_acs_hazard_3pp
 import xarray as xr
-from acs_area_statistics import get_regions # this line has been updated 19 August 2024
-regions = get_regions(["ncra_regions", "australia"]) # this line has been updated 19 August 2024
 ```
 
 ```
 
 3. **Load some data.** For example, this will load extratropical storm rx5day rainfall
 ```python
-ds = xr.open_dataset("/g/data/ia39/ncra/extratropical_storms/RX5D_AGCD-05i_ACCESS-CM2_historical_r4i1p1f1_BOM_BARPA-R_v1-r1_annual.nc")
+ds = xr.open_dataset("/g/data/ia39/australian-climate-service/test-data/CORDEX-CMIP6/bias-adjustment-input/AGCD-05i/BOM/ACCESS-CM2/historical/r4i1p1f1/BARPA-R/v1-r1/day/pr/pr_AGCD-05i_ACCESS-CM2_historical_r4i1p1f1_BOM_BARPA-R_v1-r1_day_19600101-19601231.nc")
 ```
-This data has three dimensions (time, lon, lat). There is a value for every year from 1960 to 2015. We can only plot 2D, so next we will calculate a statistic to summarise the data
+This data has three dimensions (time, lon, lat). There is a value for every day from 01-01-1960 to 31-12-1960. We can only plot 2D, so next we will calculate a statistic to summarise the data
 
-4. **Summarise data into a 2D xr.DataArray.** For example, calculate the median:
+4. **Summarise data into a 2D xr.DataArray.** For example, calculate the annual sum:
 ```python
-da = ds.median(dim="time")
+var="pr"
+da = ds.sum(dim="time")[var]
 ```
 
 5. **Finally, use the plotting function**.\
@@ -100,24 +99,26 @@ You will need to specify:
      * where you want the image outfile saved.
    
 ```python
-plot_acs_hazard(data = da["pr"],
-                regions = regions, # this line has been updated 19 August 2024
-                cmap = cmap_dict["pr"],
-                ticks = tick_dict['pr_mon'],
-                cbar_label = "rainfall [mm]",
-                cbar_extend = "max",
-                title = "Extratropical storms Rx5day median",
-                dataset_name = "BARPA-R ACCESS-CM2",
-                date_range = '01 January 1960 to 01 January 2015',
-                outfile = "figures/outfile.png",
-               );
+regions = regions_dict['ncra_regions']
+plot_acs_hazard(data = da,
+                regions = regions,
+                cmap=cmap_dict["pr"],
+                ticks=tick_dict['pr_annual'],
+                cbar_label="annual rainfall [mm]",
+                cbar_extend="max",
+                title = "Rainfall",
+                dataset_name = ds.source_id,
+                date_range=f"1 January 1960 to 31 December 1960",
+                outfile = "~/figures/out.png");
 ```
-![Extratropical_storms_Rx5day_median](https://github.com/AusClimateService/plotting_maps/assets/45543810/b5735647-c886-4d35-b230-aee7c8012a0c)
 
+![ann_pr_plot](https://github.com/user-attachments/assets/0791c5e8-c756-427a-9122-eb1d670e4410)
 
 **Plot a three-panel plot**
 ```python
 %%time
+from plotting_maps.acs_plotting_maps import plot_acs_hazard_3pp
+
 var = "HWAtx"
 
 ds_gwl12 =xr.open_dataset("/g/data/ia39/ncra/heat/data/HWAtx/bias-corrected/ensemble/GWL-average/HWAtx_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL12.nc")
@@ -141,8 +142,7 @@ plot_acs_hazard_3pp(ds_gwl15 = ds_gwl15[var],
                     ticks = np.arange(18,53,2),)
 ```
 
-
-
+![three-panel-plot](https://github.com/user-attachments/assets/9338a639-da39-4e48-ab7d-f38bc01d6cfa)
 
 6. **Calculate summary statistics for the range of models.**
 
