@@ -374,7 +374,7 @@ def plot_data(regions=None,
             facecolor=facecolor,
             edgecolor=edgecolor,
             linewidth=area_linewidth,
-            zorder=8,
+            zorder=6,
         )
 
     # subtitle
