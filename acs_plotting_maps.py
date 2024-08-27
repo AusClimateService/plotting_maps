@@ -253,7 +253,6 @@ shapefile_list = ["aus_local_gov",
 # Create an instance of the RegionShapefiles class
 regions_dict = RegionShapefiles(PATH, shapefile_list)
 
-
 # define a white mask for the area outside of Australian land
 # We will use this to hide data outside of the Australian land borders.
 # note that this is not a data mask,
@@ -276,8 +275,6 @@ not_australia = gpd.GeoSeries(
     crs=ccrs.PlateCarree(),
 )
 
-# Create an instance of the RegionShapefiles class
-regions_dict = RegionShapefiles(shapefiles_path, shapefiles)
 
 # Define subfunctions for different parts of the plotting 
 # so that they can be reused for single panel and multi panel plots
