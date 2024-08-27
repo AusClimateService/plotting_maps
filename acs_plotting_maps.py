@@ -450,9 +450,8 @@ def plot_select_area(select_area=None,
                      area_linewidth=0.3,
                     ):
     # if select a specific area
-    ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]], crs=ccrs.PlateCarree())
     if select_area is None:
-        # ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
+        ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]], crs=ccrs.PlateCarree())
         pass
     else:
         assert isinstance(select_area, list), "select_area must be a list"
@@ -494,8 +493,6 @@ def plot_select_area(select_area=None,
                               edgecolor="k", 
                               zorder=4)
     
-        # ax.set_xlim(mid_x - 0.6 * max_range, mid_x + 0.8 * max_range)
-        # ax.set_ylim(mid_y - 0.7 * max_range, mid_y + 0.7 * max_range)
         ax.set_extent([mid_x - 0.6 * max_range,
                        mid_x + 0.8 * max_range,
                        mid_y - 0.7 * max_range,
