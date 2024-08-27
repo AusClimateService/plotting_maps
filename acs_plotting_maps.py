@@ -231,9 +231,10 @@ def plot_data(regions=None,
               facecolor="none",
               edgecolor="k",
               area_linewidth=0.3,
-              mask_not_australia = False,
+              mask_not_australia = True,
               mask_australia=False,
               stippling=None,
+              select_area = None,
              ):
     """This function takes an axis and plots the hazard data to a map of Australia"""
    
@@ -251,7 +252,7 @@ def plot_data(regions=None,
                           c=station_df[var],
                           edgecolors="k", 
                           alpha = 0.8,
-                          zorder=6,
+                          zorder=7,
                           transform=ccrs.PlateCarree(), 
                           cmap= cmap,
                           norm = norm)
@@ -317,7 +318,7 @@ def plot_data(regions=None,
             )
        
         if contour and tick_labels is None:
-            cont = ax.contour(
+            ax.contour(
                 data.lon,
                 data.lat,
                 data,
@@ -338,7 +339,7 @@ def plot_data(regions=None,
                     stippling,
                     alpha=0,
                     hatches = ["",".."],
-                    zorder=5,
+                    zorder=7,
                     transform=ccrs.PlateCarree(),
                    )
 
@@ -350,7 +351,7 @@ def plot_data(regions=None,
             crs=ccrs.PlateCarree(),
             facecolor="white",
             linewidth=0,
-            zorder=4,
+            zorder=5,
         )
 
     # cover australia land area eg for ocean data
@@ -365,15 +366,16 @@ def plot_data(regions=None,
             zorder=4,
         )
 
-    # add region borders
-    ax.add_geometries(
-        regions["geometry"],
-        crs=ccrs.PlateCarree(),
-        facecolor=facecolor,
-        edgecolor=edgecolor,
-        linewidth=area_linewidth,
-        zorder=5,
-    )
+    if select_area is None:
+        # add region borders unless you have selected area
+        ax.add_geometries(
+            regions["geometry"],
+            crs=ccrs.PlateCarree(),
+            facecolor=facecolor,
+            edgecolor=edgecolor,
+            linewidth=area_linewidth,
+            zorder=8,
+        )
 
     # subtitle
     ax.text(
@@ -436,7 +438,7 @@ def plot_cbar(cont=None,
     
     # Label colorbar
     if cbar is not None:
-        cbar.ax.set_title(cbar_label, zorder=8, loc="center", fontsize=10, verticalalignment="bottom")
+        cbar.ax.set_title(cbar_label, zorder=10, loc="center", fontsize=10, verticalalignment="bottom")
     return ax
 
 def plot_select_area(select_area=None,
@@ -444,8 +446,9 @@ def plot_select_area(select_area=None,
                      xlim=None,
                      ylim=None,
                      regions=None,
-                     crs=None, 
-                     land_shadow=False):
+                     land_shadow=False,
+                     area_linewidth=0.3,
+                    ):
     # if select a specific area
     if select_area is None:
         ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
@@ -467,16 +470,16 @@ def plot_select_area(select_area=None,
                     area.dissolve()["geometry"].values[0]
                 )
             ],
-            crs=crs,
+            crs=ccrs.PlateCarree(),
         )
     
         # mask outside selected area
         if land_shadow:
             # show land as light grey
-            not_area.plot(ax=ax, facecolor="lightgrey", linewidth=0, zorder=4)
+            not_area.plot(ax=ax, facecolor="lightgrey", linewidth=area_linewidth, edgecolor="k", zorder=4)
         else:
             # mask white
-            not_area.plot(ax=ax, facecolor="white", linewidth=0, zorder=4)
+            not_area.plot(ax=ax, facecolor="white", linewidth=area_linewidth, edgecolor="k", zorder=4)
     
         ax.set_xlim(mid_x - 0.6 * max_range, mid_x + 0.8 * max_range)
         ax.set_ylim(mid_y - 0.7 * max_range, mid_y + 0.7 * max_range)
@@ -581,10 +584,6 @@ def plot_titles(title="title",
     ax.axis('off')
     return ax
 
-
-
-
-                   
 
 
 # # Define a function for plotting maps
@@ -815,6 +814,8 @@ def plot_acs_hazard(
             )
         else:
             crs = ccrs.PlateCarree()
+    else:
+        crs=crs
 
     # Set up the plot
     fig = plt.figure(
@@ -861,8 +862,9 @@ def plot_acs_hazard(
                           xlim=xlim,
                           ylim=ylim,
                           regions=regions,
-                          crs=crs,
-                          land_shadow=land_shadow)
+                          land_shadow=land_shadow,
+                          area_linewidth=area_linewidth,
+                         )
     # ---------------------------------------------
 
     # colorbar------------------------
