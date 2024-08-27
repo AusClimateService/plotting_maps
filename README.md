@@ -114,6 +114,36 @@ plot_acs_hazard(data = da["pr"],
 ```
 ![Extratropical_storms_Rx5day_median](https://github.com/AusClimateService/plotting_maps/assets/45543810/b5735647-c886-4d35-b230-aee7c8012a0c)
 
+
+**Plot a three-panel plot**
+```python
+%%time
+var = "HWAtx"
+
+ds_gwl12 =xr.open_dataset("/g/data/ia39/ncra/heat/data/HWAtx/bias-corrected/ensemble/GWL-average/HWAtx_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL12.nc")
+ds_gwl15 = xr.open_dataset("/g/data/ia39/ncra/heat/data/HWAtx/bias-corrected/ensemble/GWL-average/HWAtx_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL15.nc")
+ds_gwl20 = xr.open_dataset("/g/data/ia39/ncra/heat/data/HWAtx/bias-corrected/ensemble/GWL-average/HWAtx_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL20.nc")
+ds_gwl30 = xr.open_dataset("/g/data/ia39/ncra/heat/data/HWAtx/bias-corrected/ensemble/GWL-average/HWAtx_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL30.nc")
+
+plot_acs_hazard_3pp(ds_gwl15 = ds_gwl15[var], 
+                    ds_gwl20 = ds_gwl20[var],
+                    ds_gwl30 = ds_gwl30[var],
+                    regions = regions_dict['ncra_regions'],
+                    cbar_label=f"Temperature [degC]",
+                    title=f"Maximum Temperature of Hottest Heatwave for future warming scenarios", 
+                    date_range = "Insert subtitle - should include the date range of the data \nand then the dataset below that", 
+                    # baseline = "GWL1.2", 
+                    dataset_name= "MME50_ssp370",
+                    issued_date=None,
+                    watermark="EXPERIMENTAL IMAGE ONLY", 
+                    watermark_color="k",
+                    cmap = cmap_dict["tasmax"],
+                    ticks = np.arange(18,53,2),)
+```
+
+
+
+
 6. **Calculate summary statistics for the range of models.**
 
 ```python 
