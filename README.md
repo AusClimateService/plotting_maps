@@ -27,6 +27,11 @@ This code references shapefiles stored in ```/g/data/ia39/```. You will need to 
 
 See https://github.com/aus-ref-clim-data-nci/shapefiles for more information on the shapefiles.
 
+Include the projects you need when you start an ARE session. Eg, storage: "gdata/ia39+gdata/hh5+gdata/mn51"
+
+![image](https://github.com/user-attachments/assets/97b5b23d-4d21-45ab-bbc0-feeff5d74388)
+
+
 ## Cloning this repo
 Before you can ```import acs_plotting_maps``` to use the plotting function ```plot_acs_hazard```, you will need to clone a copy of this repository to your own working directory.
 
