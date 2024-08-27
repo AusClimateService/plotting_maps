@@ -161,34 +161,98 @@ tick_dict = {
 }
 
 # # Load the State and Region shape files
-# write a dictionary of the shapefile geopandas dataframes.
-# hese will be used for state boundaries, LGAs, NRM, etc
-regions_dict = {}
+class RegionShapefiles:
+    """Load and return a shapefile based on its name."""
 
-shape_files = [
-    # "aus_local_gov",
-    # "aus_states_territories",
-    "australia",
-    # "nrm_regions",
-    # "river_regions",
-    "ncra_regions",
-]
+    def __init__(self, path, shapefiles):
+        """Create an instance of the RegionShapefiles class.
+        Parameters
+        ----------
+        path : str
+            The path to the shapefiles directory.
+        shapefiles : list
+            A list of shapefile names to load.
+        """
+        self.path = path
+        self.shapefiles = shapefiles
+        self._regions_dict = {}
+
+    def __call__(self, name):
+        """Retrieve the shapefile for the given region name.
+        Parameters
+        ----------
+        name : str
+            The name of the region to retrieve.
+        Returns
+        -------
+        GeoDataFrame or GeoSeries
+            The shapefile data for the specified region.
+        """
+        if name not in self._regions_dict:
+            if name in self.shapefiles:
+                self._regions_dict[name] = gpd.read_file(
+                    f"{self.path}/{name}/{name}.shp"
+                )
+            elif name == "not_australia":
+                # Define a white mask for the area outside of Australian land
+                # We will use this to hide data outside of the Australian land borders.
+                # note that this is not a data mask,
+                # the data under the masked area is still loaded and computed, but not visualised
+                base_name = name[4:]  # Remove 'not_' prefix
+                base_region = self(base_name).copy()
+                base_region.crs = crs
+                # This mask is a rectangular box around the maximum land extent of Australia
+                # with a buffer of 10 degrees on every side,
+                # with the Australian land area cut out so only the ocean is hidden.
+                not_region = gpd.GeoSeries(
+                    data=[
+                        box(*box(*base_region.total_bounds).buffer(20).bounds
+                        ).difference(base_region["geometry"].values[0])
+                    ],
+                    crs=ccrs.PlateCarree(),
+                )
+                self._regions_dict[name] = not_region
+            else:
+                raise ValueError(f"Shapefile for region '{name}' not found.")
+        return self._regions_dict[name]
+
+    def __getitem__(self, name):
+        if name not in self._regions_dict:
+            self(name)
+        return self._regions_dict[name]
+
+    def __setitem__(self, name, value):
+        self._regions_dict[name] = value
+
+    def keys(self):
+        return self._regions_dict.keys()
+
+    def __len__(self):
+        return len(self._regions_dict)
+
+    def __repr__(self):
+        return repr(self._regions_dict)
+
+    def update(self, *args, **kwargs):
+        self._regions_dict.update(*args, **kwargs)
+
+
+# Define the path and shapefiles
+# These will be used for state boundaries, LGAs, NRM, etc
 PATH = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data"
-for name in shape_files:
-    regions_dict.update(
-        {
-            name: gpd.read_file(
-                f"{PATH}/{name}/{name}.shp"
-            )
-        }
-    )
-# regions_dict.update(
-#     {
-#         "broadacre_regions": gpd.read_file(
-#             f"{PATH}/broadacre_regions/aagis_asgs16v1_g5a.shp"
-#         )
-#     }
-# )
+shapefile_list = ["aus_local_gov",
+                  "aus_states_territories",
+                  "australia", 
+                  "broadacre_regions", 
+                  "NCRA_Marine_region",
+                  "ncra_regions", 
+                  "NCRA_regions_coastal_waters_GDA94", 
+                  "nrm_regions",
+                  "plantations"]
+
+# Create an instance of the RegionShapefiles class
+regions_dict = RegionShapefiles(PATH, shapefile_list)
+
 
 # define a white mask for the area outside of Australian land
 # We will use this to hide data outside of the Australian land borders.
