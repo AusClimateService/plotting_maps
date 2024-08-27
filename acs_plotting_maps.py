@@ -1033,7 +1033,9 @@ def plot_acs_hazard_3pp(
     outfile=None,
     savefig=True,
 ):
-    """Three panel plot
+    """Three panel plot. 
+    As with plot_acs_hazard, but takes three xarray data arrays:
+    ds_gwl15, ds_gwl20, ds_gwl30. (left, middle and right)
     """
 
     if regions is None:
