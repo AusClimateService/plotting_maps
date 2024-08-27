@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib import image, cm
 import xarray as xr
 import cartopy.crs as ccrs
+from glob import glob
 
 # import colormap packages
 import cmaps
@@ -190,9 +191,7 @@ class RegionShapefiles:
         """
         if name not in self._regions_dict:
             if name in self.shapefiles:
-                self._regions_dict[name] = gpd.read_file(
-                    f"{self.path}/{name}/{name}.shp"
-                )
+                self._regions_dict[name] = gpd.read_file(glob(f"{self.path}/{name}/*.shp")[0])
             elif name == "not_australia":
                 # Define a white mask for the area outside of Australian land
                 # We will use this to hide data outside of the Australian land borders.
