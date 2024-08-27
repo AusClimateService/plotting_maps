@@ -253,7 +253,6 @@ shapefile_list = ["aus_local_gov",
 # Create an instance of the RegionShapefiles class
 regions_dict = RegionShapefiles(PATH, shapefile_list)
 
-
 # define a white mask for the area outside of Australian land
 # We will use this to hide data outside of the Australian land borders.
 # note that this is not a data mask,
