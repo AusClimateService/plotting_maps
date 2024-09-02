@@ -296,11 +296,12 @@ def plot_data(regions=None,
               area_linewidth=0.3,
               mask_not_australia = True,
               mask_australia=False,
+              agcd_mask=False,
               stippling=None,
               select_area = None,
              ):
     """This function takes an axis and plots the hazard data to a map of Australia"""
-   
+    
     # for station data
     if station_df is not None:
         # assuming columns are named "lon", "lat", variable,
@@ -325,9 +326,14 @@ def plot_data(regions=None,
     if data is None:
         norm=None
         cont=None
-        pass
     else:
         data = data.squeeze()
+
+        if agcd_mask:
+            # mask data where observations are sparse
+            directory = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/masks/AGCD-05i"
+            agcd = xr.open_dataset(f"{directory}/mask-fraction_agcd_v1-0-2_precip_weight_1960_2022.nc").fraction
+            data = data.where(agcd>=0.8)
     
         # facecolor = "none"
     
@@ -673,6 +679,7 @@ def plot_acs_hazard(
     stippling=None,
     mask_not_australia=True,
     mask_australia=False,
+    agcd_mask=False,
     facecolor="none",
     edgecolor="black",
     figsize=(8, 6),
@@ -683,6 +690,7 @@ def plot_acs_hazard(
     xlim=(114, 162),
     ylim=(-43, -8),
     cmap=cm.Greens,
+    cmap_bad="lightgrey",
     cbar_extend="both",
     ticks=None,
     tick_labels=None,
@@ -742,8 +750,12 @@ def plot_acs_hazard(
         Eg, use when plotting ocean only.
         Default is False.
 
+    agcd_mask: boolean
+        If True, applies a ~5km mask for data-sparse inland areas of Australia.
+        Default is False.
+
     facecolor: color
-        color of land when you plot the regions without climate data. 
+        color of land when plotting the regions without climate data. 
         facecolor recommendations include "white", "lightgrey", "none".
 
     edgecolor: color
@@ -780,6 +792,10 @@ def plot_acs_hazard(
         See cmap_dict for suggested colormaps.
         If none, cmap set to cm.Greens.
         Please choose appropriate colormap for your data.
+
+    cmap_bad: color
+        define the color to set for "bad" or missing values
+        default "lightgrey"
 
     cbar_extend: one of {'neither', 'both', 'min', 'max'}.
         eg "both" changes the ends of the colorbar to arrows to indicate that
@@ -870,7 +886,6 @@ def plot_acs_hazard(
     This function returns fig and ax.
     """
     
-    
     if regions is None:
         try:
             regions = regions_dict[name]
@@ -911,6 +926,7 @@ def plot_acs_hazard(
         data = xr.open_dataset(infile)
 
     # plot hazard data ------------------------
+    cmap.set_bad(cmap_bad)
     ax, norm, cont, middle_ticks =plot_data(regions=regions,
                                             data=data, 
                                             station_df = station_df,
@@ -928,6 +944,7 @@ def plot_acs_hazard(
                                             facecolor=facecolor,
                                             mask_not_australia = mask_not_australia,
                                             mask_australia=mask_australia,
+                                            agcd_mask=agcd_mask,
                                             area_linewidth=area_linewidth,
                                             stippling=stippling,
                                             )
@@ -1004,6 +1021,7 @@ def plot_acs_hazard_3pp(
     stippling=None,
     mask_not_australia=True,
     mask_australia=False,
+    agcd_mask=False,
     facecolor="none",
     edgecolor="black",
     figsize=(10, 4),
@@ -1014,6 +1032,7 @@ def plot_acs_hazard_3pp(
     xlim=(114,154),
     ylim=(-43, -8),
     cmap=cm.Greens,
+    cmap_bad="lightgrey",
     cbar_extend="both",
     ticks=None,
     tick_labels=None,
@@ -1033,7 +1052,9 @@ def plot_acs_hazard_3pp(
     outfile=None,
     savefig=True,
 ):
-    """Three panel plot
+    """Three panel plot. 
+    As with plot_acs_hazard, but takes three xarray data arrays:
+    ds_gwl15, ds_gwl20, ds_gwl30. (left, middle and right)
     """
 
     if regions is None:
@@ -1059,6 +1080,7 @@ def plot_acs_hazard_3pp(
         
     fig, axs = plt.subplots(nrows=1, ncols=3,  sharey=True, sharex=True, figsize=figsize, subplot_kw={'projection': crs, "frame_on":False},)
 
+    cmap.set_bad(cmap_bad)
     for i, ds in enumerate([ds_gwl15, ds_gwl20, ds_gwl30]):
         ax, norm, cont, middle_ticks = plot_data(regions=regions,
                                               data=ds, 
@@ -1077,6 +1099,7 @@ def plot_acs_hazard_3pp(
                                               facecolor=facecolor,
                                               mask_not_australia = mask_not_australia,
                                               mask_australia=mask_australia,
+                                              agcd_mask=agcd_mask,
                                               area_linewidth=area_linewidth,
                                               stippling=stippling)
         
