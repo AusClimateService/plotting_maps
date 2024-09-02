@@ -107,6 +107,7 @@ plot_acs_hazard(data = da,
                 cbar_label="annual rainfall [mm]",
                 cbar_extend="max",
                 title = "Rainfall",
+                watermark="EXPERIMENTAL IMAGE ONLY", # When you are making your final figures, remove watermark using: watermark=""
                 dataset_name = ds.source_id,
                 date_range=f"1 January 1960 to 31 December 1960",
                 outfile = "~/figures/out.png");
@@ -136,7 +137,7 @@ plot_acs_hazard_3pp(ds_gwl15 = ds_gwl15[var],
                     # baseline = "GWL1.2", 
                     dataset_name= "MME50_ssp370",
                     issued_date=None,
-                    watermark="EXPERIMENTAL IMAGE ONLY", 
+                    watermark="EXPERIMENTAL IMAGE ONLY", # When you are making your final figures, remove watermark using: watermark=""
                     watermark_color="k",
                     cmap = cmap_dict["tasmax"],
                     ticks = np.arange(18,53,2),)
@@ -192,6 +193,8 @@ For example only, this would make a dataframe in this format:
 |        9 | AUS       | Australia               |  123.614 |   742.735 |  7146.55 |
 
 
+## Time Series extraction
+For time series extraction of point locations see https://github.com/AusClimateService/TimeSeriesExtraction
 
 ## Suggested regions, colormaps and scales for plotting
 Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
