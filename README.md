@@ -193,6 +193,8 @@ For example only, this would make a dataframe in this format:
 |        9 | AUS       | Australia               |  123.614 |   742.735 |  7146.55 |
 
 
+## Time Series extraction
+For time series extraction of point locations see https://github.com/AusClimateService/TimeSeriesExtraction
 
 ## Suggested regions, colormaps and scales for plotting
 Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
