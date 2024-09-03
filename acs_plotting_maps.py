@@ -50,6 +50,7 @@ cmap_dict = {
     "sst_anom": cmaps.cmocean_balance_r,
     "mhw_days": cm.YlOrRd,
     "mhw_intensity": cm.hot_r,
+    "hot_r": cm.hot_r,
     "surface_pH": cm.YlGnBu,
     "surface_pH_1": cmaps.cmocean_phase,
     "surface_pH_2": cm.cool,
@@ -302,25 +303,8 @@ def plot_data(regions=None,
              ):
     """This function takes an axis and plots the hazard data to a map of Australia"""
     
-    # for station data
-    if station_df is not None:
-        # assuming columns are named "lon", "lat", variable,
-        gdf = gpd.GeoDataFrame(
-            station_df, geometry=gpd.points_from_xy(station_df.lon, station_df.lat), crs=ccrs.PlateCarree()
-            )
-        var = gdf.columns[[2]][0]
-        norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
-        cont = ax.scatter(x=station_df.lon,
-                          y=station_df.lat,
-                          s=(100 - 80*len(station_df)/5000)*(figsize[0]*figsize[1])/48, 
-                          c=station_df[var],
-                          # edgecolors="k", 
-                          alpha = 0.8,
-                          zorder=7,
-                          transform=ccrs.PlateCarree(), 
-                          cmap= cmap,
-                          norm = norm)
-
+    ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
+    
     middle_ticks=[]
     
     if data is None:
@@ -357,7 +341,7 @@ def plot_data(regions=None,
                 outside_bound_first = [ticks[0] - (ticks[1] - ticks[0]) / 2]
                 outside_bound_last = [ticks[-1] + (ticks[-1] - ticks[-2]) / 2]
                 bounds = outside_bound_first + middle_ticks + outside_bound_last
-                norm = BoundaryNorm(bounds, cmap.N, extend = cbar_extend)
+                norm = BoundaryNorm(bounds, cmap.N, extend = "neither")
     
         # plot the hazard data
         if contourf and tick_labels is None:
@@ -399,7 +383,24 @@ def plot_data(regions=None,
                 transform=ccrs.PlateCarree(),
             )
 
-    ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
+    # for station data
+    if station_df is not None:
+        # assuming columns are named "lon", "lat", variable,
+        gdf = gpd.GeoDataFrame(
+            station_df, geometry=gpd.points_from_xy(station_df.lon, station_df.lat), crs=ccrs.PlateCarree()
+            )
+        var = gdf.columns[[2]][0]
+        norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
+        cont = ax.scatter(x=station_df.lon,
+                          y=station_df.lat,
+                          s=(100 - 80*len(station_df)/5000)*(figsize[0]*figsize[1])/48, 
+                          c=station_df[var],
+                          # edgecolors="k", 
+                          alpha = 0.8,
+                          zorder=7,
+                          transform=ccrs.PlateCarree(), 
+                          cmap= cmap,
+                          norm = norm)
     
     if stippling is not None:
         ax.contourf(stippling.lon,
@@ -925,6 +926,10 @@ def plot_acs_hazard(
     if infile is not None:
         data = xr.open_dataset(infile)
 
+
+    if contour or contourf:
+        cbar_extend = "neither"
+
     # plot hazard data ------------------------
     cmap.set_bad(cmap_bad)
     ax, norm, cont, middle_ticks =plot_data(regions=regions,
@@ -1013,7 +1018,7 @@ def plot_acs_hazard(
 # This is the function you call to plot all the graphs
 def plot_acs_hazard_3pp(
     name='ncra_regions',
-    regions=regions_dict['ncra_regions'],
+    regions=None,
     ds_gwl15=None,
     ds_gwl20=None,
     ds_gwl30=None,
