@@ -468,13 +468,15 @@ def plot_cbar(cont=None,
               tick_labels=None,
               middle_ticks=[], 
               cax_bounds = [0.82, 0.15, 0.03, 0.7],
-             contour=False,
-             contourf=False,):
+              contour=False,
+              contourf=False,
+              location=None,):
     """This function defines and plots the colorbar"""
-    if norm is None:
-        return ax
     
     cbar = None
+    
+    if norm is None:
+        return cbar
     
     if tick_labels is None:
         cbar = plt.colorbar(
@@ -484,6 +486,7 @@ def plot_cbar(cont=None,
             cax=ax.inset_axes(cax_bounds),
             ticks=ticks,
             norm=norm,
+            location=location,
         )
     else:
         # for categorical data
@@ -495,6 +498,7 @@ def plot_cbar(cont=None,
             ticks=ticks,
             norm=norm,
             drawedges=True,
+            location=location,
         )
         if len(ticks) == len(tick_labels):
             cbar.ax.set_yticks(ticks, tick_labels)
@@ -508,7 +512,7 @@ def plot_cbar(cont=None,
     # Label colorbar
     if cbar is not None:
         cbar.ax.set_title(cbar_label, zorder=10, loc="center", fontsize=10, verticalalignment="bottom")
-    return ax
+    return cbar
 
 def plot_select_area(select_area=None,
                      ax=None, 
@@ -968,7 +972,7 @@ def plot_acs_hazard(
     # ---------------------------------------------
 
     # colorbar------------------------
-    ax = plot_cbar(cont=cont,
+    cbar = plot_cbar(cont=cont,
                   norm=norm,
                   ax=ax,
                   cbar_extend=cbar_extend, 
@@ -976,7 +980,8 @@ def plot_acs_hazard(
                   ticks=ticks, 
                   tick_labels=tick_labels,
                   middle_ticks=middle_ticks,
-                  cax_bounds = [0.82, 0.15, 0.03, 0.7],)
+                  cax_bounds = [0.82, 0.15, 0.03, 0.7],
+                  )
     # ---------------------------------------
 
     # Annotations and titles ---------------------
@@ -1127,7 +1132,7 @@ def plot_acs_hazard_3pp(
     cbar_ax = fig.add_axes([0.87, 0.2, 0.03, 0.5]) #left bottom width height
     cbar_ax.axis('off')
 
-    ax = plot_cbar(cont=cont,
+    cbar = plot_cbar(cont=cont,
                   norm=norm,
                   ax=cbar_ax,
                   cbar_extend=cbar_extend, 
@@ -1135,7 +1140,8 @@ def plot_acs_hazard_3pp(
                   ticks=ticks, 
                   tick_labels=tick_labels,
                   middle_ticks=middle_ticks,
-                  cax_bounds = [0.1,0,0.5,1],)
+                  cax_bounds = [0.1,0,0.5,1],
+                  )
     #------------------------------------------
 
     
