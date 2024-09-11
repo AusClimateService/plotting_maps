@@ -39,6 +39,8 @@ logo = image.imread(f"{Path(__file__).parent}/ACS_Logo_Blue_on_white_Stacked.png
 # This suggested colormaps are matched with possible variables to plot.
 # This includes color maps for the total amount and anomalies
 
+#ipcc colormaps from github.com/IPCC-WG1/colormaps/
+
 cmap_mustard = LinearSegmentedColormap.from_list(
     "mustard",
     [(195 / 235, 152 / 235, 21 / 235), (229 / 235, 208 / 235, 147 / 235)],
@@ -467,11 +469,16 @@ def plot_cbar(cont=None,
               ticks=None, 
               tick_labels=None,
               middle_ticks=[], 
-              cax_bounds = [0.82, 0.15, 0.03, 0.7],
+              cax_bounds =None,
               contour=False,
               contourf=False,
               location=None,):
     """This function defines and plots the colorbar"""
+
+    if cax_bounds is not None:
+        cax = ax.inset_axes(cax_bounds)
+    else:
+        cax=None
     
     cbar = None
     
@@ -483,10 +490,10 @@ def plot_cbar(cont=None,
             cont,
             ax=ax,
             extend=cbar_extend,
-            cax=ax.inset_axes(cax_bounds),
+            cax=cax,
             ticks=ticks,
             norm=norm,
-            location=location,
+            location=location,fraction=0.046, pad=0.04
         )
     else:
         # for categorical data
@@ -494,11 +501,11 @@ def plot_cbar(cont=None,
             cont,
             ax=ax,
             extend='neither',
-            cax=ax.inset_axes(cax_bounds),
+            cax=cax,
             ticks=ticks,
             norm=norm,
             drawedges=True,
-            location=location,
+            location=location,fraction=0.046, pad=0.04
         )
         if len(ticks) == len(tick_labels):
             cbar.ax.set_yticks(ticks, tick_labels)
@@ -1172,6 +1179,441 @@ def plot_acs_hazard_3pp(
         outfile = f"{PATH}/figures/{title.replace(' ', '_')}.png"
         os.makedirs(os.path.dirname(outfile), exist_ok=True)
 
+    if savefig:
+        plt.savefig(outfile, dpi=300)
+    return fig, ax
+
+def plot_acs_hazard_4pp(
+                name='ncra_regions',
+                regions=None,
+                ds_gwl12=None,
+                ds_gwl15=None,
+                ds_gwl20=None,
+                ds_gwl30=None,
+                station_df=None,
+                mask_not_australia=True,
+                mask_australia=False,
+                agcd_mask=False,
+                stippling=None,
+                facecolor="none",
+                edgecolor="black",
+                figsize=None,
+                title=None,
+                date_range="",
+                crs=None,
+                area_linewidth=0.3,
+                xlim=(113, 154),
+                ylim=(-43, -10),
+                cmap=cm.Greens,
+                cmap_bad="lightgrey",
+                cbar_extend="both",
+                ticks=None,
+                tick_labels=None,
+                cbar_label="",
+                baseline=None,
+                dataset_name=None,
+                issued_date=None,
+                label_states=False,
+                contourf=False,
+                contour=False,
+                select_area=None,
+                land_shadow=False,
+                watermark="EXPERIMENTAL\nIMAGE ONLY",
+                watermark_color = "r",
+                show_logo = False,
+                infile=None,
+                outfile=None,
+                savefig=True,
+                orientation="horizontal",
+            ):
+    if orientation=="horizontal":
+        tick_rotation = 0
+        nrows = 1
+        ncols = 4
+        cbar_location = "right"
+        plots_rect = (0.01,0.05,0.84,0.85) #left bottom width height
+        cbar_rect = [0.85, 0.2, 0.03, 0.5]
+        
+        # text annotation xy locations
+        text_xy = {"title": (0.5, 0.9),
+                   "date_range": (0.5, 0.87),
+                   "watermark": (0.45, 0.41),}
+        if figsize is None:
+            figsize=(10, 3)
+        
+    elif orientation=="vertical":
+        tick_rotation = -90
+        nrows = 4
+        ncols = 1
+        cbar_location = "bottom"
+        plots_rect = (0.01,0.05,0.9,0.85) #left bottom width height
+        cbar_rect = [0.75, 0.3, 0.05, 0.3]
+        
+        # text annotation xy locations
+        text_xy = {"title": (0.5, 0.96),
+               "date_range": (0.5, 0.95),
+               "watermark": (0.45, 0.41),}
+        if figsize is None:
+            figsize=(5,12)
+        
+    elif orientation=="square":       
+        ncols=2
+        nrows=2
+        figsize=(8,6)
+        plots_rect = (0.01,0.05,0.84,0.85) #left bottom width height
+        cbar_rect = [0.85, 0.2, 0.03, 0.5]
+
+        # text annotation xy locations for 3-panel plot
+        text_xy = {"title": (0.5, 0.93),
+                   "date_range": (0.5, 0.92),
+                   "watermark": (0.45, 0.41),}
+
+        if figsize is None:
+            figsize=(8, 6)
+    else:
+        print('orientation must be one of ["horizontal", "vertical", "square"]')
+
+    if regions is None:
+        try:
+            regions = regions_dict[name]
+        except:
+            print(f"Could not read regions_dict[{name}]")
+
+    regions = regions.to_crs(crs = "GDA2020")
+
+    # Set default crs for Australia maps and selection maps
+    if crs is None:
+        if select_area is None:
+            # Default for Australian map
+            crs = ccrs.LambertConformal(
+                central_latitude=-24.75,
+                central_longitude=134.0,
+                cutoff=30,
+                standard_parallels=(-10, -40),
+            )
+        else:
+            crs = ccrs.PlateCarree()
+
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols,
+                            sharey=True, sharex=True, 
+                            figsize=figsize,
+                            layout="constrained",
+                            subplot_kw={'projection': crs, "frame_on":False},)
+    
+    cmap.set_bad(cmap_bad)
+    for i, ds in enumerate([ds_gwl12, ds_gwl15, ds_gwl20, ds_gwl30]):
+        ax, norm, cont, middle_ticks = plot_data(regions=regions,
+                                              data=ds, 
+                                              xlim=xlim,
+                                              ylim=ylim,
+                                              cmap=cmap,
+                                              cbar_extend=cbar_extend,
+                                              ticks=ticks,
+                                              tick_labels=tick_labels,
+                                              contourf=contourf,
+                                              contour=contour,
+                                              ax=axs.flatten()[i],
+                                              figsize=figsize,
+                                              subtitle=f"GWL{[1.2,1.5,2.0,3.0][i]}",
+                                              facecolor=facecolor,
+                                              mask_not_australia = mask_not_australia,
+                                              mask_australia=mask_australia,
+                                              agcd_mask=agcd_mask,
+                                              area_linewidth=area_linewidth,
+                                              stippling=stippling)
+        
+        # if select a specific area -----------
+        ax = plot_select_area(select_area=select_area, 
+                              ax=ax,
+                              xlim=xlim,
+                              ylim=ylim,
+                              regions=regions,
+                              land_shadow=land_shadow,
+                              area_linewidth=area_linewidth,
+                              )
+        # ---------------------------------------------
+    
+                    
+        ax.axis('off')
+    
+    # colorbar -----------------------------------------------------------
+    # fig.subplots_adjust(left=0.05, bottom=0.05, right=0.85, top=0.85, wspace=0.05, hspace=0.1)
+    fig.get_layout_engine().set(rect=plots_rect)
+    
+    
+    cbar_ax = fig.add_axes(cbar_rect) #left bottom width height
+    cbar_ax.axis('off')
+    
+    ax = plot_cbar(cont=cont,
+                  norm=norm,
+                  ax=cbar_ax,
+                  cbar_extend=cbar_extend, 
+                  cbar_label=cbar_label,
+                  ticks=ticks, 
+                  tick_labels=tick_labels,
+                  middle_ticks=middle_ticks,
+                  cax_bounds = [0.1,0,0.5,1],)
+    #------------------------------------------
+    
+    
+    # plot border and annotations -----------------
+    ax111 = fig.add_axes([0.01,0.01,0.98,0.99], facecolor="none", xticks=[], yticks=[]) #(left, bottom, width, height)
+    
+    
+    ax111 = plot_titles(title=title,
+                        date_range = date_range, 
+                        baseline = baseline, 
+                        dataset_name= dataset_name,
+                        issued_date=issued_date,
+                        watermark=watermark, 
+                        watermark_color=watermark_color,
+                        ax=ax111,
+                        text_xy = text_xy,
+                        title_ha = "center",
+                   )
+    ax111.axis(True)
+    # --------------------------------------------
+    
+    if outfile is None:
+        PATH = os.path.abspath(os.getcwd())
+        outfile = f"{PATH}/figures/{title.replace(' ', '_')}.png"
+        os.makedirs(os.path.dirname(outfile), exist_ok=True)
+    
+    if savefig:
+        plt.savefig(outfile, dpi=300)
+    return fig, ax
+
+def plot_acs_hazard_1plus3(
+                name='ncra_regions',
+                regions=None,
+                ds_gwl12=None,
+                gwl12_cmap=cm.Greens,
+                gwl12_cbar_extend="both",
+                gwl12_cbar_label=None,
+                gwl12_ticks=None,
+                gwl12_tick_labels=None,
+                ds_gwl15=None,
+                ds_gwl20=None,
+                ds_gwl30=None,
+                station_df=None,
+                mask_not_australia=True,
+                mask_australia=False,
+                agcd_mask=False,
+                stippling=None,
+                facecolor="none",
+                edgecolor="black",
+                figsize=None,
+                title=None,
+                date_range="",
+                crs=None,
+                area_linewidth=0.3,
+                xlim=(113, 154),
+                ylim=(-43, -10),
+                cmap=cm.Greens,
+                cmap_bad="lightgrey",
+                cbar_extend="both",
+                ticks=None,
+                tick_labels=None,
+                cbar_label="",
+                baseline=None,
+                dataset_name=None,
+                issued_date=None,
+                label_states=False,
+                contourf=False,
+                contour=False,
+                select_area=None,
+                land_shadow=False,
+                watermark="EXPERIMENTAL\nIMAGE ONLY",
+                watermark_color = "r",
+                show_logo = False,
+                infile=None,
+                outfile=None,
+                savefig=True,
+                orientation="horizontal",
+            ):
+    """2-by-2 layout. 1 baseline plot and 3 future scenario plots"""
+
+    
+    if orientation=="horizontal":
+        cax_bounds = [1.05,0,0.1,1]
+        tick_rotation = 0
+        nrows = 1
+        ncols = 4
+        cbar_location = "right"
+        plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
+        # text annotation xy locations
+        text_xy = {"title": (0.5, 0.9),
+                   "date_range": (0.5, 0.87),
+                   "watermark": (0.45, 0.41),}
+        if figsize is None:
+            figsize=(10, 3)
+        
+    elif orientation=="vertical":
+        cax_bounds = [-0.1,-0.3,1.2,0.1]
+        tick_rotation = -90
+        nrows = 4
+        ncols = 1
+        cbar_location = "bottom"
+        plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
+        # text annotation xy locations
+        text_xy = {"title": (0.5, 0.96),
+               "date_range": (0.5, 0.95),
+               "watermark": (0.45, 0.41),}
+        if figsize is None:
+            figsize=(5,12)
+        
+    elif orientation=="square":
+        cax_bounds = [1.05,0,0.1,1]
+        tick_rotation = 0
+        nrows = 2
+        ncols = 2
+        cbar_location = "right"
+        plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
+        # text annotation xy locations
+        text_xy = {"title": (0.5, 0.96),
+                   "date_range": (0.5, 0.95),
+                   "watermark": (0.45, 0.41),}
+        if figsize is None:
+            figsize=(8,6)
+    else:
+        print('orientation must be one of ["horizontal", "vertical", "square"]')
+    
+        
+    
+
+    if regions is None:
+        try:
+            regions = regions_dict[name]
+        except:
+            print(f"Could not read regions_dict[{name}]")
+
+    regions = regions.to_crs(crs = "GDA2020")
+
+    # Set default crs for Australia maps and selection maps
+    if crs is None:
+        if select_area is None:
+            # Default for Australian map
+            crs = ccrs.LambertConformal(
+                central_latitude=-24.75,
+                central_longitude=134.0,
+                cutoff=30,
+                standard_parallels=(-10, -40),
+            )
+        else:
+            crs = ccrs.PlateCarree()
+
+    
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols,  sharey=True, sharex=True, figsize=figsize, layout="constrained", subplot_kw={'projection': crs, "frame_on":False},)
+    
+    cmap.set_bad(cmap_bad)
+
+    # -------- plot baseline plot and its colorbar ---------------------
+    ax, norm, cont, middle_ticks = plot_data(regions=regions,
+                                          data=ds_gwl12, 
+                                          xlim=xlim,
+                                          ylim=ylim,
+                                          cmap=gwl12_cmap,
+                                          cbar_extend=gwl12_cbar_extend,
+                                          ticks=gwl12_ticks,
+                                          tick_labels=gwl12_tick_labels,
+                                          contourf=contourf,
+                                          contour=contour,
+                                          ax=axs.flatten()[0],
+                                          figsize=figsize,
+                                          subtitle=f"GWL1.2",
+                                          facecolor=facecolor,
+                                          mask_not_australia = mask_not_australia,
+                                          mask_australia=mask_australia,
+                                          agcd_mask=agcd_mask,
+                                          area_linewidth=area_linewidth,
+                                          stippling=stippling)
+    cbar = plot_cbar(cont=cont,
+                  norm=norm,
+                  ax=axs.flatten()[0],
+                  cbar_extend=gwl12_cbar_extend, 
+                  cbar_label=gwl12_cbar_label,
+                  ticks=gwl12_ticks, 
+                  tick_labels=gwl12_tick_labels,
+                  middle_ticks=middle_ticks,
+                  cax_bounds=cax_bounds,
+                  location=cbar_location)
+    cbar.ax.tick_params(rotation=tick_rotation)
+    # ------- end plot baseline plot and its colorbar ---------------------
+
+    # ------- plot three scenarios as anomalies from baseline--------------
+    for i, ds in enumerate([ds_gwl15, ds_gwl20, ds_gwl30]):
+        ax, norm, cont, middle_ticks = plot_data(regions=regions,
+                                                  data=ds, 
+                                                  xlim=xlim,
+                                                  ylim=ylim,
+                                                  cmap=cmap,
+                                                  cbar_extend=cbar_extend,
+                                                  ticks=ticks,
+                                                  tick_labels=tick_labels,
+                                                  contourf=contourf,
+                                                  contour=contour,
+                                                  ax=axs.flatten()[i+1],
+                                                  figsize=figsize,
+                                                  subtitle=f"GWL{[1.5,2.0,3.0][i]}",
+                                                  facecolor=facecolor,
+                                                  mask_not_australia = mask_not_australia,
+                                                  mask_australia=mask_australia,
+                                                  agcd_mask=agcd_mask,
+                                                  area_linewidth=area_linewidth,
+                                                  stippling=stippling)
+        
+        # if select a specific area -----------
+        ax = plot_select_area(select_area=select_area, 
+                              ax=ax,
+                              xlim=xlim,
+                              ylim=ylim,
+                              regions=regions,
+                              land_shadow=land_shadow,
+                              area_linewidth=area_linewidth,
+                              )
+        # ---------------------------------------------                    
+        ax.axis('off')
+    
+    # colorbar -----------------------------------------------------------
+    cbar = plot_cbar(cont=cont,
+                  norm=norm,
+                  ax=axs.flatten()[-1],
+                  cbar_extend=cbar_extend, 
+                  cbar_label=cbar_label,
+                  ticks=ticks, 
+                  tick_labels=tick_labels,
+                  middle_ticks=middle_ticks,
+                  cax_bounds =cax_bounds,
+                  location=cbar_location)
+    cbar.ax.tick_params(rotation=tick_rotation)
+    
+    #------------------------------------------
+    
+    
+    # plot border and annotations -----------------
+    fig.get_layout_engine().set(rect=plots_rect)
+    
+    ax111 = fig.add_axes([0.01,0.01,0.98,0.98], facecolor="none", xticks=[], yticks=[]) #(left, bottom, width, height)
+        
+    ax111 = plot_titles(title=title,
+                        date_range = date_range, 
+                        baseline = baseline, 
+                        dataset_name= dataset_name,
+                        issued_date=issued_date,
+                        watermark=watermark, 
+                        watermark_color=watermark_color,
+                        ax=ax111,
+                        text_xy = text_xy,
+                        title_ha = "center",
+                   )
+    ax111.axis(True)
+    # --------------------------------------------
+    
+    if outfile is None:
+        PATH = os.path.abspath(os.getcwd())
+        outfile = f"{PATH}/figures/{title.replace(' ', '_')}.png"
+        os.makedirs(os.path.dirname(outfile), exist_ok=True)
+    
     if savefig:
         plt.savefig(outfile, dpi=300)
     return fig, ax
