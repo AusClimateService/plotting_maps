@@ -47,6 +47,8 @@ cmap_mustard = LinearSegmentedColormap.from_list(
 )
 cmap_mustard.set_bad(color="lightgrey")
 
+cmap_dir = f"{Path(__file__).parent}/continuous_colormaps_rgb_0-1"
+
 cmap_dict = {
     "sst": cmaps.cmocean_tempo,
     "sst_anom": cmaps.cmocean_balance_r,
@@ -125,6 +127,22 @@ cmap_dict = {
     "Greens": cm.Greens,
     "topo": cmaps.OceanLakeLandSnow,
     "gmt_relief": cmaps.GMT_relief,
+    "ipcc_chem_div": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/chem_div.txt")),
+    "ipcc_chem_seq": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/chem_seq.txt")),
+    "ipcc_cryo_div": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/cryo_div.txt")),
+    "ipcc_cryo_seq": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/cryo_seq.txt")),
+    "ipcc_misc_div": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/misc_div.txt")),
+    "ipcc_misc_seq_1": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/misc_seq_1.txt")),
+    "ipcc_misc_seq_2": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/misc_seq_2.txt")),
+    "ipcc_misc_seq_3": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/misc_seq_3.txt")),
+    "ipcc_prec_div": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/prec_div.txt")),
+    "ipcc_prec_seq": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/prec_seq.txt")),
+    "ipcc_slev_div": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/slev_div.txt")),
+    "ipcc_slev_seq": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/slev_seq.txt")),
+    "ipcc_temp_div": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/temp_div.txt")),
+    "ipcc_temp_seq": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/temp_seq.txt")),
+    "ipcc_wind_div": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/wind_div.txt")),
+    "ipcc_wind_seq": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/wind_seq.txt"))
 }
 
 
