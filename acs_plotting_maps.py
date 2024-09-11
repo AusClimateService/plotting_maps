@@ -1250,7 +1250,7 @@ def plot_acs_hazard_4pp(
         ncols = 4
         cbar_location = "right"
         plots_rect = (0.01,0.05,0.84,0.85) #left bottom width height
-        cbar_rect = [0.85, 0.2, 0.03, 0.5]
+        cbar_rect = [0.85, 0.15, 0.03, 0.65]
         
         # text annotation xy locations
         text_xy = {"title": (0.5, 0.9),
