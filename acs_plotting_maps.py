@@ -427,8 +427,8 @@ def plot_data(regions=None,
                     stippling.lat,
                     stippling,
                     alpha=0,
-                    hatches = ["",".."],
-                    zorder=7,
+                    hatches = ["","////"],
+                    zorder=10,
                     transform=ccrs.PlateCarree(),
                    )
 
@@ -997,16 +997,17 @@ def plot_acs_hazard(
     # ---------------------------------------------
 
     # colorbar------------------------
-    cbar = plot_cbar(cont=cont,
-                  norm=norm,
-                  ax=ax,
-                  cbar_extend=cbar_extend, 
-                  cbar_label=cbar_label,
-                  ticks=ticks, 
-                  tick_labels=tick_labels,
-                  middle_ticks=middle_ticks,
-                  cax_bounds = [0.82, 0.15, 0.03, 0.7],
-                  )
+    if data is not None:
+        cbar = plot_cbar(cont=cont,
+                      norm=norm,
+                      ax=ax,
+                      cbar_extend=cbar_extend, 
+                      cbar_label=cbar_label,
+                      ticks=ticks, 
+                      tick_labels=tick_labels,
+                      middle_ticks=middle_ticks,
+                      cax_bounds = [0.82, 0.15, 0.03, 0.7],
+                      )
     # ---------------------------------------
 
     # Annotations and titles ---------------------
@@ -1052,8 +1053,12 @@ def plot_acs_hazard_3pp(
     ds_gwl15=None,
     ds_gwl20=None,
     ds_gwl30=None,
-    station_df=None,
-    stippling=None,
+    station_df_gwl15=None,
+    station_df_gwl20=None,
+    station_df_gwl30=None,
+    stippling_gwl15=None,
+    stippling_gwl20=None,
+    stippling_gwl30=None,
     mask_not_australia=True,
     mask_australia=False,
     agcd_mask=False,
@@ -1117,6 +1122,8 @@ def plot_acs_hazard_3pp(
 
     cmap.set_bad(cmap_bad)
     for i, ds in enumerate([ds_gwl15, ds_gwl20, ds_gwl30]):
+        station_df = [station_df_gwl15, station_df_gwl20, station_df_gwl30][i]
+        stippling = [stippling_gwl15, stippling_gwl20, stippling_gwl30][i]
         ax, norm, cont, middle_ticks = plot_data(regions=regions,
                                               data=ds, 
                                               station_df = station_df,
@@ -1208,11 +1215,17 @@ def plot_acs_hazard_4pp(
                 ds_gwl15=None,
                 ds_gwl20=None,
                 ds_gwl30=None,
-                station_df=None,
+                station_df_gwl12=None,                    
+                station_df_gwl15=None,
+                station_df_gwl20=None,
+                station_df_gwl30=None,
+                stippling_gwl12=None,
+                stippling_gwl15=None,
+                stippling_gwl20=None,
+                stippling_gwl30=None,
                 mask_not_australia=True,
                 mask_australia=False,
                 agcd_mask=False,
-                stippling=None,
                 facecolor="none",
                 edgecolor="black",
                 figsize=None,
@@ -1320,8 +1333,12 @@ def plot_acs_hazard_4pp(
     
     cmap.set_bad(cmap_bad)
     for i, ds in enumerate([ds_gwl12, ds_gwl15, ds_gwl20, ds_gwl30]):
+        station_df = [station_df_gwl12, station_df_gwl15, station_df_gwl20, station_df_gwl30][i]
+        stippling = [stippling_gwl12, stippling_gwl15, stippling_gwl20, stippling_gwl30][i]
+
         ax, norm, cont, middle_ticks = plot_data(regions=regions,
-                                              data=ds, 
+                                              data=ds,
+                                                 station_df=station_df,
                                               xlim=xlim,
                                               ylim=ylim,
                                               cmap=cmap,
@@ -1405,6 +1422,8 @@ def plot_acs_hazard_1plus3(
                 name='ncra_regions',
                 regions=None,
                 ds_gwl12=None,
+                station_df_gwl12=None, 
+                stippling_gwl12=None,
                 gwl12_cmap=cm.Greens,
                 gwl12_cbar_extend="both",
                 gwl12_cbar_label=None,
@@ -1412,12 +1431,16 @@ def plot_acs_hazard_1plus3(
                 gwl12_tick_labels=None,
                 ds_gwl15=None,
                 ds_gwl20=None,
-                ds_gwl30=None,
-                station_df=None,
+                ds_gwl30=None,                      
+                station_df_gwl15=None,
+                station_df_gwl20=None,
+                station_df_gwl30=None,
+                stippling_gwl15=None,
+                stippling_gwl20=None,
+                stippling_gwl30=None,
                 mask_not_australia=True,
                 mask_australia=False,
                 agcd_mask=False,
-                stippling=None,
                 facecolor="none",
                 edgecolor="black",
                 figsize=None,
@@ -1496,9 +1519,6 @@ def plot_acs_hazard_1plus3(
     else:
         print('orientation must be one of ["horizontal", "vertical", "square"]')
     
-        
-    
-
     if regions is None:
         try:
             regions = regions_dict[name]
@@ -1521,30 +1541,38 @@ def plot_acs_hazard_1plus3(
             crs = ccrs.PlateCarree()
 
     
-    fig, axs = plt.subplots(nrows=nrows, ncols=ncols,  sharey=True, sharex=True, figsize=figsize, layout="constrained", subplot_kw={'projection': crs, "frame_on":False},)
-    
+    fig, axs = plt.subplots(nrows=nrows,
+                            ncols=ncols,  
+                            sharey=True,
+                            sharex=True,
+                            figsize=figsize, 
+                            layout="constrained",
+                            subplot_kw={'projection': crs, "frame_on":False},)
+
+    gwl12_cmap.set_bad(cmap_bad)
     cmap.set_bad(cmap_bad)
 
     # -------- plot baseline plot and its colorbar ---------------------
     ax, norm, cont, middle_ticks = plot_data(regions=regions,
-                                          data=ds_gwl12, 
-                                          xlim=xlim,
-                                          ylim=ylim,
-                                          cmap=gwl12_cmap,
-                                          cbar_extend=gwl12_cbar_extend,
-                                          ticks=gwl12_ticks,
-                                          tick_labels=gwl12_tick_labels,
-                                          contourf=contourf,
-                                          contour=contour,
-                                          ax=axs.flatten()[0],
-                                          figsize=figsize,
-                                          subtitle=f"GWL1.2",
-                                          facecolor=facecolor,
-                                          mask_not_australia = mask_not_australia,
-                                          mask_australia=mask_australia,
-                                          agcd_mask=agcd_mask,
-                                          area_linewidth=area_linewidth,
-                                          stippling=stippling)
+                                             data=ds_gwl12, 
+                                             station_df = station_df_gwl12,
+                                             xlim=xlim,
+                                             ylim=ylim,
+                                             cmap=gwl12_cmap,
+                                             cbar_extend=gwl12_cbar_extend,
+                                             ticks=gwl12_ticks,
+                                             tick_labels=gwl12_tick_labels,
+                                             contourf=contourf,
+                                             contour=contour,
+                                             ax=axs.flatten()[0],
+                                             figsize=figsize,
+                                             subtitle=f"GWL1.2",
+                                             facecolor=facecolor,
+                                             mask_not_australia = mask_not_australia,
+                                             mask_australia=mask_australia,
+                                             agcd_mask=agcd_mask,
+                                             area_linewidth=area_linewidth,
+                                             stippling=stippling_gwl12)
     cbar = plot_cbar(cont=cont,
                   norm=norm,
                   ax=axs.flatten()[0],
@@ -1560,25 +1588,29 @@ def plot_acs_hazard_1plus3(
 
     # ------- plot three scenarios as anomalies from baseline--------------
     for i, ds in enumerate([ds_gwl15, ds_gwl20, ds_gwl30]):
+        station_df = [station_df_gwl15, station_df_gwl20, station_df_gwl30][i]
+        stippling = [stippling_gwl15, stippling_gwl20, stippling_gwl30][i]
+        
         ax, norm, cont, middle_ticks = plot_data(regions=regions,
-                                                  data=ds, 
-                                                  xlim=xlim,
-                                                  ylim=ylim,
-                                                  cmap=cmap,
-                                                  cbar_extend=cbar_extend,
-                                                  ticks=ticks,
-                                                  tick_labels=tick_labels,
-                                                  contourf=contourf,
-                                                  contour=contour,
-                                                  ax=axs.flatten()[i+1],
-                                                  figsize=figsize,
-                                                  subtitle=f"GWL{[1.5,2.0,3.0][i]}",
-                                                  facecolor=facecolor,
-                                                  mask_not_australia = mask_not_australia,
-                                                  mask_australia=mask_australia,
-                                                  agcd_mask=agcd_mask,
-                                                  area_linewidth=area_linewidth,
-                                                  stippling=stippling)
+                                                 data=ds, 
+                                                 station_df = station_df,
+                                                 xlim=xlim,
+                                                 ylim=ylim,
+                                                 cmap=cmap,
+                                                 cbar_extend=cbar_extend,
+                                                 ticks=ticks,
+                                                 tick_labels=tick_labels,
+                                                 contourf=contourf,
+                                                 contour=contour,
+                                                 ax=axs.flatten()[i+1],
+                                                 figsize=figsize,
+                                                 subtitle=f"GWL{[1.5,2.0,3.0][i]}",
+                                                 facecolor=facecolor,
+                                                 mask_not_australia = mask_not_australia,
+                                                 mask_australia=mask_australia,
+                                                 agcd_mask=agcd_mask,
+                                                 area_linewidth=area_linewidth,
+                                                 stippling=stippling)
         
         # if select a specific area -----------
         ax = plot_select_area(select_area=select_area, 
