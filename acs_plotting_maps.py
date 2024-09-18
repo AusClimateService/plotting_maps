@@ -301,6 +301,7 @@ not_australia = gpd.GeoSeries(
 def plot_data(regions=None,
               data=None, 
               station_df = None,
+              markersize=None,
               xlim=(114, 162),
               ylim=(-43, -8),
               cmap=cm.Greens,
@@ -413,7 +414,7 @@ def plot_data(regions=None,
         norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
         cont = ax.scatter(x=station_df.lon,
                           y=station_df.lat,
-                          s=(100 - 80*len(station_df)/5000)*(figsize[0]*figsize[1])/48, 
+                          s=markersize, 
                           c=station_df[var],
                           # edgecolors="k", 
                           alpha = 0.8,
@@ -706,6 +707,7 @@ def plot_acs_hazard(
     regions=regions_dict['ncra_regions'],
     data=None,
     station_df=None,
+    markersize=None,
     stippling=None,
     mask_not_australia=True,
     mask_australia=False,
@@ -961,9 +963,12 @@ def plot_acs_hazard(
 
     # plot hazard data ------------------------
     cmap.set_bad(cmap_bad)
+    if station_df is not None and markersize is None:
+        markersize=(100 - 80*len(station_df)/5000)*(figsize[0]*figsize[1])/48
     ax, norm, cont, middle_ticks =plot_data(regions=regions,
                                             data=data, 
                                             station_df = station_df,
+                                            markersize=markersize,
                                             xlim=xlim,
                                             ylim=ylim,
                                             cmap=cmap,
@@ -1065,6 +1070,7 @@ def plot_acs_hazard_3pp(
     facecolor="none",
     edgecolor="black",
     figsize=(10, 4),
+    markersize=None,
     title=None,
     date_range="",
     crs=None,
@@ -1121,12 +1127,16 @@ def plot_acs_hazard_3pp(
     fig, axs = plt.subplots(nrows=1, ncols=3,  sharey=True, sharex=True, figsize=figsize, subplot_kw={'projection': crs, "frame_on":False},)
 
     cmap.set_bad(cmap_bad)
+    station_dfs = [station_df_gwl15, station_df_gwl20, station_df_gwl30]
+    if any(df is not None for df in station_dfs) and markersize is None:
+        markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/3
     for i, ds in enumerate([ds_gwl15, ds_gwl20, ds_gwl30]):
-        station_df = [station_df_gwl15, station_df_gwl20, station_df_gwl30][i]
+        station_df = station_dfs[i]
         stippling = [stippling_gwl15, stippling_gwl20, stippling_gwl30][i]
         ax, norm, cont, middle_ticks = plot_data(regions=regions,
                                               data=ds, 
                                               station_df = station_df,
+                                              markersize=markersize,
                                               xlim=xlim,
                                               ylim=ylim,
                                               cmap=cmap,
@@ -1229,6 +1239,7 @@ def plot_acs_hazard_4pp(
                 facecolor="none",
                 edgecolor="black",
                 figsize=None,
+                markersize=None,
                 title=None,
                 date_range="",
                 crs=None,
@@ -1332,13 +1343,17 @@ def plot_acs_hazard_4pp(
                             subplot_kw={'projection': crs, "frame_on":False},)
     
     cmap.set_bad(cmap_bad)
+    station_dfs = [station_df_gwl12, station_df_gwl15, station_df_gwl20, station_df_gwl30]
+    if any(df is not None for df in station_dfs) and markersize is None:
+        markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/4
     for i, ds in enumerate([ds_gwl12, ds_gwl15, ds_gwl20, ds_gwl30]):
-        station_df = [station_df_gwl12, station_df_gwl15, station_df_gwl20, station_df_gwl30][i]
+        station_df = station_dfs[i]
         stippling = [stippling_gwl12, stippling_gwl15, stippling_gwl20, stippling_gwl30][i]
 
         ax, norm, cont, middle_ticks = plot_data(regions=regions,
                                               data=ds,
                                                  station_df=station_df,
+                                                 markersize=markersize,
                                               xlim=xlim,
                                               ylim=ylim,
                                               cmap=cmap,
@@ -1444,6 +1459,7 @@ def plot_acs_hazard_1plus3(
                 facecolor="none",
                 edgecolor="black",
                 figsize=None,
+                markersize=None,
                 title=None,
                 date_range="",
                 crs=None,
@@ -1552,10 +1568,15 @@ def plot_acs_hazard_1plus3(
     gwl12_cmap.set_bad(cmap_bad)
     cmap.set_bad(cmap_bad)
 
+    station_dfs = [station_df_gwl12, station_df_gwl15, station_df_gwl20, station_df_gwl30]
+    if any(df is not None for df in station_dfs) and markersize is None:
+        markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/4
+
     # -------- plot baseline plot and its colorbar ---------------------
     ax, norm, cont, middle_ticks = plot_data(regions=regions,
                                              data=ds_gwl12, 
                                              station_df = station_df_gwl12,
+                                             markersize=markersize,
                                              xlim=xlim,
                                              ylim=ylim,
                                              cmap=gwl12_cmap,
@@ -1594,6 +1615,7 @@ def plot_acs_hazard_1plus3(
         ax, norm, cont, middle_ticks = plot_data(regions=regions,
                                                  data=ds, 
                                                  station_df = station_df,
+                                                 markersize=markersize,
                                                  xlim=xlim,
                                                  ylim=ylim,
                                                  cmap=cmap,
