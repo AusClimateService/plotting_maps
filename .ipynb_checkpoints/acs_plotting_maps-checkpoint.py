@@ -14,11 +14,17 @@ import xarray as xr
 import cartopy.crs as ccrs
 from glob import glob
 
+from cmocean.tools import crop
+
 # import colormap packages
 import cmaps
 from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
 
 from shapely.geometry import box
+
+import matplotlib as mpl
+mpl.rcParams['hatch.linewidth'] = 0.3 
+plt.rcParams['savefig.facecolor']='white'
 
 # define some standard imput for the maps
 crs = ccrs.LambertConformal(
@@ -56,8 +62,6 @@ cmap_dict = {
     "mhw_intensity": cm.hot_r,
     "hot_r": cm.hot_r,
     "surface_pH": cm.YlGnBu,
-    "surface_pH_1": cmaps.cmocean_phase,
-    "surface_pH_2": cm.cool,
     "surface_aragonite_sat": cmaps.cmocean_delta,
     "tas": cm.Spectral_r,
     "tas_anom": cm.RdBu_r,
@@ -73,18 +77,21 @@ cmap_dict = {
     "fire_climate": ListedColormap(
         [ "#84a19b", "#e0d7c6", "#486136", "#737932", "#a18a6e", ]
     ),
-    'tasmax': ListedColormap(
+    'tasmax_bom': ListedColormap(
         [ '#E3F4FB','#C8DEE8','#91C4EA','#56B6DC','#00A2AC','#30996C',
          '#7FC69A','#B9DA88','#DCE799', '#FCE850','#EACD44','#FED98E',
          '#F89E64','#E67754','#D24241', '#AD283B','#832D57','#A2667A','#AB9487']
+    ),
+    'tasmax' : ListedColormap(
+        ['#014636','#016c59','#02818a','#3690c0','#67a9cf','#a6bddb',
+         '#d0d1e6','#ece2f0','#fff7fb','#ffffcc','#ffeda0','#fed976',
+         '#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#bd0026','#800026',
+         '#510019','#2E000E']
     ),
     "pr": cm.YlGnBu,
     "pr_1": cmaps.cmocean_deep,
     "pr_days": cm.Blues,
     "pr_GMT_drywet": cmaps.GMT_drywet,
-    "pr_rainbow_1": cmaps.prcp_1,
-    "pr_rainbow_2": cmaps.prcp_2,
-    "pr_rainbow_3": cmaps.prcp_3,
     "pr_anom": cm.BrBG,
     "pr_anom_1": cmaps.cmocean_curl,
     "pr_anom_12lev": cmaps.precip_diff_12lev,
@@ -97,13 +104,13 @@ cmap_dict = {
     "xts_intensity": cmaps.cmocean_matter,
     "xts_freq_anom": cmaps.cmocean_balance_r,
     "xts_intensity_anom": cmaps.cmocean_curl_r,
-    "drought_severity": cm.RdYlGn,
-    "drought_severity_r": cm.RdYlGn_r,
+    "drought_severity": cm.RdYlGn, # not colorblind friendly
+    "drought_severity_r": cm.RdYlGn_r, # not colorblind friendly
     "drought_duration": cmaps.hotres,
     "drought_duration_r": cmaps.hotres_r,
     "aridity": cmap_mustard,
-    "aridity_anom": cmaps.NEO_div_vegetation_a,
-    "aridity_anom_r": cmaps.NEO_div_vegetation_a_r,
+    "aridity_anom": cmaps.NEO_div_vegetation_a, # not colorblind friendly
+    "aridity_anom_r": cmaps.NEO_div_vegetation_a_r, # not colorblind friendly
     "anom_BlueYellowRed": cmaps.BlueYellowRed,
     "anom_BlueYellowRed_r": cmaps.BlueYellowRed_r,
     "anom": cmaps.BlueWhiteOrangeRed,
@@ -114,8 +121,8 @@ cmap_dict = {
     "anom_coolwarm_r": cmaps.MPL_coolwarm_r,
     "anom_deciles": cm.bwr,
     "anom_deciles_r": cm.bwr_r,
-    "anom_veg_1": cmaps.NEO_div_vegetation_a,
-    "anom_veg_1_r": cmaps.NEO_div_vegetation_a_r,
+    "anom_veg_1": cmaps.NEO_div_vegetation_a, # not colorblind friendly
+    "anom_veg_1_r": cmaps.NEO_div_vegetation_a_r, # not colorblind friendly
     "BuGnRd": cmaps.temp1,
     "rh_19lev": cmaps.rh_19lev,
     "sunshine_9lev": cmaps.sunshine_9lev,
@@ -296,6 +303,32 @@ not_australia = gpd.GeoSeries(
 )
 
 
+def crop_cmap_center(cmap, ticks, mid, extend=None):
+    ticks=np.array(ticks)
+    # number of color segments:
+    below = (ticks<mid).sum()
+    above = (ticks>mid).sum()
+    if extend =="both" or extend == "max":
+        above=above+1
+    if extend =="both" or extend =="min":
+        below=below+1
+    
+    #total segments
+    N = below+above
+    
+    #porportion below mid point 
+    prop_below_mid = below/(max(below,above))
+    # propotion above mid point
+    prop_above_mid = above/(max(below,above))
+    
+    new_cmap_list = cmap(np.linspace(0.5*(1-prop_below_mid),
+                                     0.5*(1+prop_above_mid),
+                                     N)
+                        )
+    new_cmap = LinearSegmentedColormap.from_list("new_cmap",new_cmap_list)
+    return new_cmap
+
+
 # Define subfunctions for different parts of the plotting 
 # so that they can be reused for single panel and multi panel plots
 def plot_data(regions=None,
@@ -303,7 +336,7 @@ def plot_data(regions=None,
               station_df = None,
               markersize=None,
               xlim=(114, 162),
-              ylim=(-43, -8),
+              ylim=(-43.5, -7.5),
               cmap=cm.Greens,
               cbar_extend="both",
               ticks=None,
@@ -311,8 +344,9 @@ def plot_data(regions=None,
               contourf=False,
               contour=False,
               ax=None,
-              figsize=(8,6),
+              figsize=(6.7,5),
               subtitle = "",
+              subtitle_xy = None,
               facecolor="none",
               edgecolor="k",
               area_linewidth=0.3,
@@ -321,8 +355,13 @@ def plot_data(regions=None,
               agcd_mask=False,
               stippling=None,
               select_area = None,
+              vcentre=None,
              ):
     """This function takes an axis and plots the hazard data to a map of Australia"""
+
+    if vcentre is not None:
+        cmap = crop_cmap_center(cmap, ticks, vcentre, extend=cbar_extend)
+
     
     ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
     
@@ -428,7 +467,7 @@ def plot_data(regions=None,
                     stippling.lat,
                     stippling,
                     alpha=0,
-                    hatches = ["","////"],
+                    hatches = ["","xxxxxx"],
                     zorder=10,
                     transform=ccrs.PlateCarree(),
                    )
@@ -468,14 +507,18 @@ def plot_data(regions=None,
         )
 
     # subtitle
+    if subtitle_xy is None:
+        subtitle_xy = (0.03, 0.14)
     ax.text(
-        x=0.1,
-        y=0.07,
+        x=subtitle_xy[0],
+        y=subtitle_xy[1],
         s=subtitle,
-        fontsize=10,
+        fontsize=12,
         horizontalalignment="left",
+        verticalalignment="top",
         transform=ax.transAxes,
         zorder=10,
+        wrap=True,
     )
 
     return ax, norm, cont, middle_ticks
@@ -491,7 +534,9 @@ def plot_cbar(cont=None,
               cax_bounds =None,
               contour=False,
               contourf=False,
-              location=None,):
+              location=None,
+             rotation=None,
+             ):
     """This function defines and plots the colorbar"""
 
     if cax_bounds is not None:
@@ -512,7 +557,9 @@ def plot_cbar(cont=None,
             cax=cax,
             ticks=ticks,
             norm=norm,
-            location=location,fraction=0.046, pad=0.04
+            location=location,
+            fraction=0.046, 
+            pad=0.04
         )
     else:
         # for categorical data
@@ -524,20 +571,36 @@ def plot_cbar(cont=None,
             ticks=ticks,
             norm=norm,
             drawedges=True,
-            location=location,fraction=0.046, pad=0.04
+            location=location,
+            fraction=0.046, 
+            pad=0.04
         )
-        if len(ticks) == len(tick_labels):
-            cbar.ax.set_yticks(ticks, tick_labels)
-        elif len(middle_ticks) == len(tick_labels):
-            cbar.ax.set_yticks(middle_ticks, tick_labels)
+        if location=="bottom":
+            if len(ticks) == len(tick_labels):
+                cbar.ax.set_xticks(ticks, tick_labels, wrap=True, verticalalignment="top")
+            elif len(middle_ticks) == len(tick_labels):
+                cbar.ax.set_xticks(middle_ticks, tick_labels, wrap=True, verticalalignment="top")
 
-    cbar.ax.tick_params(labelsize=10)
+        else:
+            if len(ticks) == len(tick_labels):
+                cbar.ax.set_yticks(ticks, tick_labels, wrap=True)
+            elif len(middle_ticks) == len(tick_labels):
+                cbar.ax.set_yticks(middle_ticks, tick_labels, wrap=True)
+
+    cbar.ax.tick_params(labelsize=8)
     if contour and tick_labels is None:
         cbar.add_lines(cont)
     
     # Label colorbar
     if cbar is not None:
-        cbar.ax.set_title(cbar_label, zorder=10, loc="center", fontsize=10, verticalalignment="bottom")
+        cbar.ax.set_title(cbar_label, 
+                          zorder=10,
+                          loc="center",
+                          fontsize=10,
+                          verticalalignment="bottom",
+                         wrap=True)
+
+    cbar.ax.tick_params(rotation=rotation) 
     return cbar
 
 def plot_select_area(select_area=None,
@@ -602,36 +665,39 @@ def plot_select_area(select_area=None,
 def plot_titles(title="title",
                 date_range = "DD Mon YYY to DD Mon YYYY", 
                 baseline = None, 
-                dataset_name= "dataset_name",
+                dataset_name= None,
                 issued_date=None,
-                watermark="", 
+                watermark= None, 
                 watermark_color="r",
                 ax=None,
                 text_xy = None,
-                title_ha = "left"):
+                title_ha = "left",
+               orientation = "none",):
     """Set the plot title and axis labels"""
     
     ax.text(
         x=text_xy["title"][0],
         y=text_xy["title"][1],
         s=f"{title}",
-        fontsize=16,
+        fontsize=14,
         weight="bold",
         horizontalalignment=title_ha,
         verticalalignment="bottom",
         transform=ax.transAxes,
         zorder=10,
+        wrap=True,
     )
 
     ax.text(
         x=text_xy["date_range"][0],
         y=text_xy["date_range"][1],
         s=f"{date_range}",
-        fontsize=10,
+        fontsize=12,
         horizontalalignment=title_ha,
         verticalalignment="top",
         transform=ax.transAxes,
         zorder=10,
+        wrap=True,
     )
     
     if baseline is not None:
@@ -640,46 +706,54 @@ def plot_titles(title="title",
             x=0.01,
             y=0.01,
             s=f"Base period: {baseline}",
-            fontsize=7,
+            fontsize=8,
             verticalalignment="bottom",
             transform=ax.transAxes,
             zorder=10,
         )
     # print copyright outside bottom left corner
+    if orientation == "vertical":
+        string = f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, \nAustralian Climate Service"
+    else:
+        string = f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, Australian Climate Service"
     ax.text(
         x=0.01,
-        y=-0.01,
-        s=f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, Australian Climate Service",
-        fontsize=7,
+        y=0.00,
+        s=string,
+        fontsize=8,
         transform=ax.transAxes,
-        verticalalignment="top",
-        zorder=10,
-    )
-    # print data source inside bottom right
-    ax.text(
-        x=0.99,
-        y=0.01,
-        s=f"Dataset: {dataset_name}",
-        fontsize=7,
-        transform=ax.transAxes,
-        horizontalalignment="right",
         verticalalignment="bottom",
         zorder=10,
+        wrap=True,
     )
+    if dataset_name is not None:
+        # print data source inside bottom right
+        ax.text(
+            x=0.99,
+            y=0.01,
+            s=f"Dataset: {dataset_name}",
+            fontsize=8,
+            transform=ax.transAxes,
+            horizontalalignment="right",
+            verticalalignment="bottom",
+            zorder=10,
+        )
     # print issued date on bottom right under the border.
     # Set to today's date if None supplied
+    # Suppress this by issued_date=""
     if issued_date is None:
         issued_date = datetime.datetime.today().date().strftime("%d %B %Y")
-    ax.text(
-        x=0.99,
-        y=-0.01,
-        s=f"Issued: {issued_date}",
-        fontsize=7,
-        transform=ax.transAxes,
-        horizontalalignment="right",
-        verticalalignment="top",
-        zorder=10,
-    )
+    if len(issued_date)>=1:
+        ax.text(
+            x=0.99,
+            y=-0.01,
+            s=f"Issued: {issued_date}",
+            fontsize=8,
+            transform=ax.transAxes,
+            horizontalalignment="right",
+            verticalalignment="top",
+            zorder=10,
+        )
     
     if watermark is not None:
         ax.text(
@@ -714,7 +788,7 @@ def plot_acs_hazard(
     agcd_mask=False,
     facecolor="none",
     edgecolor="black",
-    figsize=(8, 6),
+    figsize=(4.5,3),
     title=None,
     date_range="",
     crs=None,
@@ -741,6 +815,8 @@ def plot_acs_hazard(
     infile=None,
     outfile=None,
     savefig=True,
+    tick_rotation=None,
+    vcentre=None,
 ):
     """This function takes a name of an Australian shapefile collection for data in 
     /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/ 
@@ -906,7 +982,7 @@ def plot_acs_hazard(
 
     outfile: str
         The location to save the figure. 
-        If None, then figure is saved here f"figures/{title.replace(' ', '_')}.png"
+        If None, then figure is saved here f"figures/{title.replace(' ', '-')}.png"
 
     savefig: bool
         default is True
@@ -986,6 +1062,7 @@ def plot_acs_hazard(
                                             agcd_mask=agcd_mask,
                                             area_linewidth=area_linewidth,
                                             stippling=stippling,
+                                            vcentre=vcentre,
                                             )
                     
     # ---------------------------------
@@ -1008,21 +1085,23 @@ def plot_acs_hazard(
                       ax=ax,
                       cbar_extend=cbar_extend, 
                       cbar_label=cbar_label,
+                      location = "right",
                       ticks=ticks, 
                       tick_labels=tick_labels,
                       middle_ticks=middle_ticks,
                       cax_bounds = [0.82, 0.15, 0.03, 0.7],
+                         rotation = tick_rotation,
                       )
     # ---------------------------------------
 
     # Annotations and titles ---------------------
 
     #plot border and annotations
-    ax111 = fig.add_axes([0.,0.,1,1], facecolor="none", xticks=[], yticks=[]) #(left, bottom, width, height)
+    ax111 = fig.add_axes([0.,0.,1,1], xticks=[], yticks=[]) #(left, bottom, width, height)
 
     # text annotation xy locations for 1-panel plot
-    text_xy_1pp = {"title": (0.04, 0.07),
-                   "date_range": (0.04, 0.06),
+    text_xy_1pp = {"title": (0.03, 0.12),  
+                   "date_range": (0.03, 0.11),
                    "watermark": (0.4, 0.5),}
     
     ax111 = plot_titles(title=title,
@@ -1034,19 +1113,22 @@ def plot_acs_hazard(
                         watermark_color=watermark_color,
                         ax=ax111,
                         text_xy = text_xy_1pp,
-                        title_ha = "left")
-    ax111.axis(True)
+                        title_ha = "left",
+                        )
+    # draw border
+    # ax111.axis(True)
+    ax111.axis(False)
 
     # -----------------------------------------------
 
 
     if outfile is None:
         PATH = os.path.abspath(os.getcwd())
-        outfile = f"{PATH}/figures/{title.replace(' ', '_')}.png"
+        outfile = f"{PATH}/figures/{title.replace(' ', '-')}.png"
         os.makedirs(os.path.dirname(outfile), exist_ok=True)
 
     if savefig:
-        plt.savefig(outfile, dpi=300)
+        plt.savefig(outfile, dpi=300,)
     return fig, ax
 
 
@@ -1073,10 +1155,11 @@ def plot_acs_hazard_3pp(
     markersize=None,
     title=None,
     date_range="",
+    subplot_titles=None,
     crs=None,
     area_linewidth=0.3,
     xlim=(114,154),
-    ylim=(-43, -8),
+    ylim=(-43.5, -7.5),
     cmap=cm.Greens,
     cmap_bad="lightgrey",
     cbar_extend="both",
@@ -1091,16 +1174,23 @@ def plot_acs_hazard_3pp(
     contour=False,
     select_area=None,
     land_shadow=False,
-    watermark="EXPERIMENTAL\nIMAGE ONLY",
+    watermark="EXPERIMENTAL IMAGE ONLY",
     watermark_color = "r",
     show_logo = False,
     infile=None,
     outfile=None,
     savefig=True,
+    orientation="horizontal",
+    tick_rotation=None,
+    vcentre=None,
 ):
     """Three panel plot. 
     As with plot_acs_hazard, but takes three xarray data arrays:
     ds_gwl15, ds_gwl20, ds_gwl30. (left, middle and right)
+    
+    subplot_titles for labeling each subplot title
+    if None, then subtitles are ["GWL1.5", "GWL2.0", "GWL3.0"]
+    otherwise specify a list of three strings.
     """
 
     if regions is None:
@@ -1127,12 +1217,18 @@ def plot_acs_hazard_3pp(
     fig, axs = plt.subplots(nrows=1, ncols=3,  sharey=True, sharex=True, figsize=figsize, subplot_kw={'projection': crs, "frame_on":False},)
 
     cmap.set_bad(cmap_bad)
+    
     station_dfs = [station_df_gwl15, station_df_gwl20, station_df_gwl30]
     if any(df is not None for df in station_dfs) and markersize is None:
         markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/3
+
+    if subplot_titles is None:
+        subplot_titles = [f"GWL{[1.5,2.0,3.0][i]}" for i in range(3)]
+        
     for i, ds in enumerate([ds_gwl15, ds_gwl20, ds_gwl30]):
         station_df = station_dfs[i]
         stippling = [stippling_gwl15, stippling_gwl20, stippling_gwl30][i]
+        subtitle = subplot_titles[i]
         ax, norm, cont, middle_ticks = plot_data(regions=regions,
                                               data=ds, 
                                               station_df = station_df,
@@ -1147,13 +1243,15 @@ def plot_acs_hazard_3pp(
                                               contour=contour,
                                               ax=axs[i],
                                               figsize=figsize,
-                                              subtitle=f"GWL{[1.5,2.0,3.0][i]}",
+                                              subtitle=subtitle,
                                               facecolor=facecolor,
                                               mask_not_australia = mask_not_australia,
                                               mask_australia=mask_australia,
                                               agcd_mask=agcd_mask,
                                               area_linewidth=area_linewidth,
-                                              stippling=stippling)
+                                              stippling=stippling,
+                                                vcentre=vcentre,
+                                                )
         
         # if select a specific area -----------
         ax = plot_select_area(select_area=select_area, 
@@ -1183,12 +1281,13 @@ def plot_acs_hazard_3pp(
                   tick_labels=tick_labels,
                   middle_ticks=middle_ticks,
                   cax_bounds = [0.1,0,0.5,1],
+                     rotation=tick_rotation,
                   )
     #------------------------------------------
 
     
     # plot border and annotations -----------------
-    ax111 = fig.add_axes([0.01,0.1,0.98,0.9], facecolor="none", xticks=[], yticks=[]) #(left, bottom, width, height)
+    ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
 
     # text annotation xy locations for 3-panel plot
     text_xy_3pp = {"title": (0.5, 0.9),
@@ -1205,17 +1304,20 @@ def plot_acs_hazard_3pp(
                         ax=ax111,
                         text_xy = text_xy_3pp,
                         title_ha = "center",
+                        orientation = "horizontal",
                    )
-    ax111.axis(True)
+    # draw border
+    # ax111.axis(True)
+    ax111.axis(False)
     # --------------------------------------------
 
     if outfile is None:
         PATH = os.path.abspath(os.getcwd())
-        outfile = f"{PATH}/figures/{title.replace(' ', '_')}.png"
+        outfile = f"{PATH}/figures/{title.replace(' ', '-')}.png"
         os.makedirs(os.path.dirname(outfile), exist_ok=True)
 
     if savefig:
-        plt.savefig(outfile, dpi=300)
+        plt.savefig(outfile, dpi=300,)
     return fig, ax
 
 def plot_acs_hazard_4pp(
@@ -1242,10 +1344,11 @@ def plot_acs_hazard_4pp(
                 markersize=None,
                 title=None,
                 date_range="",
+                subplot_titles=None,
                 crs=None,
                 area_linewidth=0.3,
                 xlim=(113, 154),
-                ylim=(-43, -10),
+                ylim=(-43.5, -9.5),
                 cmap=cm.Greens,
                 cmap_bad="lightgrey",
                 cbar_extend="both",
@@ -1266,43 +1369,50 @@ def plot_acs_hazard_4pp(
                 infile=None,
                 outfile=None,
                 savefig=True,
-                orientation="horizontal",
+                orientation="vertical",
+                tick_rotation=None,
+                vcentre=None,
             ):
+
     if orientation=="horizontal":
-        tick_rotation = 0
+        cax_bounds = [1.05,0,0.1,1]
+        if tick_rotation is None:
+            tick_rotation = 0
         nrows = 1
         ncols = 4
         cbar_location = "right"
-        plots_rect = (0.01,0.05,0.84,0.85) #left bottom width height
-        cbar_rect = [0.85, 0.15, 0.03, 0.65]
-        
+        plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
         # text annotation xy locations
         text_xy = {"title": (0.5, 0.9),
                    "date_range": (0.5, 0.87),
                    "watermark": (0.45, 0.41),}
         if figsize is None:
             figsize=(10, 3)
-        
+            
     elif orientation=="vertical":
-        tick_rotation = -90
+        cax_bounds = [-0.4,-0.3,1.6,0.1]
+        if tick_rotation is None:
+            tick_rotation = -90
         nrows = 4
         ncols = 1
         cbar_location = "bottom"
-        plots_rect = (0.01,0.05,0.9,0.85) #left bottom width height
-        cbar_rect = [0.75, 0.3, 0.05, 0.3]
-        
+        plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
         # text annotation xy locations
-        text_xy = {"title": (0.5, 0.96),
-               "date_range": (0.5, 0.95),
+        text_xy = {"title": (0.5, 0.94),
+               "date_range": (0.5, 0.93),
                "watermark": (0.45, 0.41),}
         if figsize is None:
-            figsize=(5,12)
+            figsize=(3, 8)
         
-    elif orientation=="square":       
+    elif orientation=="square":   
+        if tick_rotation is None:
+            tick_rotation = -90
         ncols=2
         nrows=2
-        figsize=(8,6)
+        cbar_location = "right"
+        figsize=(6, 4.5)
         plots_rect = (0.01,0.05,0.84,0.85) #left bottom width height
+        cax_bounds = [0.1,0,0.5,1]
         cbar_rect = [0.85, 0.2, 0.03, 0.5]
 
         # text annotation xy locations for 3-panel plot
@@ -1311,7 +1421,7 @@ def plot_acs_hazard_4pp(
                    "watermark": (0.45, 0.41),}
 
         if figsize is None:
-            figsize=(8, 6)
+            figsize=(6, 4.5)
     else:
         print('orientation must be one of ["horizontal", "vertical", "square"]')
 
@@ -1343,13 +1453,24 @@ def plot_acs_hazard_4pp(
                             subplot_kw={'projection': crs, "frame_on":False},)
     
     cmap.set_bad(cmap_bad)
+    
     station_dfs = [station_df_gwl12, station_df_gwl15, station_df_gwl20, station_df_gwl30]
     if any(df is not None for df in station_dfs) and markersize is None:
         markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/4
+
+    if subplot_titles is None:
+        subplot_titles = [f"GWL{[1.2, 1.5, 2.0, 3.0][i]}" for i in range(4)]
+
+    if orientation=="vertical":
+        subtitle_xy = (-0.5, 0.4)
+    else:
+        # use default
+        subtitle_xy = None
+        
     for i, ds in enumerate([ds_gwl12, ds_gwl15, ds_gwl20, ds_gwl30]):
         station_df = station_dfs[i]
         stippling = [stippling_gwl12, stippling_gwl15, stippling_gwl20, stippling_gwl30][i]
-
+        subtitle = subplot_titles[i]
         ax, norm, cont, middle_ticks = plot_data(regions=regions,
                                               data=ds,
                                                  station_df=station_df,
@@ -1364,13 +1485,15 @@ def plot_acs_hazard_4pp(
                                               contour=contour,
                                               ax=axs.flatten()[i],
                                               figsize=figsize,
-                                              subtitle=f"GWL{[1.2,1.5,2.0,3.0][i]}",
+                                              subtitle=subtitle,
+                                                 subtitle_xy=subtitle_xy,
                                               facecolor=facecolor,
                                               mask_not_australia = mask_not_australia,
                                               mask_australia=mask_australia,
                                               agcd_mask=agcd_mask,
                                               area_linewidth=area_linewidth,
-                                              stippling=stippling)
+                                              stippling=stippling,
+                                                vcentre=vcentre,)
         
         # if select a specific area -----------
         ax = plot_select_area(select_area=select_area, 
@@ -1390,24 +1513,31 @@ def plot_acs_hazard_4pp(
     # fig.subplots_adjust(left=0.05, bottom=0.05, right=0.85, top=0.85, wspace=0.05, hspace=0.1)
     fig.get_layout_engine().set(rect=plots_rect)
     
+    if orientation == "square":
+        cbar_ax = fig.add_axes(cbar_rect) #left bottom width height
+        cbar_ax.axis('off')
+    else:
+        cbar_ax = axs.flatten()[-1]
     
-    cbar_ax = fig.add_axes(cbar_rect) #left bottom width height
-    cbar_ax.axis('off')
+    cbar = plot_cbar(cont=cont,
+                     norm=norm,
+                     ax=cbar_ax,
+                     cbar_extend=cbar_extend, 
+                     cbar_label=cbar_label,
+                     location=cbar_location,
+                     ticks=ticks, 
+                     tick_labels=tick_labels,
+                     middle_ticks=middle_ticks,
+                     cax_bounds=cax_bounds,
+                     rotation = tick_rotation,
+                     )
     
-    ax = plot_cbar(cont=cont,
-                  norm=norm,
-                  ax=cbar_ax,
-                  cbar_extend=cbar_extend, 
-                  cbar_label=cbar_label,
-                  ticks=ticks, 
-                  tick_labels=tick_labels,
-                  middle_ticks=middle_ticks,
-                  cax_bounds = [0.1,0,0.5,1],)
+    
     #------------------------------------------
     
     
     # plot border and annotations -----------------
-    ax111 = fig.add_axes([0.01,0.01,0.98,0.99], facecolor="none", xticks=[], yticks=[]) #(left, bottom, width, height)
+    ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
     
     
     ax111 = plot_titles(title=title,
@@ -1420,17 +1550,20 @@ def plot_acs_hazard_4pp(
                         ax=ax111,
                         text_xy = text_xy,
                         title_ha = "center",
+                        orientation=orientation,
                    )
-    ax111.axis(True)
+    # draw border
+    # ax111.axis(True)
+    ax111.axis(False)
     # --------------------------------------------
     
     if outfile is None:
         PATH = os.path.abspath(os.getcwd())
-        outfile = f"{PATH}/figures/{title.replace(' ', '_')}.png"
+        outfile = f"{PATH}/figures/{title.replace(' ', '-')}.png"
         os.makedirs(os.path.dirname(outfile), exist_ok=True)
     
     if savefig:
-        plt.savefig(outfile, dpi=300)
+        plt.savefig(outfile, dpi=300,)
     return fig, ax
 
 def plot_acs_hazard_1plus3(
@@ -1444,6 +1577,8 @@ def plot_acs_hazard_1plus3(
                 gwl12_cbar_label=None,
                 gwl12_ticks=None,
                 gwl12_tick_labels=None,
+                gwl12_tick_rotation=None,
+                gwl12_vcentre=None,
                 ds_gwl15=None,
                 ds_gwl20=None,
                 ds_gwl30=None,                      
@@ -1462,10 +1597,11 @@ def plot_acs_hazard_1plus3(
                 markersize=None,
                 title=None,
                 date_range="",
+                subplot_titles=None,
                 crs=None,
                 area_linewidth=0.3,
                 xlim=(113, 154),
-                ylim=(-43, -10),
+                ylim=(-43.5, -9.5),
                 cmap=cm.Greens,
                 cmap_bad="lightgrey",
                 cbar_extend="both",
@@ -1486,14 +1622,17 @@ def plot_acs_hazard_1plus3(
                 infile=None,
                 outfile=None,
                 savefig=True,
-                orientation="horizontal",
+                orientation="vertical",
+                tick_rotation=None,
+                vcentre=None,
             ):
-    """2-by-2 layout. 1 baseline plot and 3 future scenario plots"""
+    """1 baseline plot and 3 future scenario plots"""
 
     
     if orientation=="horizontal":
         cax_bounds = [1.05,0,0.1,1]
-        tick_rotation = 0
+        if tick_rotation is None:
+            tick_rotation = 0
         nrows = 1
         ncols = 4
         cbar_location = "right"
@@ -1506,34 +1645,39 @@ def plot_acs_hazard_1plus3(
             figsize=(10, 3)
         
     elif orientation=="vertical":
-        cax_bounds = [-0.1,-0.3,1.2,0.1]
-        tick_rotation = -90
+        cax_bounds = [-0.4,-0.3,1.6,0.1]
+        if tick_rotation is None:
+            tick_rotation = -90
         nrows = 4
         ncols = 1
         cbar_location = "bottom"
         plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
         # text annotation xy locations
-        text_xy = {"title": (0.5, 0.96),
-               "date_range": (0.5, 0.95),
+        text_xy = {"title": (0.5, 0.94),
+               "date_range": (0.5, 0.93),
                "watermark": (0.45, 0.41),}
         if figsize is None:
-            figsize=(5,12)
+            figsize=(3, 8)
         
     elif orientation=="square":
         cax_bounds = [1.05,0,0.1,1]
-        tick_rotation = 0
+        if tick_rotation is None:
+            tick_rotation = 0
         nrows = 2
         ncols = 2
         cbar_location = "right"
         plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
         # text annotation xy locations
-        text_xy = {"title": (0.5, 0.96),
-                   "date_range": (0.5, 0.95),
+        text_xy = {"title": (0.5, 0.93),
+                   "date_range": (0.5, 0.92),
                    "watermark": (0.45, 0.41),}
         if figsize is None:
-            figsize=(8,6)
+            figsize=(6,4.5)
     else:
         print('orientation must be one of ["horizontal", "vertical", "square"]')
+
+    if gwl12_tick_rotation is None:
+        gwl12_tick_rotation = tick_rotation
     
     if regions is None:
         try:
@@ -1572,7 +1716,16 @@ def plot_acs_hazard_1plus3(
     if any(df is not None for df in station_dfs) and markersize is None:
         markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/4
 
+    if subplot_titles is None:
+        subplot_titles = [f"GWL{[1.2, 1.5, 2.0, 3.0][i]}" for i in range(4)]
+
     # -------- plot baseline plot and its colorbar ---------------------
+    if orientation=="vertical":
+        subtitle_xy = (-0.5, 0.4)
+    else:
+        # use default
+        subtitle_xy = None
+    
     ax, norm, cont, middle_ticks = plot_data(regions=regions,
                                              data=ds_gwl12, 
                                              station_df = station_df_gwl12,
@@ -1587,31 +1740,35 @@ def plot_acs_hazard_1plus3(
                                              contour=contour,
                                              ax=axs.flatten()[0],
                                              figsize=figsize,
-                                             subtitle=f"GWL1.2",
+                                             subtitle=subplot_titles[0],
+                                             subtitle_xy=subtitle_xy,
                                              facecolor=facecolor,
                                              mask_not_australia = mask_not_australia,
                                              mask_australia=mask_australia,
                                              agcd_mask=agcd_mask,
                                              area_linewidth=area_linewidth,
-                                             stippling=stippling_gwl12)
+                                             stippling=stippling_gwl12,
+                                             vcentre=gwl12_vcentre,
+                                            )
     cbar = plot_cbar(cont=cont,
                   norm=norm,
                   ax=axs.flatten()[0],
                   cbar_extend=gwl12_cbar_extend, 
                   cbar_label=gwl12_cbar_label,
+                     location=cbar_location,
                   ticks=gwl12_ticks, 
                   tick_labels=gwl12_tick_labels,
                   middle_ticks=middle_ticks,
                   cax_bounds=cax_bounds,
-                  location=cbar_location)
-    cbar.ax.tick_params(rotation=tick_rotation)
+                  rotation=gwl12_tick_rotation,
+                  )
     # ------- end plot baseline plot and its colorbar ---------------------
 
     # ------- plot three scenarios as anomalies from baseline--------------
     for i, ds in enumerate([ds_gwl15, ds_gwl20, ds_gwl30]):
-        station_df = [station_df_gwl15, station_df_gwl20, station_df_gwl30][i]
+        station_df = station_dfs[i+1]
         stippling = [stippling_gwl15, stippling_gwl20, stippling_gwl30][i]
-        
+        subtitle = subplot_titles[i+1]
         ax, norm, cont, middle_ticks = plot_data(regions=regions,
                                                  data=ds, 
                                                  station_df = station_df,
@@ -1626,13 +1783,15 @@ def plot_acs_hazard_1plus3(
                                                  contour=contour,
                                                  ax=axs.flatten()[i+1],
                                                  figsize=figsize,
-                                                 subtitle=f"GWL{[1.5,2.0,3.0][i]}",
+                                                 subtitle=subtitle,
+                                                 subtitle_xy=subtitle_xy,
                                                  facecolor=facecolor,
                                                  mask_not_australia = mask_not_australia,
                                                  mask_australia=mask_australia,
                                                  agcd_mask=agcd_mask,
                                                  area_linewidth=area_linewidth,
-                                                 stippling=stippling)
+                                                 stippling=stippling,
+                                                vcentre=vcentre,)
         
         # if select a specific area -----------
         ax = plot_select_area(select_area=select_area, 
@@ -1656,8 +1815,9 @@ def plot_acs_hazard_1plus3(
                   tick_labels=tick_labels,
                   middle_ticks=middle_ticks,
                   cax_bounds =cax_bounds,
-                  location=cbar_location)
-    cbar.ax.tick_params(rotation=tick_rotation)
+                  location=cbar_location,
+                    rotation=tick_rotation,
+                    )
     
     #------------------------------------------
     
@@ -1665,7 +1825,7 @@ def plot_acs_hazard_1plus3(
     # plot border and annotations -----------------
     fig.get_layout_engine().set(rect=plots_rect)
     
-    ax111 = fig.add_axes([0.01,0.01,0.98,0.98], facecolor="none", xticks=[], yticks=[]) #(left, bottom, width, height)
+    ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
         
     ax111 = plot_titles(title=title,
                         date_range = date_range, 
@@ -1677,15 +1837,20 @@ def plot_acs_hazard_1plus3(
                         ax=ax111,
                         text_xy = text_xy,
                         title_ha = "center",
+                        orientation = orientation,
                    )
-    ax111.axis(True)
+    # draw border
+    # ax111.axis(True)
+    ax111.axis(False)
     # --------------------------------------------
     
     if outfile is None:
         PATH = os.path.abspath(os.getcwd())
-        outfile = f"{PATH}/figures/{title.replace(' ', '_')}.png"
+        outfile = f"{PATH}/figures/{title.replace(' ', '-')}.png"
         os.makedirs(os.path.dirname(outfile), exist_ok=True)
     
     if savefig:
-        plt.savefig(outfile, dpi=300)
+        plt.savefig(outfile, dpi=300,)
     return fig, ax
+
+
