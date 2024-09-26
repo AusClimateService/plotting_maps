@@ -49,9 +49,15 @@ logo = image.imread(f"{Path(__file__).parent}/ACS_Logo_Blue_on_white_Stacked.png
 
 cmap_mustard = LinearSegmentedColormap.from_list(
     "mustard",
-    [(195 / 235, 152 / 235, 21 / 235), (229 / 235, 208 / 235, 147 / 235)],
+    # [(195 / 235, 152 / 235, 21 / 235), (229 / 235, 208 / 235, 147 / 235)],
+    # ["#f4ea94", "#e2ce17", "#61580a"]
+    # [ "#3c320a", "#5a4c10", "#977f1b","#d3b125", "#e2c85e",  "#eddd9b",]
+    ["#5a4c10", "#977f1b","#d3b125", "#e2c85e",  "#eddd9b",]
 )
 cmap_mustard.set_bad(color="lightgrey")
+
+cmap_BuGnPi = LinearSegmentedColormap.from_list('BuGnPi', np.vstack((cm.BrBG(np.linspace(0.55, 1, 30)[::-1]),[0.9,0.9,0.9,0.9], cm.pink_r(np.linspace(0.25, 1, 30)) )))
+cmap_BuGnPi_r = LinearSegmentedColormap.from_list('BuGnPi_r',cmap_BuGnPi(np.linspace(0,1,256))[::-1])
 
 cmap_dir = f"{Path(__file__).parent}/continuous_colormaps_rgb_0-1"
 
@@ -109,8 +115,12 @@ cmap_dict = {
     "drought_duration": cmaps.hotres,
     "drought_duration_r": cmaps.hotres_r,
     "aridity": cmap_mustard,
-    "aridity_anom": cmaps.NEO_div_vegetation_a, # not colorblind friendly
-    "aridity_anom_r": cmaps.NEO_div_vegetation_a_r, # not colorblind friendly
+    # "aridity_anom": cmaps.NEO_div_vegetation_a, # not colorblind friendly
+    # "aridity_anom_r": cmaps.NEO_div_vegetation_a_r, # not colorblind friendly
+    "aridity_anom": cmap_BuGnPi_r,
+    "aridity_anom_r": cmap_BuGnPi,
+    "BrBu": LinearSegmentedColormap.from_list("BrBu", ["#3c320a", "#d3b125", "lightgrey", "royalblue", "navy"]),
+    "BuBr": LinearSegmentedColormap.from_list("BuBr", ["navy", "royalblue", "lightgrey", "#d3b125", "#3c320a"]),
     "anom_BlueYellowRed": cmaps.BlueYellowRed,
     "anom_BlueYellowRed_r": cmaps.BlueYellowRed_r,
     "anom": cmaps.BlueWhiteOrangeRed,
@@ -1151,7 +1161,7 @@ def plot_acs_hazard_3pp(
     agcd_mask=False,
     facecolor="none",
     edgecolor="black",
-    figsize=(10, 4),
+    figsize=None,
     markersize=None,
     title=None,
     date_range="",
@@ -1193,6 +1203,40 @@ def plot_acs_hazard_3pp(
     otherwise specify a list of three strings.
     """
 
+    if orientation=="horizontal":
+        cax_bounds = [1.05,0,0.1,1]
+        if tick_rotation is None:
+            tick_rotation = 0
+        nrows = 1
+        ncols = 3
+        cbar_location = "right"
+        plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
+        # text annotation xy locations
+        text_xy = {"title": (0.5, 0.9),
+                   "date_range": (0.5, 0.87),
+                   "watermark": (0.45, 0.41),}
+        if figsize is None:
+            figsize=(10, 3)
+            
+    elif orientation=="vertical":
+        cax_bounds = [-0.4,-0.3,1.6,0.1]
+        if tick_rotation is None:
+            tick_rotation = -90
+        nrows = 3
+        ncols = 1
+        cbar_location = "bottom"
+        plots_rect = (0.01,0.07,0.98,0.85) #left bottom width height
+        # text annotation xy locations
+        text_xy = {"title": (0.5, 0.94),
+               "date_range": (0.5, 0.93),
+               "watermark": (0.45, 0.41),}
+        if figsize is None:
+            figsize=(3, 6.5)
+        
+    else:
+        print('orientation must be one of ["horizontal", "vertical",]')
+
+    
     if regions is None:
         try:
             regions = regions_dict[name]
@@ -1214,7 +1258,11 @@ def plot_acs_hazard_3pp(
         else:
             crs = ccrs.PlateCarree()
         
-    fig, axs = plt.subplots(nrows=1, ncols=3,  sharey=True, sharex=True, figsize=figsize, subplot_kw={'projection': crs, "frame_on":False},)
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, 
+                            sharey=True, sharex=True,
+                            figsize=figsize, 
+                            layout="constrained",
+                            subplot_kw={'projection': crs, "frame_on":False},)
 
     cmap.set_bad(cmap_bad)
     
@@ -1224,6 +1272,12 @@ def plot_acs_hazard_3pp(
 
     if subplot_titles is None:
         subplot_titles = [f"GWL{[1.5,2.0,3.0][i]}" for i in range(3)]
+
+    if orientation=="vertical":
+        subtitle_xy = (-0.5, 0.5)
+    else:
+        # use default
+        subtitle_xy = None
         
     for i, ds in enumerate([ds_gwl15, ds_gwl20, ds_gwl30]):
         station_df = station_dfs[i]
@@ -1244,6 +1298,7 @@ def plot_acs_hazard_3pp(
                                               ax=axs[i],
                                               figsize=figsize,
                                               subtitle=subtitle,
+                                                 subtitle_xy=subtitle_xy,
                                               facecolor=facecolor,
                                               mask_not_australia = mask_not_australia,
                                               mask_australia=mask_australia,
@@ -1268,9 +1323,11 @@ def plot_acs_hazard_3pp(
         ax.axis('off')
 
     # colorbar -----------------------------------------------------------
-    fig.subplots_adjust(left=0.05, bottom=0, right=0.85, top=0.95, wspace=0.05, hspace=0.05)
-    cbar_ax = fig.add_axes([0.87, 0.2, 0.03, 0.5]) #left bottom width height
-    cbar_ax.axis('off')
+    # fig.subplots_adjust(left=0.05, bottom=0, right=0.85, top=0.95, wspace=0.05, hspace=0.05)
+    # cbar_ax = fig.add_axes([0.87, 0.2, 0.03, 0.5]) #left bottom width height
+    # cbar_ax.axis('off')
+    fig.get_layout_engine().set(rect=plots_rect)
+    cbar_ax = axs.flatten()[-1]
 
     cbar = plot_cbar(cont=cont,
                   norm=norm,
@@ -1280,19 +1337,20 @@ def plot_acs_hazard_3pp(
                   ticks=ticks, 
                   tick_labels=tick_labels,
                   middle_ticks=middle_ticks,
-                  cax_bounds = [0.1,0,0.5,1],
+                  cax_bounds = cax_bounds,
                      rotation=tick_rotation,
+                     location = cbar_location,
                   )
     #------------------------------------------
 
-    
+
     # plot border and annotations -----------------
     ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
 
-    # text annotation xy locations for 3-panel plot
-    text_xy_3pp = {"title": (0.5, 0.9),
-               "date_range": (0.5, 0.87),
-               "watermark": (0.45, 0.41),}
+    # # text annotation xy locations for 3-panel plot
+    # text_xy_3pp = {"title": (0.5, 0.9),
+    #            "date_range": (0.5, 0.87),
+    #            "watermark": (0.45, 0.41),}
     
     ax111 = plot_titles(title=title,
                         date_range = date_range, 
@@ -1302,9 +1360,9 @@ def plot_acs_hazard_3pp(
                         watermark=watermark, 
                         watermark_color=watermark_color,
                         ax=ax111,
-                        text_xy = text_xy_3pp,
+                        text_xy = text_xy,
                         title_ha = "center",
-                        orientation = "horizontal",
+                        orientation = orientation,
                    )
     # draw border
     # ax111.axis(True)
