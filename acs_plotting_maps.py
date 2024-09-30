@@ -1450,9 +1450,9 @@ def plot_acs_hazard_4pp(
         text_xy = {"title": (0.5, 0.94),
                "date_range": (0.5, 0.93),
                "watermark": (0.45, 0.41),}
-        subtitle_xy = (-0.55, 0.6)
+        subtitle_xy = (-0.54, 0.6)
         if figsize is None:
-            figsize=(3, 8)
+            figsize=(3, 8)       
         
     elif orientation=="square":   
         if tick_rotation is None:
@@ -1555,7 +1555,6 @@ def plot_acs_hazard_4pp(
         ax.axis('off')
     
     # colorbar -----------------------------------------------------------
-    # fig.subplots_adjust(left=0.05, bottom=0.05, right=0.85, top=0.85, wspace=0.05, hspace=0.1)
     fig.get_layout_engine().set(rect=plots_rect)
     
     if orientation == "square":
@@ -1748,7 +1747,6 @@ def plot_acs_hazard_1plus3(
         else:
             crs = ccrs.PlateCarree()
 
-    
     fig, axs = plt.subplots(nrows=nrows,
                             ncols=ncols,  
                             sharey=True,
