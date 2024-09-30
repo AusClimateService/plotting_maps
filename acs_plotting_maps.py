@@ -1,5 +1,4 @@
-"""Standardising Australia Hazard Maps
-This module plots maps to consistently present climate hazards for Australia.
+"""This module plots maps to consistently present climate hazards for Australia.
 It is code is designed to work with hh5 analysis3-24.04 venv"""
 
 import datetime
@@ -1215,6 +1214,7 @@ def plot_acs_hazard_3pp(
         text_xy = {"title": (0.5, 0.9),
                    "date_range": (0.5, 0.87),
                    "watermark": (0.45, 0.41),}
+        subtitle_xy = None
         if figsize is None:
             figsize=(10, 3)
             
@@ -1230,6 +1230,7 @@ def plot_acs_hazard_3pp(
         text_xy = {"title": (0.5, 0.94),
                "date_range": (0.5, 0.93),
                "watermark": (0.45, 0.41),}
+        subtitle_xy = (-0.55, 0.6)
         if figsize is None:
             figsize=(3, 6.5)
         
@@ -1272,12 +1273,6 @@ def plot_acs_hazard_3pp(
 
     if subplot_titles is None:
         subplot_titles = [f"GWL{[1.5,2.0,3.0][i]}" for i in range(3)]
-
-    if orientation=="vertical":
-        subtitle_xy = (-0.5, 0.5)
-    else:
-        # use default
-        subtitle_xy = None
         
     for i, ds in enumerate([ds_gwl15, ds_gwl20, ds_gwl30]):
         station_df = station_dfs[i]
@@ -1346,11 +1341,6 @@ def plot_acs_hazard_3pp(
 
     # plot border and annotations -----------------
     ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
-
-    # # text annotation xy locations for 3-panel plot
-    # text_xy_3pp = {"title": (0.5, 0.9),
-    #            "date_range": (0.5, 0.87),
-    #            "watermark": (0.45, 0.41),}
     
     ax111 = plot_titles(title=title,
                         date_range = date_range, 
@@ -1444,6 +1434,7 @@ def plot_acs_hazard_4pp(
         text_xy = {"title": (0.5, 0.9),
                    "date_range": (0.5, 0.87),
                    "watermark": (0.45, 0.41),}
+        subtitle_xy = None
         if figsize is None:
             figsize=(10, 3)
             
@@ -1459,6 +1450,7 @@ def plot_acs_hazard_4pp(
         text_xy = {"title": (0.5, 0.94),
                "date_range": (0.5, 0.93),
                "watermark": (0.45, 0.41),}
+        subtitle_xy = (-0.55, 0.6)
         if figsize is None:
             figsize=(3, 8)
         
@@ -1477,6 +1469,7 @@ def plot_acs_hazard_4pp(
         text_xy = {"title": (0.5, 0.93),
                    "date_range": (0.5, 0.92),
                    "watermark": (0.45, 0.41),}
+        subtitle_xy = None
 
         if figsize is None:
             figsize=(6, 4.5)
@@ -1518,12 +1511,6 @@ def plot_acs_hazard_4pp(
 
     if subplot_titles is None:
         subplot_titles = [f"GWL{[1.2, 1.5, 2.0, 3.0][i]}" for i in range(4)]
-
-    if orientation=="vertical":
-        subtitle_xy = (-0.5, 0.4)
-    else:
-        # use default
-        subtitle_xy = None
         
     for i, ds in enumerate([ds_gwl12, ds_gwl15, ds_gwl20, ds_gwl30]):
         station_df = station_dfs[i]
@@ -1699,6 +1686,7 @@ def plot_acs_hazard_1plus3(
         text_xy = {"title": (0.5, 0.9),
                    "date_range": (0.5, 0.87),
                    "watermark": (0.45, 0.41),}
+        subtitle_xy = None
         if figsize is None:
             figsize=(10, 3)
         
@@ -1714,6 +1702,7 @@ def plot_acs_hazard_1plus3(
         text_xy = {"title": (0.5, 0.94),
                "date_range": (0.5, 0.93),
                "watermark": (0.45, 0.41),}
+        subtitle_xy = (-0.55, 0.6)
         if figsize is None:
             figsize=(3, 8)
         
@@ -1729,6 +1718,7 @@ def plot_acs_hazard_1plus3(
         text_xy = {"title": (0.5, 0.93),
                    "date_range": (0.5, 0.92),
                    "watermark": (0.45, 0.41),}
+        subtitle_xy = None
         if figsize is None:
             figsize=(6,4.5)
     else:
@@ -1778,12 +1768,6 @@ def plot_acs_hazard_1plus3(
         subplot_titles = [f"GWL{[1.2, 1.5, 2.0, 3.0][i]}" for i in range(4)]
 
     # -------- plot baseline plot and its colorbar ---------------------
-    if orientation=="vertical":
-        subtitle_xy = (-0.5, 0.4)
-    else:
-        # use default
-        subtitle_xy = None
-    
     ax, norm, cont, middle_ticks = plot_data(regions=regions,
                                              data=ds_gwl12, 
                                              station_df = station_df_gwl12,
