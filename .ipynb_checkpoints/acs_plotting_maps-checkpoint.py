@@ -1,4 +1,5 @@
-"""This module plots maps to consistently present climate hazards for Australia.
+"""Standardising Australia Hazard Maps
+This module plots maps to consistently present climate hazards for Australia.
 It is code is designed to work with hh5 analysis3-24.04 venv"""
 
 import datetime
@@ -13,8 +14,6 @@ import xarray as xr
 import cartopy.crs as ccrs
 from glob import glob
 
-from cmocean.tools import crop
-
 # import colormap packages
 import cmaps
 from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
@@ -26,7 +25,7 @@ mpl.rcParams['hatch.linewidth'] = 0.3
 plt.rcParams['savefig.facecolor']='white'
 
 # define some standard imput for the maps
-crs = ccrs.LambertConformal(
+projection = ccrs.LambertConformal(
     central_latitude=-24.75,
     central_longitude=134.0,
     cutoff=30,
@@ -82,11 +81,14 @@ cmap_dict = {
     "fire_climate": ListedColormap(
         [ "#84a19b", "#e0d7c6", "#486136", "#737932", "#a18a6e", ]
     ),
+    "fire_climate_alternative": ListedColormap(
+        [ "#355834", "#F1F5F2", "#14281D", "#6E633D", "#C2A878", ]
+    ),
     'tasmax_bom': ListedColormap(
         [ '#E3F4FB','#C8DEE8','#91C4EA','#56B6DC','#00A2AC','#30996C',
          '#7FC69A','#B9DA88','#DCE799', '#FCE850','#EACD44','#FED98E',
          '#F89E64','#E67754','#D24241', '#AD283B','#832D57','#A2667A','#AB9487']
-    ),
+    ), #not colourblind safe
     'tasmax' : ListedColormap(
         ['#014636','#016c59','#02818a','#3690c0','#67a9cf','#a6bddb',
          '#d0d1e6','#ece2f0','#fff7fb','#ffffcc','#ffeda0','#fed976',
@@ -293,7 +295,6 @@ regions_dict = RegionShapefiles(PATH, shapefile_list)
 # We will use this to hide data outside of the Australian land borders.
 # note that this is not a data mask,
 # the data under the masked area is still loaded and computed, but not visualised
-
 australia = regions_dict["australia"].copy()
 
 # Define the CRS of the shapefile manually
@@ -313,6 +314,36 @@ not_australia = gpd.GeoSeries(
 
 
 def crop_cmap_center(cmap, ticks, mid, extend=None):
+    """This function is used to align the centre of a colormap (cmap)
+    to a specified midpoint (mid). Allows the cmap to be normalised on 
+    the specified ticks with cbar_extend arrows taken into account.
+    Intended for divergent colormaps that show anomalies that are mostly
+    all positive (or negative), for example, temperature anomalies in 
+    future climate projections.
+    The shorter side of the colormap is cropped and not stretched - unlike 
+    matplotlib.colors.TwoSlopeNorm.
+
+    Parameters
+    -------
+    cmap: matplotlib colormap
+        original colormap to crop
+
+    ticks: list or np.array
+        list or array of numerical ticks
+
+    mid: float
+        Set the midpoint value of the colormap. 
+        For example, 0.0
+
+    extend: {'neither', 'both', 'min', 'max'}
+        Make pointed end(s) for out-of-range values (unless 'neither').
+        These are set for a given colormap using the colormap set_under
+        and set_over methods.
+    
+    Returns
+    -------
+    matplotlib.colors.LinearSegmentedColormap
+    """
     ticks=np.array(ticks)
     # number of color segments:
     below = (ticks<mid).sum()
@@ -344,6 +375,7 @@ def plot_data(regions=None,
               data=None, 
               station_df = None,
               markersize=None,
+              stippling=None,
               xlim=(114, 162),
               ylim=(-43.5, -7.5),
               cmap=cm.Greens,
@@ -353,7 +385,6 @@ def plot_data(regions=None,
               contourf=False,
               contour=False,
               ax=None,
-              figsize=(6.7,5),
               subtitle = "",
               subtitle_xy = None,
               facecolor="none",
@@ -362,16 +393,143 @@ def plot_data(regions=None,
               mask_not_australia = True,
               mask_australia=False,
               agcd_mask=False,
-              stippling=None,
               select_area = None,
               vcentre=None,
              ):
-    """This function takes an axis and plots the hazard data to a map of Australia"""
+    """This function takes one axis and plots the hazard data to one map of Australia. 
+    This function takes gridded "data" and/or a "station_df" dataframe and "regions" shapefiles 
+    to visualise hazard data from a 2D Xarray data array and plots the data on a map
+    of Australia with the regions outlines.
+
+    Parameters
+    ----------
+    regions: geopandas.GeoDataFrame
+        region geometries for regions/states/catchments etc
+
+    data: xr.DataArray
+        a 2D xarray DataArray which has already computed the 
+        average, sum, anomaly, metric or index you wish to visualise.
+        This function is resolution agnostic.
+
+    station_df: pd.DataFrame, optional
+        a pandas.DataFrame with columns ["lon", "lat", variable]. 
+        If station_df is given, then variable values are represented as dots on 
+        the mapaccordingg to the lat lon coordinates and coloured according to
+        cmap colors and ticks.
+
+    markersize: int, optional
+        default None. If None then the markersize will adjust to the size of the
+        figure and the number of markers in the plot such that when there are
+        many markers and the figure is small, the markersize is smaller.
+
+    stippling: xr.DataArray
+        a True/False mask to define regions of stippling hatching. 
+        Intended to show information such as "model agreement for direction of change".
+
+    xlim: tuple, optional
+        longitude min and max of the plot area.
+        default is cropped to Australian continent xlim=(114, 162)
+
+    ylim: tuple, optional
+        latitude min and max of the plot area.
+        default is cropped to Australian continent ylim=(-43.5, -7.5),
+
+    cmap:
+        defines the colormap used for the data.
+        See cmap_dict for suggested colormaps.
+        Default cmap set to cm.Greens.
+        Please choose appropriate colormaps for your data.
+
+    cbar_extend: one of {'neither', 'both', 'min', 'max'}.
+        eg "both" changes the ends of the colorbar to arrows to indicate that
+        values are possible outside the scale shown.
+        If contour or contourf is True, then cbar_extend will be overridden to "none".
+
+    ticks: list or arraylike
+        Define the ticks on the colorbar. Define any number of intervals. 
+        This will make the color for each interval one discrete color, 
+        instead of a smooth color gradient.
+        If None, linear ticks will be auto-generated to fit the provided data.
+
+    tick_labels: list
+        Labels for categorical data. 
+        If tick_labels is used, then pcolormesh is used to plot data 
+        and does not allow contour or contourf to be used.
+        Tick labels will correspond to the ticks.
+
+    contourf: bool
+        if True then the gridded data is visualised as smoothed filled contours. 
+        Default is False.
+        Use with caution when plotting data with negative and positive values;
+        Check output for NaNs and misaligned values.  
+        High resolution data is slow to compute.
+
+    contour: bool
+        if True then the gridded data is visualised as smoothed unfilled grey contours.
+        Default is False.
+        High resolution data is slow to compute.
+        Using both contourf and contour results in smooth filled contours
+        with grey outlines between the color levels.
+
+    ax: matplotlib.axes.Axes
+        Axes object of existing figure to put the plotting.
+
+    subtitle: str
+        default ""
+        Intended to label global warming levels for subplots eg. "GWL 1.2"
+        
+    subtitle_xy: tuple, optional
+        (x, y) location of subtitle relative to transAxes.
+        defines the top left location for the subtitle. 
+
+    facecolor: color
+        color of land when plotting the regions without climate data and select_area is None. 
+        facecolor recommendations include "white", "lightgrey", "none".
+        default is "none"
+
+    edgecolor: color
+        defines the color of the state/region borders. 
+        edgecolor recommendations include "black" and "white".
+
+    mask_not_australia: boolean
+        decides whether or not the area outside of Australian land is hidden 
+        under white shape.
+        Default is True.
+
+    mask_australia: boolean
+        decides whether or not Australian land is hidden under white shape.
+        Eg, use when plotting ocean only.
+        Default is False.
+
+    agcd_mask: boolean
+        If True, applies a ~5km mask for data-sparse inland areas of Australia.
+        Default is False.
+
+    area_linewidth: float, optional
+        the width of state/region borders only. All other linewidths are hardcoded.
+
+    select_area: list
+        If None, then don't add region borders geometries.
+        
+    vcentre: float, eg 0
+        default is None.
+        Align centre of colormap to this value. 
+        Intended for using a divergent colormap with uneven number of ticks 
+        around the centre, eg for future temperature anomalies with a larger
+        positive range compared to the negative range.
+
+    Returns
+    -------
+    ax, norm, cont, middle_ticks
+    ax, the matplotlib.axes.Axes with the plot
+    norm, the normalisation for the colormap and plotted contours according to ticks
+    cont, the QuadContourSet or QuadMesh of the plotted gridded data
+    middle_ticks, the location to label categorical tick labels
+    """
 
     if vcentre is not None:
         cmap = crop_cmap_center(cmap, ticks, vcentre, extend=cbar_extend)
 
-    
     ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
     
     middle_ticks=[]
@@ -387,9 +545,7 @@ def plot_data(regions=None,
             directory = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/masks/AGCD-05i"
             agcd = xr.open_dataset(f"{directory}/mask-fraction_agcd_v1-0-2_precip_weight_1960_2022.nc").fraction
             data = data.where(agcd>=0.8)
-    
-        # facecolor = "none"
-    
+        
         if ticks is None:
             norm = None
         else:
@@ -542,11 +698,58 @@ def plot_cbar(cont=None,
               middle_ticks=[], 
               cax_bounds =None,
               contour=False,
-              contourf=False,
               location=None,
-             rotation=None,
+              rotation=None,
              ):
-    """This function defines and plots the colorbar"""
+    """This function defines and plots the colorbar. 
+    It takes crucial information from the plot_data function.
+    
+    Parameters
+    ----------
+    cont:
+        output from matplotlib plotting
+        
+    norm:
+        normalisation
+        
+    ax: matplotlib.axes.Axes
+        Axes to put the colorbar
+        
+    cbar_extend: one of {'neither', 'both', 'min', 'max'}.
+        eg "both" changes the ends of the colorbar to arrows to indicate that
+        values are possible outside the scale shown.
+         
+    cbar_label: str
+        Title for colorbar. Include name of metric and [units]
+        
+    ticks: list or array
+        numerical location of ticks
+        
+    tick_labels: list
+        If categorical data, these labels go inbetween the numerical bounds set by ticks
+        
+    middle_ticks: list
+        If categorical data, this specifies the location of the tick labels.
+        Typically in the middle of the bounds set by ticks
+        
+    cax_bounds: [left, bottom, width, height]
+        Colorbar axes bounds relative to ax
+        
+    contour: bool
+        draw lines on colorbar if True
+        Default is False
+        
+    location: {"top", "bottom", "left", "right"}
+        location of the colorbar. Defaults to right.
+        
+    rotation: [-360,360]
+        rotation of tick labels in degrees. Set to 0 for horizontal.
+
+    Returns
+    -------
+    matplotlib.colorbar    
+    
+    """
 
     if cax_bounds is not None:
         cax = ax.inset_axes(cax_bounds)
@@ -602,11 +805,16 @@ def plot_cbar(cont=None,
     
     # Label colorbar
     if cbar is not None:
+        if len(cbar_label)>35 and "\n" not in cbar_label:
+            fontstretch = "condensed"
+        else:
+            fontstretch = "normal"
         cbar.ax.set_title(cbar_label, 
                           zorder=10,
                           loc="center",
                           fontsize=10,
-                          verticalalignment="bottom",
+                          fontstretch=fontstretch,
+                          verticalalignment="baseline",
                          wrap=True)
 
     cbar.ax.tick_params(rotation=rotation) 
@@ -620,7 +828,40 @@ def plot_select_area(select_area=None,
                      land_shadow=False,
                      area_linewidth=0.3,
                     ):
-    # if select a specific area
+    """This function takes a list of named areas to plot and adjusts 
+    the limits of the axis.   
+    
+    Parameters
+    ----------
+    select_area: list
+        list of selected areas to plot. Must be name of area in regions.
+
+    ax: matplotlib.axes.Axes
+        axis 
+
+    xlim:
+        longitude limits to use if select_area is None
+
+    ylim:
+        latitude limits to use if select_area is None  
+
+    regions: geopandas.GeoDataFrame
+        region border data, must contain a column name with "NAME" in it
+        to select those areas.
+
+    land_shadow: bool
+        whether or not to shade in the non-selected areas. Can help 
+        visualise land-sea borders.
+
+    area_linewidth: float
+        default 0.3
+        linewidth of area edges. Larger values have thicker borders.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+
     if select_area is None:
         ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]], crs=ccrs.PlateCarree())
         pass
@@ -672,7 +913,7 @@ def plot_select_area(select_area=None,
     return ax
 
 def plot_titles(title="title",
-                date_range = "DD Mon YYY to DD Mon YYYY", 
+                date_range = "DD Mon YYYY to DD Mon YYYY", 
                 baseline = None, 
                 dataset_name= None,
                 issued_date=None,
@@ -682,7 +923,69 @@ def plot_titles(title="title",
                 text_xy = None,
                 title_ha = "left",
                orientation = "none",):
-    """Set the plot title and axis labels"""
+    """
+    Set the plot title and axis labels
+    
+    Parameters
+    ----------
+    title: str
+        Main text. Size 14, bold. Location set by text_xy["title"]. 
+        Horizontal alignment set by title_ha.
+        
+    date_range: str
+        Text under title. Size 12. Horizontal alignment set by title_ha.
+        Intended for data date range. Also can be used for any subtitle.
+        Default "DD Mon YYYY to DD Mon YYYY" to indicate prefered date format.
+        
+    baseline: str
+        Text in bottom left corner. Size 8. 
+        Intended to describe the baseline period of the data.
+        If None, then no text is printed.
+        Default is None. 
+        
+    dataset_name: str
+        Text inside bottom right. Size 8.
+        Intended to describe data source.
+        If None, then no text is printed.
+        Default is None.
+        
+    issued_date: str
+        Text on bottom right under the border.
+        The date that the plot is current/valid/produced.
+        If None (default), then today's date is used.
+        To suppress any text, use issued_date="".
+        Default is None.
+        
+    watermark: str
+        Large text over plot. Use to indicate draft figures etc.
+        Default is None. 
+        
+    watermark_color: color
+        Option to change watermark text colour from red,
+        eg if figure colours are red and then you can't read the watermark.
+        default is "r" for red text.
+        
+    ax: matplotlib.axes.Axes
+        axes
+        
+    text_xy: dictionary 
+        Expects a dictionary with "title", "date_range" and "watermark" keys
+        dictionary items with tuples describing text locations.
+        Can omit "watermark" if watermark is None.
+
+    title_ha: {"left", "center", "right"}
+        Title horizontal alignment.
+        Default "left"
+    
+    orientation: {"vertical", "horizontal"}
+        Orientation of figures, used to control layout of Copywrite text.
+        I.e. vertically stacked, or horizontal side-by-side
+        
+    Returns
+    -------
+    matplotlib.axes.Axes with text for titles etc.
+    
+    """
     
     ax.text(
         x=text_xy["title"][0],
@@ -691,7 +994,7 @@ def plot_titles(title="title",
         fontsize=14,
         weight="bold",
         horizontalalignment=title_ha,
-        verticalalignment="bottom",
+        verticalalignment="baseline",
         transform=ax.transAxes,
         zorder=10,
         wrap=True,
@@ -716,7 +1019,7 @@ def plot_titles(title="title",
             y=0.01,
             s=f"Base period: {baseline}",
             fontsize=8,
-            verticalalignment="bottom",
+            verticalalignment="baseline",
             transform=ax.transAxes,
             zorder=10,
         )
@@ -744,7 +1047,7 @@ def plot_titles(title="title",
             fontsize=8,
             transform=ax.transAxes,
             horizontalalignment="right",
-            verticalalignment="bottom",
+            verticalalignment="baseline",
             zorder=10,
         )
     # print issued date on bottom right under the border.
@@ -800,7 +1103,7 @@ def plot_acs_hazard(
     figsize=(4.5,3),
     title=None,
     date_range="",
-    crs=None,
+    projection=None,
     area_linewidth=0.3,
     xlim=(114, 162),
     ylim=(-43, -8),
@@ -827,9 +1130,8 @@ def plot_acs_hazard(
     tick_rotation=None,
     vcentre=None,
 ):
-    """This function takes a name of an Australian shapefile collection for data in 
-    /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/ 
-    and hazard data from a 2D Xarray data array
+    """This function takes gridded data or station_df dataframe and shapefiles 
+    to visualise hazard data from a 2D Xarray data array
     and plots the data on a map of Australia with the shape outlines.
 
     Parameters
@@ -843,19 +1145,24 @@ def plot_acs_hazard(
         if None, then will try to read from regions_dict[{name}].
 
     data: xr.DataArray
-        a 2D xarray DataArray which has already computed the 
+        a 2D xarray DataArray that has already computed the 
         average, sum, anomaly, metric or index you wish to visualise.
         This function is resolution agnostic.
 
     station_df: pd.DataFrame, optional
         a pandas.DataFrame with columns ["lon", "lat", variable]. 
         If station_df is given, then variable values are represented as dots on 
-        the map accoring to at the lat lon coordinates  and colored according to
-        cmap colors and ticks.
+        the map according to the lat lon coordinates and coloured according to
+        cmap colours and ticks.
+
+    markersize: int, optional
+        default None. If None then the markersize will adjust to the size of the
+        figure and the number of markers in the plot such that when there are
+        many markers and the figure is small, the markersize is smaller.
 
     stippling: xr.DataArray
-        a True/False to define regions of stippling hatching. 
-        Intended to show model agreement, eg for direction of change.
+        a True/False mask to define regions of stippling hatching. 
+        Intended to show model agreement, eg for the direction of change.
 
     mask_not_australia: boolean
         decides whether or not the area outside of Australian land is hidden 
@@ -892,8 +1199,9 @@ def plot_acs_hazard(
         This is printed under the title. 
         format: dd Month yyyy to dd Month yyy.
 
-    crs: optional
-        defines the coordinate reference system. Similar to transform or projection.
+    projection: optional
+        formally spuriously named "crs". Defines the projection of the plots.
+        defaults to a LambertConformal projection unless using "select_area".
 
     area_linewidth: float, optional
         the width of state/region borders only. All other linewidths are hardcoded.
@@ -908,7 +1216,7 @@ def plot_acs_hazard(
         defines the colormap used for the data.
         See cmap_dict for suggested colormaps.
         If none, cmap set to cm.Greens.
-        Please choose appropriate colormap for your data.
+        Please choose appropriate colormaps for your data.
 
     cmap_bad: color
         define the color to set for "bad" or missing values
@@ -985,6 +1293,9 @@ def plot_acs_hazard(
         for the watermark, this changes the colour of the text.
         The default is red. Only change color if red is not visible. 
 
+    show_logo: bool, default False
+        show ACS logo in top left corner.
+
     infile: str
         Not yet tested. 
         The idea is to read in 2D netCDF data and use this as the mappable data.
@@ -996,6 +1307,19 @@ def plot_acs_hazard(
     savefig: bool
         default is True
         If set to False, then fig is not saved.
+
+    tick_rotation: int [-360,360]
+        Angle to rotate colorbar tick labels.
+        Default is None. Tick labels will be horizontal if colorbar is vertical,
+        or vertical if colorbar is horizontal.
+        Easiest to read id tick_rotation = 0
+        
+    vcentre: float, eg 0
+        default is None.
+        Align centre of colormap to this value. 
+        Intended for using a divergent colormap with uneven number of ticks 
+        around the centre, eg for future temperature anomalies with a larger
+        positive range compared to the negative range.
 
     Returns
     -------
@@ -1012,19 +1336,17 @@ def plot_acs_hazard(
     regions = regions.to_crs(crs = "GDA2020")
 
     # Set default crs for Australia maps and selection maps
-    if crs is None:
+    if projection is None:
         if select_area is None:
             # Default for Australian map
-            crs = ccrs.LambertConformal(
+            projection = ccrs.LambertConformal(
                 central_latitude=-24.75,
                 central_longitude=134.0,
                 cutoff=30,
                 standard_parallels=(-10, -40),
             )
         else:
-            crs = ccrs.PlateCarree()
-    else:
-        crs=crs
+            projection = ccrs.PlateCarree()
 
     # Set up the plot
     fig = plt.figure(
@@ -1034,7 +1356,7 @@ def plot_acs_hazard(
         frameon=False,
     )
     ax = plt.axes(
-        projection=crs,
+        projection=projection,
         frameon=False,
     )
     ax.set_global()
@@ -1063,7 +1385,6 @@ def plot_acs_hazard(
                                             contourf=contourf,
                                             contour=contour,
                                             ax=ax,
-                                            figsize=figsize,
                                             subtitle="",
                                             facecolor=facecolor,
                                             mask_not_australia = mask_not_australia,
@@ -1165,7 +1486,7 @@ def plot_acs_hazard_3pp(
     title=None,
     date_range="",
     subplot_titles=None,
-    crs=None,
+    projection=None,
     area_linewidth=0.3,
     xlim=(114,154),
     ylim=(-43.5, -7.5),
@@ -1193,13 +1514,257 @@ def plot_acs_hazard_3pp(
     tick_rotation=None,
     vcentre=None,
 ):
-    """Three panel plot. 
+    """
+    Three panel plot with shared cmap and titles etc. 
     As with plot_acs_hazard, but takes three xarray data arrays:
-    ds_gwl15, ds_gwl20, ds_gwl30. (left, middle and right)
-    
-    subplot_titles for labeling each subplot title
-    if None, then subtitles are ["GWL1.5", "GWL2.0", "GWL3.0"]
-    otherwise specify a list of three strings.
+    ds_gwl15, ds_gwl20, ds_gwl30. (left, middle and right) or 
+    (top, middle and bottom) 
+    This function is intended for plotting multiple Global Warming 
+    Levels, but it will plot any valid data (xr.DataArrays or pd.DataFrames)
+
+    Parameters
+    ----------
+    name: str
+        name of a shapefile collection in 
+        /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/
+        to get regions from.
+        
+    regions: geopandas.GeoDataFrame
+        if None, then will try to read from regions_dict[{name}].
+        
+    ds_gwl15: xr.DataArray
+        The first DataArray to plot.
+        Expects a 2D xarray DataArray that has already computed the 
+        average, sum, anomaly, metric or index you wish to visualise.
+        This function is resolution agnostic.
+        
+    ds_gwl20: xr.DataArray
+        The second DataArray to plot.
+        
+    ds_gwl30: xr.DataArray
+        The third DataArray to plot.
+        
+    station_df_gwl15: pd.DataFrame, optional
+        The first pandas.DataFrame with columns ["lon", "lat", variable]. 
+        If station_df_gwl15 is given, then variable values are represented as dots on 
+        the map according to the lat lon coordinates and coloured according to
+        cmap colours and ticks. Use markersize to change dot size.
+
+    station_df_gwl20: pd.DataFrame, optional
+        The second pandas.DataFrame with columns ["lon", "lat", variable].
+        
+    station_df_gwl30: pd.DataFrame, optional
+        The third pandas.DataFrame with columns ["lon", "lat", variable]. 
+        
+    stippling_gwl15: xr.DataArray
+        a True/False mask to define regions of stippling hatching 
+        for the first subplot. 
+        Intended to show model agreement, eg for the direction of change.
+        
+    stippling_gwl20: xr.DataArray
+        a True/False mask to define regions of stippling hatching 
+        for the second subplot. 
+        
+    stippling_gwl30: xr.DataArray
+        a True/False mask to define regions of stippling hatching 
+        for the third subplot. 
+
+    mask_not_australia: boolean
+        decides whether or not the area outside of Australian land is hidden 
+        under white shape.
+        Default is True.
+
+    mask_australia: boolean
+        decides whether or not Australian land is hidden under white shape.
+        Eg, use when plotting ocean only.
+        Default is False.
+
+    agcd_mask: boolean
+        If True, applies a ~5km mask for data-sparse inland areas of Australia.
+        Default is False.
+
+    facecolor: color
+        color of land when plotting the regions without climate data. 
+        facecolor recommendations include "white", "lightgrey", "none".
+        Default is "none"
+
+    edgecolor: color
+        defines the color of the state/region borders. 
+        edgecolor recommendations include "black" and "white".
+        Default is "black"
+
+    figsize: tuple
+        defines the width and height of the figure in inches.
+        ACS recommends a maximum width of 6.7" (17cm) and 
+        maximum height of ~7.5" (19cm)
+
+    markersize: optional 
+        Markersize for station_df dots.
+        default None. If None then the markersize will adjust to the size of the
+        figure and the number of markers in the plot such that when there are
+        many markers and the figure is small, the markersize is smaller.
+        
+    title: str
+        A title should describe what is shown in the map. 
+        The title should be written in plain English and 
+        centred at the top of the visualization.
+        If title is None, then defaults to the name of the shapefile.
+        
+    date_range: str
+        date_range (or subtitle)
+        Expected to decribe the start and end date of the data analysed. 
+        This is printed under the title. 
+        format: dd Month yyyy to dd Month yyy.
+        Default=""
+        
+    subplot_titles: list of strings
+        subplot_titles for labeling each subplot title
+        if None, then subtitles are ["GWL1.5", "GWL2.0", "GWL3.0"]
+        otherwise specify a list of three strings.
+        
+    projection:
+        Specify projection of the maps. The default suits Australia.
+        Formally "crs".
+        If None, defaults to
+        ccrs.LambertConformal(central_latitude=-24.75,
+                              central_longitude=134.0,
+                              cutoff=30,
+                              standard_parallels=(-10, -40),
+        unless select_area is not None, then defaults to
+        ccrs.PlateCarree()
+                            
+    area_linewidth: float
+        linewidth of state/region borders.
+        Default =0.3
+        
+    xlim: tuple of floats
+        longitude limits
+        Default = (114,154)
+        
+    ylim: tuple of floats
+        latitude limits
+        Default = (-43.5, -7.5)
+        
+    cmap: matplotlib colormap
+        color map for gridded and/or station data
+        See cmap_dict for suggested colormaps.
+        If none, cmap set to cm.Greens.
+        Please choose appropriate colormaps for your data.
+
+    cmap_bad: color
+        define the color to set for "bad" or missing values
+        default "lightgrey"
+        
+    cbar_extend: one of {'neither', 'both', 'min', 'max'}.
+        eg "both" changes the ends of the colorbar to arrows to indicate that
+        values are possible outside the scale show.
+        If contour or contourf is True, then cbar_extend will be overridden to "none".
+        
+    ticks: list or arraylike
+        Define the ticks on the colorbar. Define any number of intervals. 
+        This will make the color for each interval one discrete color, 
+        instead of a smooth color gradient.
+        If None, linear ticks will be auto-generated to fit the provided data.
+
+    tick_labels: list
+        Labels for categorical data. 
+        If tick_labels is used, then pcolormesh is used to plot data 
+        and does not allow contour or contourf to be used.
+        Tick labels will correspond to the ticks.
+        
+    cbar_label: string
+        defines the title for the color bar. 
+        This should indicate the variable name and the units eg 
+        "daily rainfall [mm]",
+        "annual rainfall [mm]", 
+        "monthly rainfall anomaly [mm]",
+        "tas [\N{DEGREE SIGN}C]".
+        Default is ""
+        
+    baseline: string
+        the baseline period for anomalies, eg "1961 - 1990".
+        
+    dataset_name: string
+        describes the source of the data eg "AGCD v2" or "BARPA-R ACCESS-CM2"
+        
+    issued_date: string
+        The date of issue. If None is supplied, then today's date is printed.
+        To supress, set to ""
+        
+    label_states: bool
+        if set to True and Australian states are the shapefile selected,
+        then each state is labelled with its three-letter abbreviation. 
+        Default False.
+        
+    contourf: bool
+        if True then the gridded data is visualised as smoothed filled contours. 
+        Default is False.
+        Use with caution when plotting data with negative and positive values;
+        Check output for NaNs and misaligned values.  
+
+    contour: bool
+        if True then the gridded data is visualised as smoothed unfilled grey contours.
+        Default is True.
+        Using both contourf and contour results in smooth filled contours
+        with grey outlines between the color levels.
+
+    select_area: list
+        A list of areas (eg states) that are in the geopandas.GeoDataFrame.
+        Inspect the regions gdf for area names. eg ["Victoria", "New South Wales"]
+
+    land_shadow: bool
+        Used when select_area is not None. 
+        This option controls whether to show Australian land area that is outside 
+        the select area in grey for visual context.
+        Default False.
+
+    watermark: str
+        text over the plot for images not in their final form. 
+        If the plot is in final form, set to None. 
+        Suggestions include "PRELIMINARY DATA", "DRAFT ONLY", 
+        "SAMPLE ONLY (NOT A FORECAST)", "EXPERIMENTAL IMAGE ONLY"
+
+    watermark_color: default "r"
+        for the watermark, this changes the colour of the text.
+        The default is red. Only change color if red is not visible. 
+
+    show_logo: bool, default False
+        show ACS logo in top left corner.
+
+    infile: str
+        Not yet tested. 
+        The idea is to read in 2D netCDF data and use this as the mappable data.
+
+    outfile: str
+        The location to save the figure. 
+        If None, then figure is saved here f"figures/{title.replace(' ', '-')}.png"
+
+    savefig: bool
+        default is True
+        If set to False, then fig is not saved.
+
+    orientation: {"horizontal", "vertical"}
+        whether the three plots are orientatied in a vertical stack or
+        horizontally.
+        Default "horizontal"
+ 
+    tick_rotation: int [-360,360]
+        Angle to rotate colorbar tick labels.
+        Default is None. Tick labels will be horizontal if colorbar is vertical,
+        or vertical if colorbar is horizontal.
+        Easiest to read if tick_rotation = 0
+        
+    vcentre: float, eg 0
+        default is None.
+        Align centre of colormap to this value. 
+        Intended for using a divergent colormap with uneven number of ticks 
+        around the centre, eg for future temperature anomalies with a larger
+        positive range compared to the negative range.
+
+    Returns
+    -------
+    A three panel plot saved as a png in a "figures" file in your working directory.
+    This function returns fig and ax.
     """
 
     if orientation=="horizontal":
@@ -1246,24 +1811,24 @@ def plot_acs_hazard_3pp(
 
     regions = regions.to_crs(crs = "GDA2020")
 
-    # Set default crs for Australia maps and selection maps
-    if crs is None:
+    # Set default projection for Australia maps and selection maps
+    if projection is None:
         if select_area is None:
             # Default for Australian map
-            crs = ccrs.LambertConformal(
+            projection = ccrs.LambertConformal(
                 central_latitude=-24.75,
                 central_longitude=134.0,
                 cutoff=30,
                 standard_parallels=(-10, -40),
             )
         else:
-            crs = ccrs.PlateCarree()
+            projection = ccrs.PlateCarree()
         
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, 
                             sharey=True, sharex=True,
                             figsize=figsize, 
                             layout="constrained",
-                            subplot_kw={'projection': crs, "frame_on":False},)
+                            subplot_kw={'projection': projection, "frame_on":False},)
 
     cmap.set_bad(cmap_bad)
     
@@ -1393,7 +1958,7 @@ def plot_acs_hazard_4pp(
                 title=None,
                 date_range="",
                 subplot_titles=None,
-                crs=None,
+                projection=None,
                 area_linewidth=0.3,
                 xlim=(113, 154),
                 ylim=(-43.5, -9.5),
@@ -1421,6 +1986,271 @@ def plot_acs_hazard_4pp(
                 tick_rotation=None,
                 vcentre=None,
             ):
+    """
+    Four panel plot with shared cmap and titles etc. 
+    As with plot_acs_hazard, but takes four xarray data arrays:
+    ds_gwl12, ds_gwl15, ds_gwl20, ds_gwl30. (left to right), 
+    (top-left, top-right, bottom-left, bottom-right), or 
+    (top to bottom).
+    This function is intended for plotting multiple Global Warming 
+    Levels, but it will plot any valid data (xr.DataArrays or pd.DataFrames)
+
+    Parameters
+    ----------
+    name: str
+        name of a shapefile collection in 
+        /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/
+        to get regions from.
+        
+    regions: geopandas.GeoDataFrame
+        if None, then will try to read from regions_dict[{name}].
+
+    ds_gwl12: xr.DataArray
+        The first DataArray to plot.
+        Expects a 2D xarray DataArray that has already computed the 
+        average, sum, anomaly, metric or index you wish to visualise.
+        This function is resolution agnostic.
+        
+    ds_gwl15: xr.DataArray
+        The second DataArray to plot.
+
+    ds_gwl20: xr.DataArray
+        The third DataArray to plot.
+        
+    ds_gwl30: xr.DataArray
+        The fourth DataArray to plot.
+
+    station_df_gwl12: pd.DataFrame, optional
+        The first pandas.DataFrame with columns ["lon", "lat", variable]. 
+        If station_df_gwl12 is given, then variable values are represented as dots on 
+        the map according to the lat lon coordinates and coloured according to
+        cmap colours and ticks. Use markersize to change dot size.
+        
+    station_df_gwl15: pd.DataFrame, optional
+        The second pandas.DataFrame with columns ["lon", "lat", variable]. 
+
+    station_df_gwl20: pd.DataFrame, optional
+        The third pandas.DataFrame with columns ["lon", "lat", variable].
+        
+    station_df_gwl30: pd.DataFrame, optional
+        The fourth pandas.DataFrame with columns ["lon", "lat", variable]. 
+
+    stippling_gwl12: xr.DataArray
+        a True/False mask to define regions of stippling hatching 
+        for the first subplot. 
+        Intended to show model agreement, eg for the direction of change.
+        
+    stippling_gwl15: xr.DataArray
+        a True/False mask to define regions of stippling hatching 
+        for the second subplot. 
+        
+    stippling_gwl20: xr.DataArray
+        a True/False mask to define regions of stippling hatching 
+        for the third subplot. 
+        
+    stippling_gwl30: xr.DataArray
+        a True/False mask to define regions of stippling hatching 
+        for the fourth subplot. 
+
+    mask_not_australia: boolean
+        decides whether or not the area outside of Australian land is hidden 
+        under white shape.
+        Default is True.
+
+    mask_australia: boolean
+        decides whether or not Australian land is hidden under white shape.
+        Eg, use when plotting ocean only.
+        Default is False.
+
+    agcd_mask: boolean
+        If True, applies a ~5km mask for data-sparse inland areas of Australia.
+        Default is False.
+
+    facecolor: color
+        color of land when plotting the regions without climate data. 
+        facecolor recommendations include "white", "lightgrey", "none".
+        Default is "none"
+
+    edgecolor: color
+        defines the color of the state/region borders. 
+        edgecolor recommendations include "black" and "white".
+        Default is "black"
+
+    figsize: tuple
+        defines the width and height of the figure in inches.
+        ACS recommends a maximum width of 6.7" (17cm) and 
+        maximum height of ~7.5" (19cm)
+
+    markersize: optional 
+        Markersize for station_df dots.
+        default None. If None then the markersize will adjust to the size of the
+        figure and the number of markers in the plot such that when there are
+        many markers and the figure is small, the markersize is smaller.
+        
+    title: str
+        A title should describe what is shown in the map. 
+        The title should be written in plain English and 
+        centred at the top of the visualization.
+        If title is None, then defaults to the name of the shapefile.
+        
+    date_range: str
+        date_range (or subtitle)
+        Expected to decribe the start and end date of the data analysed. 
+        This is printed under the title. 
+        format: dd Month yyyy to dd Month yyy.
+        Default=""
+        
+    subplot_titles: list of strings
+        subplot_titles for labeling each subplot title
+        if None, then subtitles are ["GWL1.5", "GWL2.0", "GWL3.0"]
+        otherwise specify a list of three strings.
+        
+    projection:
+        Specify projection of the maps. The default suits Australia.
+        Formally "crs".
+        If None, defaults to
+        ccrs.LambertConformal(central_latitude=-24.75,
+                              central_longitude=134.0,
+                              cutoff=30,
+                              standard_parallels=(-10, -40),
+        unless select_area is not None, then defaults to
+        ccrs.PlateCarree()
+                            
+    area_linewidth: float
+        linewidth of state/region borders.
+        Default =0.3
+        
+    xlim: tuple of floats
+        longitude limits
+        Default = (113,154)
+        
+    ylim: tuple of floats
+        latitude limits
+        Default = (-43.5, -9.5)
+        
+    cmap: matplotlib colormap
+        color map for gridded and/or station data
+        See cmap_dict for suggested colormaps.
+        Default cmap set to cm.Greens.
+        Please choose appropriate colormaps for your data.
+
+    cmap_bad: color
+        define the color to set for "bad" or missing values
+        default "lightgrey"
+        
+    cbar_extend: one of {'neither', 'both', 'min', 'max'}.
+        eg "both" changes the ends of the colorbar to arrows to indicate that
+        values are possible outside the scale show.
+        If contour or contourf is True, then cbar_extend will be overridden to "none".
+        Default is "both"
+        
+    ticks: list or arraylike
+        Define the ticks on the colorbar. Define any number of intervals. 
+        This will make the color for each interval one discrete color, 
+        instead of a smooth color gradient.
+        If None, linear ticks will be auto-generated to fit the provided data.
+
+    tick_labels: list
+        Labels for categorical data. 
+        If tick_labels is used, then pcolormesh is used to plot data 
+        and does not allow contour or contourf to be used.
+        Tick labels will correspond to the ticks.
+        
+    cbar_label: string
+        defines the title for the color bar. 
+        This should indicate the variable name and the units eg 
+        "daily rainfall [mm]",
+        "annual rainfall [mm]", 
+        "monthly rainfall anomaly [mm]",
+        "tas [\N{DEGREE SIGN}C]".
+        Default is ""
+        
+    baseline: string
+        the baseline period for anomalies, eg "1961 - 1990".
+        
+    dataset_name: string
+        describes the source of the data eg "AGCD v2" or "BARPA-R ACCESS-CM2"
+        
+    issued_date: string
+        The date of issue. If None is supplied, then today's date is printed.
+        To supress, set to ""
+        
+    label_states: bool
+        if set to True and Australian states are the shapefile selected,
+        then each state is labelled with its three-letter abbreviation. 
+        Default False.
+        
+    contourf: bool
+        if True then the gridded data is visualised as smoothed filled contours. 
+        Default is False.
+        Use with caution when plotting data with negative and positive values;
+        Check output for NaNs and misaligned values.  
+
+    contour: bool
+        if True then the gridded data is visualised as smoothed unfilled grey contours.
+        Default is True.
+        Using both contourf and contour results in smooth filled contours
+        with grey outlines between the color levels.
+
+    select_area: list
+        A list of areas (eg states) that are in the geopandas.GeoDataFrame.
+        Inspect the regions gdf for area names. eg ["Victoria", "New South Wales"]
+
+    land_shadow: bool
+        Used when select_area is not None. 
+        This option controls whether to show Australian land area that is outside 
+        the select area in grey for visual context.
+        Default False.
+
+    watermark: str
+        text over the plot for images not in their final form. 
+        If the plot is in final form, set to None. 
+        Suggestions include "PRELIMINARY DATA", "DRAFT ONLY", 
+        "SAMPLE ONLY (NOT A FORECAST)", "EXPERIMENTAL IMAGE ONLY"
+        default "EXPERIMENTAL\nIMAGE ONLY"
+
+    watermark_color: default "r"
+        for the watermark, this changes the colour of the text.
+        The default is red. Only change color if red is not visible. 
+
+    show_logo: bool, default False
+        show ACS logo in top left corner.
+
+    infile: str
+        Not yet tested. 
+        The idea is to read in 2D netCDF data and use this as the mappable data.
+
+    outfile: str
+        The location to save the figure. 
+        If None, then figure is saved here f"figures/{title.replace(' ', '-')}.png"
+
+    savefig: bool
+        default is True
+        If set to False, then fig is not saved.
+
+    orientation: {"horizontal", "vertical", "square"}
+        whether the four plots are orientatied in a vertical stack,
+        horizontally, or in a 2-by-2 grid (left to right).
+        Default "horizontal"
+ 
+    tick_rotation: int [-360,360]
+        Angle to rotate colorbar tick labels.
+        Default is None. Tick labels will be horizontal if colorbar is vertical,
+        or vertical if colorbar is horizontal.
+        Easiest to read if tick_rotation = 0
+        
+    vcentre: float, eg 0
+        default is None.
+        Align centre of colormap to this value. 
+        Intended for using a divergent colormap with uneven number of ticks 
+        around the centre, eg for future temperature anomalies with a larger
+        positive range compared to the negative range.
+
+    Returns
+    -------
+    A four panel plot saved as a png in a "figures" file in your working directory.
+    This function returns fig and ax.
+    """
 
     if orientation=="horizontal":
         cax_bounds = [1.05,0,0.1,1]
@@ -1484,24 +2314,24 @@ def plot_acs_hazard_4pp(
 
     regions = regions.to_crs(crs = "GDA2020")
 
-    # Set default crs for Australia maps and selection maps
-    if crs is None:
+    # Set default projection for Australia maps and selection maps
+    if projection is None:
         if select_area is None:
             # Default for Australian map
-            crs = ccrs.LambertConformal(
+            projection = ccrs.LambertConformal(
                 central_latitude=-24.75,
                 central_longitude=134.0,
                 cutoff=30,
                 standard_parallels=(-10, -40),
             )
         else:
-            crs = ccrs.PlateCarree()
+            projection = ccrs.PlateCarree()
 
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols,
                             sharey=True, sharex=True, 
                             figsize=figsize,
                             layout="constrained",
-                            subplot_kw={'projection': crs, "frame_on":False},)
+                            subplot_kw={'projection': projection, "frame_on":False},)
     
     cmap.set_bad(cmap_bad)
     
@@ -1529,7 +2359,6 @@ def plot_acs_hazard_4pp(
                                               contourf=contourf,
                                               contour=contour,
                                               ax=axs.flatten()[i],
-                                              figsize=figsize,
                                               subtitle=subtitle,
                                                  subtitle_xy=subtitle_xy,
                                               facecolor=facecolor,
@@ -1574,9 +2403,7 @@ def plot_acs_hazard_4pp(
                      middle_ticks=middle_ticks,
                      cax_bounds=cax_bounds,
                      rotation = tick_rotation,
-                     )
-    
-    
+                     )    
     #------------------------------------------
     
     
@@ -1642,7 +2469,7 @@ def plot_acs_hazard_1plus3(
                 title=None,
                 date_range="",
                 subplot_titles=None,
-                crs=None,
+                projection=None,
                 area_linewidth=0.3,
                 xlim=(113, 154),
                 ylim=(-43.5, -9.5),
@@ -1670,7 +2497,305 @@ def plot_acs_hazard_1plus3(
                 tick_rotation=None,
                 vcentre=None,
             ):
-    """1 baseline plot and 3 future scenario plots"""
+    """
+    Four panel plot with 1 baseline plot and 3 future scenario 
+    anomaly plots. The first plot has its own cmap and normalisation.
+    The last three  plots share colormap and normalisation.
+    
+    As with plot_acs_hazard, but takes four xarray data arrays:
+    ds_gwl12, ds_gwl15, ds_gwl20, ds_gwl30. (left to right), 
+    (top-left, top-right, bottom-left, bottom-right), or 
+    (top to bottom).
+    This function is intended for plotting multiple Global Warming 
+    Levels, but it will plot any valid data (xr.DataArrays or pd.DataFrames)
+
+    Parameters
+    ----------
+    name: str
+        name of a shapefile collection in 
+        /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/
+        to get regions from.
+        default "ncra_regions"
+        
+    regions: geopandas.GeoDataFrame
+        if None, then will try to read from regions_dict[{name}].
+
+    ds_gwl12: xr.DataArray
+        The first DataArray to plot.
+        Expects a 2D xarray DataArray that has already computed the 
+        average, sum, anomaly, metric or index you wish to visualise.
+        This function is resolution agnostic.
+
+    station_df_gwl12: pd.DataFrame, optional
+        The first pandas.DataFrame with columns ["lon", "lat", variable]. 
+        If station_df_gwl12 is given, then variable values are represented as dots on 
+        the map according to the lat lon coordinates and coloured according to
+        cmap colours and ticks. Use markersize to change dot size.
+    
+    stippling_gwl12: xr.DataArray
+        a True/False mask to define regions of stippling hatching 
+        for the first subplot. 
+        Intended to show model agreement, eg for the direction of change.
+
+    gwl12_cmap: matplotlib.colors.Colormap
+        colormap for baseline plot
+        default cm.Greens
+        
+    gwl12_cbar_extend: {"both", "neither", "min", "max"}
+        arrows for colorbar for first (gwl12) plot.
+        default "both".
+        
+    gwl12_cbar_label: str
+        title for first (gwl12) colorbar.
+        
+    gwl12_ticks: list or np.array
+        ticks for normalising colorbar for gwl12 data. 
+        Used for both gridded (ds_gwl12) and station data (gwl12_station_df)
+        
+    gwl12_tick_labels: list
+        tick labels for gwl12 data if categorical data
+        
+    gwl12_tick_rotation: [-360,360]
+        degrees to rotate tick labels for gwl12 colorbar
+        0 is horizontal
+         
+    gwl12_vcentre: float, optional
+        Align centre of colormap to this value. 
+        Intended for using a divergent colormap with uneven number of ticks 
+        around the centre, eg for future temperature anomalies with a larger
+        positive range compared to the negative range.
+        
+    ds_gwl15: xr.DataArray
+        The second DataArray to plot.
+
+    ds_gwl20: xr.DataArray
+        The third DataArray to plot.
+        
+    ds_gwl30: xr.DataArray
+        The fourth DataArray to plot.
+        
+    station_df_gwl15: pd.DataFrame, optional
+        The second pandas.DataFrame with columns ["lon", "lat", variable]. 
+
+    station_df_gwl20: pd.DataFrame, optional
+        The third pandas.DataFrame with columns ["lon", "lat", variable].
+        
+    station_df_gwl30: pd.DataFrame, optional
+        The fourth pandas.DataFrame with columns ["lon", "lat", variable]. 
+        
+    stippling_gwl15: xr.DataArray
+        a True/False mask to define regions of stippling hatching 
+        for the second subplot. 
+        
+    stippling_gwl20: xr.DataArray
+        a True/False mask to define regions of stippling hatching 
+        for the third subplot. 
+        
+    stippling_gwl30: xr.DataArray
+        a True/False mask to define regions of stippling hatching 
+        for the fourth subplot. 
+
+    mask_not_australia: boolean
+        decides whether or not the area outside of Australian land is hidden 
+        under white shape.
+        Default is True.
+
+    mask_australia: boolean
+        decides whether or not Australian land is hidden under white shape.
+        Eg, use when plotting ocean only.
+        Default is False.
+
+    agcd_mask: boolean
+        If True, applies a ~5km mask for data-sparse inland areas of Australia.
+        Default is False.
+
+    facecolor: color
+        color of land when plotting the regions without climate data. 
+        facecolor recommendations include "white", "lightgrey", "none".
+        Default is "none"
+
+    edgecolor: color
+        defines the color of the state/region borders. 
+        edgecolor recommendations include "black" and "white".
+        Default is "black"
+
+    figsize: tuple
+        defines the width and height of the figure in inches.
+        ACS recommends a maximum width of 6.7" (17cm) and 
+        maximum height of ~7.5" (19cm)
+        Defaults depend on "orientation"
+
+    markersize: optional 
+        Markersize for station_df dots.
+        default None. If None then the markersize will adjust to the size of the
+        figure and the number of markers in the plot such that when there are
+        many markers and the figure is small, the markersize is smaller.
+        
+    title: str
+        A title should describe what is shown in the map. 
+        The title should be written in plain English and 
+        centred at the top of the visualization.
+        If title is None, then defaults to the name of the shapefile.
+        
+    date_range: str
+        date_range (or subtitle)
+        Expected to decribe the start and end date of the data analysed. 
+        This is printed under the title. 
+        format: dd Month yyyy to dd Month yyy.
+        Default=""
+        
+    subplot_titles: list of strings
+        subplot_titles for labeling each subplot title
+        if None, then subtitles are ["GWL1.5", "GWL2.0", "GWL3.0"]
+        otherwise specify a list of three strings.
+        
+    projection:
+        Specify projection of the maps. The default suits Australia.
+        Formally "crs".
+        If None, defaults to
+        ccrs.LambertConformal(central_latitude=-24.75,
+                              central_longitude=134.0,
+                              cutoff=30,
+                              standard_parallels=(-10, -40),
+        unless select_area is not None, then defaults to
+        ccrs.PlateCarree()
+                            
+    area_linewidth: float
+        linewidth of state/region borders.
+        Default =0.3
+        
+    xlim: tuple of floats
+        longitude limits
+        Default = (113, 154)
+        
+    ylim: tuple of floats
+        latitude limits
+        Default = (-43.5, -9.5)
+        
+    cmap: matplotlib colormap
+        color map for gridded and/or station data
+        See cmap_dict for suggested colormaps.
+        Default cmap set to cm.Greens.
+        Please choose appropriate colormaps for your data.
+
+    cmap_bad: color
+        define the color to set for "bad" or missing values
+        default "lightgrey"
+        
+    cbar_extend: one of {'neither', 'both', 'min', 'max'}.
+        eg "both" changes the ends of the colorbar to arrows to indicate that
+        values are possible outside the scale show.
+        If contour or contourf is True, then cbar_extend will be overridden to "none".
+        Default is "both"
+        
+    ticks: list or arraylike
+        Define the ticks on the colorbar. Define any number of intervals. 
+        This will make the color for each interval one discrete color, 
+        instead of a smooth color gradient.
+        If None, linear ticks will be auto-generated to fit the provided data.
+
+    tick_labels: list
+        Labels for categorical data. 
+        If tick_labels is used, then pcolormesh is used to plot data 
+        and does not allow contour or contourf to be used.
+        Tick labels will correspond to the ticks.
+        
+    cbar_label: string
+        defines the title for the color bar. 
+        This should indicate the variable name and the units eg 
+        "daily rainfall [mm]",
+        "annual rainfall [mm]", 
+        "monthly rainfall anomaly [mm]",
+        "tas [\N{DEGREE SIGN}C]".
+        Default is ""
+        
+    baseline: string
+        the baseline period for anomalies, eg "1961 - 1990".
+        
+    dataset_name: string
+        describes the source of the data eg "AGCD v2" or "BARPA-R ACCESS-CM2"
+        
+    issued_date: string
+        The date of issue. If None is supplied, then today's date is printed.
+        To supress, set to ""
+        
+    label_states: bool
+        if set to True and Australian states are the shapefile selected,
+        then each state is labelled with its three-letter abbreviation. 
+        Default False.
+        
+    contourf: bool
+        if True then the gridded data is visualised as smoothed filled contours. 
+        Default is False.
+        Use with caution when plotting data with negative and positive values;
+        Check output for NaNs and misaligned values.  
+
+    contour: bool
+        if True then the gridded data is visualised as smoothed unfilled grey contours.
+        Default is True.
+        Using both contourf and contour results in smooth filled contours
+        with grey outlines between the color levels.
+
+    select_area: list
+        A list of areas (eg states) that are in the geopandas.GeoDataFrame.
+        Inspect the regions gdf for area names. eg ["Victoria", "New South Wales"]
+
+    land_shadow: bool
+        Used when select_area is not None. 
+        This option controls whether to show Australian land area that is outside 
+        the select area in grey for visual context.
+        Default False.
+
+    watermark: str
+        text over the plot for images not in their final form. 
+        If the plot is in final form, set to None. 
+        Suggestions include "PRELIMINARY DATA", "DRAFT ONLY", 
+        "SAMPLE ONLY (NOT A FORECAST)", "EXPERIMENTAL IMAGE ONLY"
+        default "EXPERIMENTAL\nIMAGE ONLY"
+
+    watermark_color: default "r"
+        for the watermark, this changes the colour of the text.
+        The default is red. Only change color if red is not visible. 
+
+    show_logo: bool, default False
+        show ACS logo in top left corner.
+
+    infile: str
+        Not yet tested. 
+        The idea is to read in 2D netCDF data and use this as the mappable data.
+
+    outfile: str
+        The location to save the figure. 
+        If None, then figure is saved here f"figures/{title.replace(' ', '-')}.png"
+
+    savefig: bool
+        default is True
+        If set to False, then fig is not saved.
+
+    orientation: {"horizontal", "vertical", "square"}
+        whether the four plots are orientatied in a vertical stack,
+        horizontally, or in a 2-by-2 grid (left to right).
+        Default "horizontal"
+ 
+    tick_rotation: int [-360,360]
+        Angle to rotate colorbar tick labels.
+        Default is None. Tick labels will be horizontal if colorbar is vertical,
+        or vertical if colorbar is horizontal.
+        Easiest to read if tick_rotation = 0
+        
+    vcentre: float, eg 0
+        default is None.
+        Align centre of colormap to this value. 
+        Intended for using a divergent colormap with uneven number of ticks 
+        around the centre, eg for future temperature anomalies with a larger
+        positive range compared to the negative range.
+
+    Returns
+    -------
+    A four panel plot (one baseline and three anomalies) saved as a png 
+    in a "figures" file in your working directory.
+    This function returns fig and ax.
+    """
 
     
     if orientation=="horizontal":
@@ -1696,7 +2821,7 @@ def plot_acs_hazard_1plus3(
         nrows = 4
         ncols = 1
         cbar_location = "bottom"
-        plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
+        plots_rect = (0,0.05,1,0.85) #left bottom width height
         # text annotation xy locations
         text_xy = {"title": (0.5, 0.94),
                "date_range": (0.5, 0.93),
@@ -1734,18 +2859,18 @@ def plot_acs_hazard_1plus3(
 
     regions = regions.to_crs(crs = "GDA2020")
 
-    # Set default crs for Australia maps and selection maps
-    if crs is None:
+    # Set default projection for Australia maps and selection maps
+    if projection is None:
         if select_area is None:
             # Default for Australian map
-            crs = ccrs.LambertConformal(
+            projection = ccrs.LambertConformal(
                 central_latitude=-24.75,
                 central_longitude=134.0,
                 cutoff=30,
                 standard_parallels=(-10, -40),
             )
         else:
-            crs = ccrs.PlateCarree()
+            projection = ccrs.PlateCarree()
 
     fig, axs = plt.subplots(nrows=nrows,
                             ncols=ncols,  
@@ -1753,7 +2878,7 @@ def plot_acs_hazard_1plus3(
                             sharex=True,
                             figsize=figsize, 
                             layout="constrained",
-                            subplot_kw={'projection': crs, "frame_on":False},)
+                            subplot_kw={'projection': projection, "frame_on":False},)
 
     gwl12_cmap.set_bad(cmap_bad)
     cmap.set_bad(cmap_bad)
@@ -1779,7 +2904,6 @@ def plot_acs_hazard_1plus3(
                                              contourf=contourf,
                                              contour=contour,
                                              ax=axs.flatten()[0],
-                                             figsize=figsize,
                                              subtitle=subplot_titles[0],
                                              subtitle_xy=subtitle_xy,
                                              facecolor=facecolor,
@@ -1822,7 +2946,6 @@ def plot_acs_hazard_1plus3(
                                                  contourf=contourf,
                                                  contour=contour,
                                                  ax=axs.flatten()[i+1],
-                                                 figsize=figsize,
                                                  subtitle=subtitle,
                                                  subtitle_xy=subtitle_xy,
                                                  facecolor=facecolor,

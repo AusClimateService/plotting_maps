@@ -5,6 +5,7 @@ Typical statistics include median, mean, min, max, 10th, 90th percentiles.
 
 This method has used guidance from
 [https://github.com/aus-ref-clim-data-nci/shapefiles/blob/master/python_tutorial.ipynb]"""
+
 import xarray as xr
 import geopandas as gpd
 import regionmask
@@ -48,8 +49,9 @@ abbr_dict = {"aus_local_gov":"LGA_CODE22",
 
 def get_regions(shapefiles):
     """
-    This function takes a list of names of shape files from ia39 and
-    returns a combined regionmask.
+    This function takes a list of names of shapefiles from ia39 and
+    returns a combined regionmask. Renames columns so that there are
+    columns named "NAME" and "abbrevs".  
     
     Parameters
     -----------
@@ -83,7 +85,7 @@ def acs_regional_stats(
     infile=None,
     var=None,
     mask=None,
-    regions=get_regions(["ncra_regions", "australia"]),
+    regions=None,
     start=None,
     end=None,
     dims=None,
@@ -117,6 +119,10 @@ def acs_regional_stats(
 
     mask:  xarray.DataArray 'mask' or ["fractional", "centred", "min_overlap"]
         expects a precalculated mask, or will calculate one of the three options. 
+        There are some mask files in /g/data/ia39/aus-ref-clim-data-nci/shapefiles/masks/AGCD-05i/
+        which provide ~5km gridded masks for shapefiles in the above list. eg use
+        /g/data/ia39/aus-ref-clim-data-nci/shapefiles/masks/AGCD-05i/mask-3D-frac-approx_ncra-regions.nc 
+        for fractional mask for NCRA regions.
         If "min_overlap" selected, you must provide an overlap_threshold value.
         fractional mask from regionmask.from_geopandas(ncra_gdf, 
                                                        names="NAME",
@@ -124,7 +130,12 @@ def acs_regional_stats(
                                                        ).mask_3D_frac_approx(ds).
         If None is provided, then will calculate a fractional mask based on NCRA regions,
         but this will take about one minute to calculate.
-        This is best avoided by calculating frac outside the function.
+        This is best avoided by calculating the fractional mask outside the function.
+
+    regions:
+        regions to use to calculate mask if no mask is provided.
+        use get_regions function for regions in shapefile list
+        eg get_regions(["ncra_regions", "australia"])
 
     start: string or int
         start year to slice data array. eg start year of global warming level GWL. 
@@ -144,14 +155,12 @@ def acs_regional_stats(
         List of ['mean', 'median', 'min', 'max', 'mode', 'sum', 'std', 'var', 'proportions', 'p10', 'p90', ]. 
         (any pxx where xx is between 0 and 100)
 
-    quantile: float [0.0,1.], optional
-        REPLACED with how = "pxx" where xx is number between 0 and 100. Percentile to calculate.
-
     outfile: str
         csv filename to save dataframe.
 
     select_abbr: list of str
         list of regions by abbreviation to perform statistic on. eg ["VIC", "NSW"]
+        Prefered over select_name.
 
     select_name: list of str
         list of regions by name to perform statistic on.  eg ["Victoria", "New South Wales & ACT"]
@@ -179,6 +188,7 @@ def acs_regional_stats(
     # open data
     ds = xr.open_dataset(filename, use_cftime = True,)
     # define mask
+    regions = get_regions(["ncra_regions", "australia"])
     mask_frac = regions.mask_3D_frac_approx(ds)
 
     # apply function
@@ -205,6 +215,9 @@ def acs_regional_stats(
             "!warning very slow! Calculating fractional mask every time is very slow. \
         \nPlease consider calculating `mask = regions.mask_3D_frac_approx(ds)` before function."
         )
+        if regions is None:
+            regions = get_regions(["ncra_regions", "australia"])
+
         # mask = regions.mask_3D_frac_approx(ds)
         try:
             mask = regions.mask_3D_frac_approx(ds)
@@ -229,6 +242,8 @@ def acs_regional_stats(
             "!warning slow! Calculating mask every time is slow. \
         \nPlease consider calculating ```mask = regions.mask_3D(ds)``` before this function."
         )
+        if regions is None:
+            regions = get_regions(["ncra_regions", "australia"])
         mask = regions.mask_3D(ds)
     elif mask == "min_overlap":
         # !warning very slow!
@@ -240,6 +255,8 @@ def acs_regional_stats(
         assert (
             0.0 <= overlap_threshold <= 1.0
         ), "You have selected min_overlap mask. Please specify overlap_threshold between [0.,1.]"
+        if regions is None:
+            regions = get_regions(["ncra_regions", "australia"])
         mask = regions.mask_3D_frac_approx(ds) >= overlap_threshold
     else:
         print(
