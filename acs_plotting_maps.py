@@ -1429,7 +1429,7 @@ def plot_acs_hazard(
 
     # text annotation xy locations for 1-panel plot
     text_xy_1pp = {"title": (0.03, 0.12),  
-                   "date_range": (0.03, 0.11),
+                   "date_range": (0.03, 0.09),
                    "watermark": (0.4, 0.5),}
     
     ax111 = plot_titles(title=title,
@@ -1854,7 +1854,6 @@ def plot_acs_hazard_3pp(
                                               contourf=contourf,
                                               contour=contour,
                                               ax=axs[i],
-                                              figsize=figsize,
                                               subtitle=subtitle,
                                                  subtitle_xy=subtitle_xy,
                                               facecolor=facecolor,

@@ -47,9 +47,6 @@ logo = image.imread(f"{Path(__file__).parent}/ACS_Logo_Blue_on_white_Stacked.png
 
 cmap_mustard = LinearSegmentedColormap.from_list(
     "mustard",
-    # [(195 / 235, 152 / 235, 21 / 235), (229 / 235, 208 / 235, 147 / 235)],
-    # ["#f4ea94", "#e2ce17", "#61580a"]
-    # [ "#3c320a", "#5a4c10", "#977f1b","#d3b125", "#e2c85e",  "#eddd9b",]
     ["#5a4c10", "#977f1b","#d3b125", "#e2c85e",  "#eddd9b",]
 )
 cmap_mustard.set_bad(color="lightgrey")
@@ -233,15 +230,15 @@ class RegionShapefiles:
                 self._regions_dict[name] = gpd.read_file(glob(f"{self.path}/{name}/*.shp")[0])
             elif name == "not_australia":
                 # Define a white mask for the area outside of Australian land
-                # We will use this to hide data outside of the Australian land borders.
+                # We will use this to hide data outside the Australian land borders.
                 # note that this is not a data mask,
                 # the data under the masked area is still loaded and computed, but not visualised
                 base_name = name[4:]  # Remove 'not_' prefix
                 base_region = self(base_name).copy()
                 base_region.crs = crs
                 # This mask is a rectangular box around the maximum land extent of Australia
-                # with a buffer of 10 degrees on every side,
-                # with the Australian land area cut out so only the ocean is hidden.
+                # with a buffer of 20 degrees on every side,
+                # with the Australian land area cut out, only the ocean is hidden.
                 not_region = gpd.GeoSeries(
                     data=[
                         box(*box(*base_region.total_bounds).buffer(20).bounds
@@ -314,7 +311,8 @@ not_australia = gpd.GeoSeries(
 
 
 def crop_cmap_center(cmap, ticks, mid, extend=None):
-    """This function is used to align the centre of a colormap (cmap)
+    """
+    This function is used to align the centre of a colormap (cmap)
     to a specified midpoint (mid). Allows the cmap to be normalised on 
     the specified ticks with cbar_extend arrows taken into account.
     Intended for divergent colormaps that show anomalies that are mostly
@@ -1431,7 +1429,7 @@ def plot_acs_hazard(
 
     # text annotation xy locations for 1-panel plot
     text_xy_1pp = {"title": (0.03, 0.12),  
-                   "date_range": (0.03, 0.11),
+                   "date_range": (0.03, 0.09),
                    "watermark": (0.4, 0.5),}
     
     ax111 = plot_titles(title=title,
@@ -1856,7 +1854,6 @@ def plot_acs_hazard_3pp(
                                               contourf=contourf,
                                               contour=contour,
                                               ax=axs[i],
-                                              figsize=figsize,
                                               subtitle=subtitle,
                                                  subtitle_xy=subtitle_xy,
                                               facecolor=facecolor,
