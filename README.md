@@ -1,12 +1,46 @@
 # plotting_maps
-This repo aims to plot standardised maps of ACS climate hazard data. We will develop and provide examples of mapping climate hazards for Australia so that data can be consistently presented.
+This repo has been developed to enable standardised statistics and plotting of ACS climate hazard data to support the Australian Climate Service (ACS) Hazard teams and the National Climate Risk Assessment (NCRA). We have developed Python functions and provided examples of mapping climate hazards for Australia so that data can be consistently and clearly presented.
 
-Examples will include maps for Australia and selected states or regions. 
+Examples include maps and stats for Australia with a range of regions including states/territories and NCRA regions. Plotting is also possible for station data and ocean data. The functions are flexible to plot any given lat/lon but are optimised for Australia.
 
 Intended uses include taking netcdf or xarray dataarrays of hazards and indices such as Rx1day, TXx, FFDI and plotting the data on a map of Australia. 
 
-Developed by Gen Tolhurst (gentolhurst@gmail.com), Supervised by Mitchell Black (Mitchell.Black@bom.gov.au).\
-Funded by ACS
+This work has enabled consistent mapping and summary analyses of Hazard Metrics for present and future scenarios at Global Warming Levels (GWLs). Subsequent figures and tables have been presented to national departments and ministers. The figures and tables contribute to the timely delivery of presentations and reports on Australia’s current and future climate hazards.
+
+The code has been developed to be flexible and functional for different hazards; plotting land, ocean and station-based data; creating single- and multi-panel plots; applying different regions (eg states and NCRA regions); and masking areas (eg AGCD mask). The goal was to create code that is easy to apply, well-supported by documentation and notebook tutorials, and effective at producing aesthetic and clear plots. This has enabled collaboration between the ACS team of scientists and science communicators to deliver high-quality products to stakeholders.
+
+Figures have been developed to align with ACS design guidelines and IPCC standards, where possible and applicable.
+
+This work has been developed with advice from ACS, CSIRO, and BOM scientists, ACS communication teams, and stakeholders.
+
+This repo has been developed by Gen Tolhurst (gentolhurst@gmail.com or Gen.Tolhurst@bom.gov.au) and supervised by Mitch Black (Mitchell.Black@bom.gov.au). Work has been undertaken from May 2024 to October 2024.\
+Funded by ACS.
+
+## What's possible?
+### [acs_plotting_maps.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_plotting_maps.py) for plots
+There's many possibilities built into this function. ```plot_acs_hazard``` is the single plot function. Multiple plots can be made in the same figure using ```plot_acs_hazard_2pp```, ```plot_acs_hazard_3pp```, ```plot_acs_hazard_4pp```, and ```plot_acs_hazard_1plus3```; these multi-panel plots have the same functionalities as the single plot function.
+
+To access docstrings and learn about input arguments, use ```plot_acs_hazard?```. This will describe each parameter you can give to the function to customise your plot.
+
+ - Basic usage: Single plot of Australia eg temperature
+ - Plot ocean data: Single plot of ocean data eg marine heat waves
+ - Plot stations data: Single plot of station data eg coastal flooding
+ - Plot multiple data types. Gridded data and station data can be plotted on the same plot: eg ocean data and station data (station and gridded data on the same plot)
+ - Plot categorical data: Single plot of categorical data eg aridity
+ - Plot categorical data with stippling: Single plot of hazard data with stippling eg Fire climate classes
+ - Plot a selected region: Single plot of single state/region
+ - Plot a selection of regions: Single plot of multiple selected regions
+ - Plot multi-paneled plots for a range of future global warming levels (GWLs). For example, `plot_acs_hazard_4pp` and `plot_acs_hazard_1plus3` and both four panel plots for gwl1.2, gwl1.5, gwl2.0, and gwl3.0.  `plot_acs_hazard_1plus3` plots the first (gwl1.2) panel as the baseline and the subsequent 3 gwls as anomalies from this baseline.
+ - All the above functionality is available in multi-panelled plots. Functions exist for 1, 2, 3, and 4-panelled plots in vertical or horizontal orientations. (also 2-by-2 “square” for 4pp) The hazard plotting function eg plot_acs_hazard_4pp for four-panelled-plots is constructed using helper functions
+
+### acs_area_stats.py
+This module enables calculating a range of statistics for area defined by shapefiles. It is best used for reducing 2D maps into a table of summary statistics for each region or state.
+
+
+
+See the github “issues” https://github.com/AusClimateService/plotting_maps/issues?q=is%3Aissue for some history of added functionality etc.
+
+## Getting started:
 
 ## Python environment
 This code is designed to work with hh5 analysis3-24.04 virtual environment.
