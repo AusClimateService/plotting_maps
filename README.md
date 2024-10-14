@@ -33,6 +33,12 @@ To access docstrings and learn about input arguments, use ```plot_acs_hazard?```
  - Plot multi-paneled plots for a range of future global warming levels (GWLs). For example, `plot_acs_hazard_4pp` and `plot_acs_hazard_1plus3` and both four panel plots for gwl1.2, gwl1.5, gwl2.0, and gwl3.0.  `plot_acs_hazard_1plus3` plots the first (gwl1.2) panel as the baseline and the subsequent 3 gwls as anomalies from this baseline.
  - All the above functionality is available in multi-panelled plots. Functions exist for 1, 2, 3, and 4-panelled plots in vertical or horizontal orientations. (also 2-by-2 “square” for 4pp) The hazard plotting function eg plot_acs_hazard_4pp for four-panelled-plots is constructed using helper functions
 
+**Limitations**
+-	Region shapefiles with many regions are very slow to load (big regions are ok)
+-	Stippling can be weird when the mask has fuzzy edges, the stippling can get confused about what should be stippled and what shouldn’t be and may put hatches where there shouldn’t be hatches. (problem with contourf)
+-	Setting contour=True to smoothly plot your gridded data can cause errors for particular data and particular projections. This is a known issue with contourf, be careful if you use it (check with contour=False plots). Contour and contourf are quite slow to calculate for very high resolution or fuzzy data.
+-	Specifying tick_labels for non-categorical data produces unexpected results. The tick_labels argument is only designed for labelling categorical data. It might be misunderstood to allow for labelling only major ticks or for labelling data with the units on the tick labels. Be aware of this. Possibly could change the functionality, if desired. (https://github.com/AusClimateService/plotting_maps/issues/7)
+
 ### Colours and design
 Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
 
@@ -43,12 +49,32 @@ ACS has specific guidelines on figure layout and text label sizes etc.
 
 We have provided dictionaries with suggested region shapefiles, cmap colormaps, and tick intervals. Using the recommended items may help make plotting between users more consistent, but if they are not fit for your purpose, you may specify whatever you like.
 
-## Suggested regions, colormaps and scales for plotting
+Below are suggested colormaps matched with possible variables to plot.  This includes color maps for the total amount and anomalies. They are stored as `cmap_dict` in the `acs_plotting_maps` module.
 
-### regions_dict
-Region shape files are stored here: /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/
+![colormaps_aus_maps](https://github.com/AusClimateService/plotting_maps/blob/main/figures/colormaps_aus_maps.png)
 
-More information here: [https://aus-ref-clim-data-nci.github.io/aus-ref-clim-data-nci/datasets/shapefiles.html]
+### acs_area_stats.py
+This module enables calculating a range of statistics for areas defined by shapefiles, including area averages. It is best used for reducing 2D maps into a table of summary statistics for each region or state. The function can be used for more dimensions (eg, lat, lon, time, model) but may be slow and memory intensive depending on the data.
+ - The function works for continuous and numerical variables
+ - The function also works for calculating stats for categorical data, including calculating mode, median (if ordinal), and each category's proportions.
+ - The function can calculate the states for many models individually or across the multi-member ensemble.
+ - The function can be used for time series extraction for regions, but it can be very memory intensive (TODO set up a workflow to cope with large data input)
+ 
+**Limitations**
+-	Stats function cannot work with NaNs
+-	Region shapefiles with many regions is very slow (big regions are ok)
+
+### Time Series extraction
+For time series extraction of point locations see https://github.com/AusClimateService/TimeSeriesExtraction
+
+### masks
+Shapefiles and masks that define regions can be at /g/data/ia39/shapefiles/data and /g/data/ia39/aus-ref-clim-data-nci/shapefiles/masks/.
+
+These shapefiles and masks can be used to outline some selected regions, calculate area statistics, or any other use you like. 
+
+[More information on the shapefiles](https://github.com/aus-ref-clim-data-nci/shapefiles) is in the readme and example notebooks.
+
+You may apply your own shapefiles or masks. You may need to rename some columns so that functions work as intended.
 
 Regions include Australian: 
 - Local Government Areas (LGAs),
@@ -63,39 +89,14 @@ Regions include Australian:
 dict_keys(['aus_local_gov', 'aus_states_territories', 'australia', 'nrm_regions', 'river_regions', 'broadacre_regions', 'ncra_regions'])
 ```
 
-### cmap_dict
-These are suggested colormaps matched with possible variables to plot.  This includes color maps for total amount and for anomalies.
-
-![colormaps_aus_maps](https://github.com/AusClimateService/plotting_maps/blob/main/colormaps_aus_maps.png)
-
-```
-
-
-
-
-### acs_area_stats.py
-This module enables calculating a range of statistics for areas defined by shapefiles, including area averages. It is best used for reducing 2D maps into a table of summary statistics for each region or state. The function can be used for more dimensions (eg, lat, lon, time, model) but may be slow and memory intensive depending on the data.
- - The function works for continuous and numerical variables
- - The function also works for calculating stats for categorical data, including calculating mode, median (if ordinal), and each category's proportions.
- - The function can calculate the states for many models individually or across the multi member ensemble.
- - The function can be used for time series extraction for regions, but it can be very memory intensive (TODO set up a workflow to cope with large data input)
-
-### masks
-Shapefiles and masks that define regions can be at /g/data/ia39/shapefiles/... . 
-
-These shapefiles and masks can be used to outline some selected regions, calculate area statistics, or any other use you like. 
-
-[More information on the shapefiles](https://github.com/aus-ref-clim-data-nci/shapefiles) is in the readme and example notebooks.
-
-You may apply your own shapefiles or masks. You may need to rename some columns so that functions work as intended.
-
 ### other
 
 See the github “issues” https://github.com/AusClimateService/plotting_maps/issues?q=is%3Aissue for some history of added functionality etc.
 
+
 ## Getting started:
 
-## Python environment
+### Python environment
 This code is designed to work with hh5 analysis3-24.04 virtual environment.
 
 In your terminal, this may look like:
@@ -109,7 +110,7 @@ When starting a new ARE JupyterLab session (https://are.nci.org.au/pun/sys/dashb
 
 ![image](https://github.com/AusClimateService/plotting_maps/assets/45543810/e0d93235-c0a7-4a24-adb5-8bf99f3febe0)
 
-## Access shapefiles
+### Access shapefiles
 This code references shapefiles stored in ```/g/data/ia39/```. You will need to be a member of this project to access the data. Request membership https://my.nci.org.au/mancini/project/ia39
 
 See https://github.com/aus-ref-clim-data-nci/shapefiles for more information on the shapefiles.
@@ -119,7 +120,7 @@ Include the projects you need when you start an ARE session. Eg, storage: "gdata
 ![image](https://github.com/user-attachments/assets/97b5b23d-4d21-45ab-bbc0-feeff5d74388)
 
 
-## Cloning this repo
+### Cloning this repo
 Before you can ```import acs_plotting_maps``` to use the plotting function ```plot_acs_hazard```, you will need to clone a copy of this repository to your own working directory.
 
 If you are working in your home directory, navigate there:
@@ -143,7 +144,7 @@ $ git clone https://github.com/AusClimateService/plotting_maps.git plotting_maps
 ```
 You will now be able to access the functions, python scripts, and Jupyter notebooks from your user.
 
-## Usage in Jupyter Notebook:
+### Usage in Jupyter Notebook:
 
 See a small, easy-to-follow example here: 
 - [https://github.com/AusClimateService/plotting_maps/blob/main/minimal_plotting_example_pr.ipynb]
@@ -280,6 +281,31 @@ For example only, this would make a dataframe in this format:
 |        9 | AUS       | Australia               |  123.614 |   742.735 |  7146.55 |
 
 
-## Time Series extraction
-For time series extraction of point locations see https://github.com/AusClimateService/TimeSeriesExtraction
+## TODO
+**Figures to make:**
+-	SLR observations with station data. For the Climate Hazards report, recreate the sea level observations of gridded ocean data and station data in the same plot.
+-	Lightning plot. For the Climate Hazards report, recreate the lightning observations plot using the plot_acs_hazards function so that it is in the consistent format.
+
+**Documentation:**
+-	Clear tutorials for how to use different functionalities
+
+**Improve plotting function and axillaries:**
+-	Improve the aesthetics and proportions of plotting, especially with dataset/date_range/baseline annotations. Design aesthetics where focused on vertical orientations for 4 panel plots without these annotations for a particular report.
+-	Improve the aesthetics of plotting select_area. Eg remove boundaries of neighbouring regions (if desired)
+-	Try plotting Antarctica and see what settings work. Especially xlim, ylim, projection. I think this code should work for any region of the world, with the right settings.
+-	Forest mask for forested areas. For example, FFDI is not useful in places where there is not connected vegetation/fuel. This is probably particularly for arid desert areas of central Australia. Changes in climate and land use may cause changes over time.
+-	Improve colormap for fire climate classes. This colour scheme is not completely colourblind friendly. Perhaps modify the colours to increase the contrast. 
+-	Enable rotating all labels and tick labels so that they are horizontal (easier to read). May need to reduce the labels to every second increment. Eg for temperature.
+-	Create dictionaries for each hazard to enable automation of figures. Eg, use one keyword to select titles, colormaps and ticks.
+-	Possibly automate the scaling of the colourbar to the data limits of the plot. (I am personally against this idea. Let's come up with standard colormaps and colourscales so that all figures of that one variable or hazard have a standard and comparable scale.)\
+-	Possibly automate the arrows of the colourbar. (I don’t think the arrows on the colorbar should be determined by the data in the plot, I think they should be only limited by possible physical values of that metric so that all colourbars of that metric are comparable. Determine if you want the arrows to be determined by the plotting data or the metric’s possible physical values.)
+-	If hazard data had consistent file naming practices (DRS) and consistent attribute labels, the plotting functions could be automated further. At the moment, the data files are named in different patterns, the files might have different names for coordinates (eg “time”, “lat”, “lon”)
+
+**New plotting function:**
+-	Fully flexible custom n x m grid of plots. At the moment, minor modifications within multiplot are needed to make a custom plot for new layouts. It may be possible to make a function that can take in dimensions and a list of dataarrays to make a figure of many plots. This should use a similar format to the existing multi-panel plots and allow plotting gridded data, station data, stippling, ocean data, etc.
+
+**Stats functions:**
+-	Optimise workflow to enable area-averaged time series (stats or just area mean). This function can be very memory intensive. Need to apply a strategy or strategies to reduce memory use. A possible option may be to calculate and save area averages for every year. Saving outputs in annual files is a common practice for climate models.
+-	Calculate statistics along streamlines. Similar to area averages, but for a custom transect. Eg for rivers instead of catchments. Eg https://github.com/AusClimateService/plotting_maps/issues/23
+
 
