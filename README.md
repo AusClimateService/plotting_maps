@@ -33,10 +33,63 @@ To access docstrings and learn about input arguments, use ```plot_acs_hazard?```
  - Plot multi-paneled plots for a range of future global warming levels (GWLs). For example, `plot_acs_hazard_4pp` and `plot_acs_hazard_1plus3` and both four panel plots for gwl1.2, gwl1.5, gwl2.0, and gwl3.0.  `plot_acs_hazard_1plus3` plots the first (gwl1.2) panel as the baseline and the subsequent 3 gwls as anomalies from this baseline.
  - All the above functionality is available in multi-panelled plots. Functions exist for 1, 2, 3, and 4-panelled plots in vertical or horizontal orientations. (also 2-by-2 “square” for 4pp) The hazard plotting function eg plot_acs_hazard_4pp for four-panelled-plots is constructed using helper functions
 
+### Colours and design
+Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
+
+Most colours have been tested for common red-green colorblindness eg Deuteranopia. [Coblis](https://www.color-blindness.com/coblis-color-blindness-simulator/) is a handy tool to understand what your plots look like with a range of colorblind types.
+
+Colorscales follow [IPCC design principles](https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf) and [ACS design guide (internal BOM document)](https://bom365-my.sharepoint.com/:w:/g/personal/amy_walsh_bom_gov_au/EU0i7YY8nlNHrFo3shk35nwBbl-0A4gFqG9QyxKajo2l1A). Subject matter experts gave guidance on common colourscales used in their field.
+ACS has specific guidelines on figure layout and text label sizes etc.
+
+We have provided dictionaries with suggested region shapefiles, cmap colormaps, and tick intervals. Using the recommended items may help make plotting between users more consistent, but if they are not fit for your purpose, you may specify whatever you like.
+
+## Suggested regions, colormaps and scales for plotting
+
+### regions_dict
+Region shape files are stored here: /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/
+
+More information here: [https://aus-ref-clim-data-nci.github.io/aus-ref-clim-data-nci/datasets/shapefiles.html]
+
+Regions include Australian: 
+- Local Government Areas (LGAs),
+- State and Territories,
+- land boundary,
+- Natural Resource Management (NRM) regions,
+- river regions,
+- broadacre regions, and
+- National Climate Risk Assessment (NCRA) regions.
+
+```
+dict_keys(['aus_local_gov', 'aus_states_territories', 'australia', 'nrm_regions', 'river_regions', 'broadacre_regions', 'ncra_regions'])
+```
+
+### cmap_dict
+These are suggested colormaps matched with possible variables to plot.  This includes color maps for total amount and for anomalies.
+
+![colormaps_aus_maps](https://github.com/AusClimateService/plotting_maps/blob/main/colormaps_aus_maps.png)
+
+```
+
+
+
+
 ### acs_area_stats.py
-This module enables calculating a range of statistics for area defined by shapefiles. It is best used for reducing 2D maps into a table of summary statistics for each region or state.
+This module enables calculating a range of statistics for areas defined by shapefiles, including area averages. It is best used for reducing 2D maps into a table of summary statistics for each region or state. The function can be used for more dimensions (eg, lat, lon, time, model) but may be slow and memory intensive depending on the data.
+ - The function works for continuous and numerical variables
+ - The function also works for calculating stats for categorical data, including calculating mode, median (if ordinal), and each category's proportions.
+ - The function can calculate the states for many models individually or across the multi member ensemble.
+ - The function can be used for time series extraction for regions, but it can be very memory intensive (TODO set up a workflow to cope with large data input)
 
+### masks
+Shapefiles and masks that define regions can be at /g/data/ia39/shapefiles/... . 
 
+These shapefiles and masks can be used to outline some selected regions, calculate area statistics, or any other use you like. 
+
+[More information on the shapefiles](https://github.com/aus-ref-clim-data-nci/shapefiles) is in the readme and example notebooks.
+
+You may apply your own shapefiles or masks. You may need to rename some columns so that functions work as intended.
+
+### other
 
 See the github “issues” https://github.com/AusClimateService/plotting_maps/issues?q=is%3Aissue for some history of added functionality etc.
 
@@ -229,60 +282,4 @@ For example only, this would make a dataframe in this format:
 
 ## Time Series extraction
 For time series extraction of point locations see https://github.com/AusClimateService/TimeSeriesExtraction
-
-## Suggested regions, colormaps and scales for plotting
-Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
-
-We have provided dictionaries with suggested region shapefiles, cmap colormaps, and tick intervals. Using the recommended items may help make plotting between users more consistent, but if they are not fit for your purpose, you may specify whatever you like.
-
-### regions_dict
-Region shape files are stored here: /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/
-
-More information here: [https://aus-ref-clim-data-nci.github.io/aus-ref-clim-data-nci/datasets/shapefiles.html]
-
-Regions include Australian: 
-- Local Government Areas (LGAs),
-- State and Territories,
-- land boundary,
-- Natural Resource Management (NRM) regions,
-- river regions,
-- broadacre regions, and
-- National Climate Risk Assessment (NCRA) regions.
-
-```
-dict_keys(['aus_local_gov', 'aus_states_territories', 'australia', 'nrm_regions', 'river_regions', 'broadacre_regions', 'ncra_regions'])
-```
-
-### cmap_dict
-These are suggested colormaps matched with possible variables to plot.  This includes color maps for total amount and for anomalies.
-
-![colormaps_aus_maps](https://github.com/AusClimateService/plotting_maps/blob/main/colormaps_aus_maps.png)
-
-
-### tick_dict
-```python
-# This dictionary gives some suggestions on the scale of the colour map to use for some variables. Some scales are taken from climate maps on bom.gov.au/climate
-tick_dict = {"pr_annual":  [0, 50, 100, 200, 300, 400, 600, 1000, 1500, 2000, 3000, 6000],
-             "pr_6mon":    [0, 50, 100, 200, 300, 400, 600,  900, 1200, 1800, 2400, 6000],
-             "pr_3mon":  [0, 10,  25,  50, 100, 200, 300,  400,  600,  800, 1200, 2500],
-             "pr_mon" :  [0,  1,   5,  10,  25,  50, 100,  200,  300,  400,  600, 1200],
-             "pr_hour" :  [0, 1,   2,   5,  10,  15,  20,   30,   50,   75,  100,  200,],
-             "pr_days": [0, 2, 3, 5, 10, 20, 30, 40, 50, 75, 100, 125, 150, 175],
-             "pr_anom_mon": [-1000, -400, -200, -100, -50, -25, -10, 0, 10, 25, 50, 100, 200, 400, 1000],
-             "pr_anom_3mon": [-2000, -600, -400, -200, -100, -50, -25, 0, 25, 50, 100, 200, 400, 600, 2000],
-             "pr_anom_6mon": [-3000, -1200, -800, -400, -200, -100, -50, 0, 50, 100, 200, 400, 800, 1200, 3000],
-             "pr_anom_ann": [-4000, -1800, -1200, -800, -400, -200, -100, 0, 100, 200, 400, 800, 1200, 1800, 4000],
-             "pr_diff_mon": [-1000, -400, -200, -100, -50, -25, -10, 10, 25, 50, 100, 200, 400, 1000],
-             "pr_diff_ann": [-3000, -1800, -1200, -800, -400, -200, -100, 100, 200, 400, 800, 1200, 1800, 3000],
-             "frost_days": [0, 10, 20, 30, 40, 50, 75, 100, 150, 300],
-             "frost_days_mon":[0, 2, 5, 10, 15, 20, 25, 31],
-             "tas": np.arange(-9,52, 3),
-             "tas_anom_day": np.arange(-14, 14.1, 2),
-             "tas_anom_mon": np.arange(-7, 7.1, 1),
-             "tas_anom_ann": np.arange(-3.5, 3.6, 0.5),
-             "apparent_tas": np.arange(-6, 42, 3),
-             "percent": np.arange(0,101,10),
-             "xts_freq":[0.00, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.12, 0.15]
-            }
-```
 
