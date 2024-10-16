@@ -33,7 +33,6 @@ projection = ccrs.LambertConformal(
 )
 
 from pathlib import Path
-logo = image.imread(f"{Path(__file__).parent}/ACS_Logo_Blue_on_white_Stacked.png")
 
 # # Suggested colormaps and scales
 # Using suggested colormaps and scales will improve the consistency across teams
@@ -1098,7 +1097,7 @@ def plot_acs_hazard(
     agcd_mask=False,
     facecolor="none",
     edgecolor="black",
-    figsize=(4.5,3),
+    figsize=(6.7,4),
     title=None,
     date_range="",
     projection=None,
@@ -1121,7 +1120,6 @@ def plot_acs_hazard(
     land_shadow=False,
     watermark="EXPERIMENTAL\nIMAGE ONLY",
     watermark_color = "r",
-    show_logo = False,
     infile=None,
     outfile=None,
     savefig=True,
@@ -1291,9 +1289,6 @@ def plot_acs_hazard(
         for the watermark, this changes the colour of the text.
         The default is red. Only change color if red is not visible. 
 
-    show_logo: bool, default False
-        show ACS logo in top left corner.
-
     infile: str
         Not yet tested. 
         The idea is to read in 2D netCDF data and use this as the mappable data.
@@ -1363,7 +1358,7 @@ def plot_acs_hazard(
         data = xr.open_dataset(infile)
 
 
-    if contour or contourf:
+    if contourf:
         cbar_extend = "neither"
 
     # plot hazard data ------------------------
@@ -1504,7 +1499,6 @@ def plot_acs_hazard_3pp(
     land_shadow=False,
     watermark="EXPERIMENTAL IMAGE ONLY",
     watermark_color = "r",
-    show_logo = False,
     infile=None,
     outfile=None,
     savefig=True,
@@ -1725,9 +1719,6 @@ def plot_acs_hazard_3pp(
     watermark_color: default "r"
         for the watermark, this changes the colour of the text.
         The default is red. Only change color if red is not visible. 
-
-    show_logo: bool, default False
-        show ACS logo in top left corner.
 
     infile: str
         Not yet tested. 
@@ -1975,7 +1966,6 @@ def plot_acs_hazard_4pp(
                 land_shadow=False,
                 watermark="EXPERIMENTAL\nIMAGE ONLY",
                 watermark_color = "r",
-                show_logo = False,
                 infile=None,
                 outfile=None,
                 savefig=True,
@@ -2209,9 +2199,6 @@ def plot_acs_hazard_4pp(
     watermark_color: default "r"
         for the watermark, this changes the colour of the text.
         The default is red. Only change color if red is not visible. 
-
-    show_logo: bool, default False
-        show ACS logo in top left corner.
 
     infile: str
         Not yet tested. 
@@ -2486,7 +2473,6 @@ def plot_acs_hazard_1plus3(
                 land_shadow=False,
                 watermark="EXPERIMENTAL\nIMAGE ONLY",
                 watermark_color = "r",
-                show_logo = False,
                 infile=None,
                 outfile=None,
                 savefig=True,
@@ -2753,9 +2739,6 @@ def plot_acs_hazard_1plus3(
     watermark_color: default "r"
         for the watermark, this changes the colour of the text.
         The default is red. Only change color if red is not visible. 
-
-    show_logo: bool, default False
-        show ACS logo in top left corner.
 
     infile: str
         Not yet tested. 
@@ -3053,7 +3036,6 @@ def plot_acs_hazard_2pp(
     land_shadow=False,
     watermark="EXPERIMENTAL IMAGE ONLY",
     watermark_color = "r",
-    show_logo = False,
     infile=None,
     outfile=None,
     savefig=True,

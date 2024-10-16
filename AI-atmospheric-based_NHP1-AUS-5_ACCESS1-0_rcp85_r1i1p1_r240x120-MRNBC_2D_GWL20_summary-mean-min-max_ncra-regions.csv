@@ -1,0 +1,11 @@
+region,abbrevs,names,AI_mean,AI_min,AI_max
+0,WANorth,Western Australia North,,0.0001208131,inf
+1,WASouth,Western Australia South,,8.5600805e-05,inf
+2,NSW,New South Wales and Australian Capital Territory,,0.099034205,1.6265694
+3,VIC,Victoria,,0.12834479,inf
+4,SA,South Australia,,0.007343506,inf
+5,TAS,Tasmania,,0.34825402,inf
+6,NT,Northern Territory,,0.03489041,inf
+7,QLDNorth,Queensland North,,0.1323435,inf
+8,QLDSouth,Queensland South,,0.06613731,inf
+9,AUS,Australia,,8.5600805e-05,inf
