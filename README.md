@@ -77,7 +77,7 @@ This module enables calculating a range of statistics for areas defined by shape
 ### Time Series extraction
 For time series extraction of point locations see https://github.com/AusClimateService/TimeSeriesExtraction
 
-### masks
+### Masks
 Shapefiles and masks that define regions can be at /g/data/ia39/shapefiles/data and /g/data/ia39/aus-ref-clim-data-nci/shapefiles/masks/.
 
 These shapefiles and masks can be used to outline some selected regions, calculate area statistics, or any other use you like. 
@@ -267,7 +267,7 @@ dims = ("lat", "lon",)
 how = ["min", "mean", "max"]
 
 da_summary = acs_regional_stats(ds=ds, infile = filename, mask=mask_frac, dims = dims, how = how,)
-da_summary
+da_summary.to_DateFrame()
 
 ```
 
