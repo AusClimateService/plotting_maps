@@ -154,6 +154,19 @@ $ git clone https://github.com/AusClimateService/plotting_maps.git plotting_maps
 ```
 You will now be able to access the functions, python scripts, and Jupyter notebooks from your user.
 
+### Pull the lastest version of the repo
+Navigate to your existing version of the plotting maps repository (if you don't have an existing version, follow the above directions for cloning).
+
+```
+$ cd /path/to/dir/plotting_maps
+````
+
+Then pull the latest version using git
+
+```
+$ git pull
+```
+
 ### Usage in Jupyter Notebook:
 
 See small, easy-to-follow examples here: 
@@ -308,6 +321,7 @@ For example only, this would make a dataframe in this format:
 -	Possibly automate the scaling of the colourbar to the data limits of the plot. (I am personally against this idea. Let's come up with standard colormaps and colourscales so that all figures of that one variable or hazard have a standard and comparable scale.)\
 -	Possibly automate the arrows of the colourbar. (I don’t think the arrows on the colorbar should be determined by the data in the plot, I think they should be only limited by possible physical values of that metric so that all colourbars of that metric are comparable. Determine if you want the arrows to be determined by the plotting data or the metric’s possible physical values.)
 -	If hazard data had consistent file naming practices (DRS) and consistent attribute labels, then the plotting functions could be further automated. At the moment, the data files are named in different patterns, the files might have different names for coordinates (eg “time”, “lat”, “lon”)
+-	Use a keyword to make plots appropriate for different uses eg journal, report, powerpoint, poster etc similar to https://seaborn.pydata.org/generated/seaborn.set_context.html
 
 **New plotting function:**
 -	Fully flexible custom n x m grid of plots. At the moment, minor modifications within multiplot are needed to make a custom plot for new layouts. It may be possible to make a function that can take in dimensions and a list of dataarrays to make a figure of many plots. This should use a similar format to the existing multi-panel plots and allow plotting gridded data, station data, stippling, ocean data, etc.
