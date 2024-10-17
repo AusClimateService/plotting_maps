@@ -26,6 +26,7 @@ To access docstrings and learn about input arguments, use ```plot_acs_hazard?```
 <img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/ch_report/Annual-maximum-daily%0Amaximum-temperature.png" width="300">
 
  - Plot ocean data: Plots of ocean data eg marine heat waves [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb),  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
+<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/Ocean-acidification.png" width="300">
  - Plot stations data: Single plot of station data eg coastal flooding [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb), [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb),  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
 <img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/ch_report/Change-in-frequency-of-flood-days.png" width="300">
   
@@ -306,7 +307,7 @@ For example only, this would make a dataframe in this format:
 ## FAQs
 ### Something is not working and I don't know why!
 Here are some common suggestions for troubleshooting: 
- -	see “getting started” in the readme https://github.com/AusClimateService/plotting_maps:
+ -	see “getting started” above and make sure you have followed all the instructions
  -	Check you are using the right venv. This code is designed to work with hh5 analysis3-24.04 virtual environment.
  -	Restart the kernel and rerun all cells from start. Especially if you have made a variety of modifications, you may have renamed a function/variable.
  -	If python can't find the module, check you have the .py module in your working directory. If not cd to the directory with the module.
@@ -325,10 +326,11 @@ regions = get_regions(["ncra_regions", "australia"])
 ```
 
 ### How can I add stippling (hatching) to plots to indicate model agreement?
-The plotting scripts can do this. You will need to calculate the mask and provide this as a dataarray with "lat" and "lon"
- see this link (https://github.com/AusClimateService/plotting_maps/issues/2) for a brief example
+The plotting scripts can add stippling to the plots using the stippling keyword(s).
+You will need to calculate the mask and provide this as a dataarray with "lat" and "lon". The mask must be a True/False boolean mask. It does not have to be the same resolution as the underlying data (you may wish to coarsen the mask if the underlying data is high-resolution and noisy).
+See [this link](https://github.com/AusClimateService/plotting_maps/issues/2) for a brief example of applying stippling.
 
-For the multi-panel plots, you can give a mask for each of the plots eg see https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb (you may ignore the "coarsen..." this is needed so smooth out the fuzzy edges of the fire climate classes)
+For the multi-panel plots, you can give a mask for each of the plots eg see [fire_climate_classes_projections.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb) (you may ignore the "coarsen..." this is needed so smooth out the fuzzy edges of the fire climate classes). In this
 
 Your function will look something like this:
 ```python
@@ -364,13 +366,72 @@ new_stippling_mask =  stippling_mask.coarsen(lat=2, boundary="pad").mean().coars
 
 
 ### Is there a way to use the 4pp plot with the average conditions for GWL1.2 and the change % for GWL1.5 to GWL3? Or does it only work for plots that use a consistent colourbar?
+plot_acs_hazard_1plus3
 
-### How can I change the orientation of the figures in a multipaneled plot?
+### How can I change the orientation (eg from vertical to horizontal) of the figures in a multipaneled plot?
+orientation
 
 ### Can I use my own shapefiles to define regions?
 Yes, you can provide any shapefiles you like. We have provided some helpful Australian regions from /g/data/ia39, but the functions are flexible to take custom regions. 
 
+### I want to use a divergent colormap, but the neutral color isn't in the middle of my ticks. What can I do to align the centre of the colormap to zero?
+vcentre
 
+### What does gwl mean?
+GWL describe global warming levels. These are 20 year periods centred on the year when a climate model is projected to reach a specified global surface temperature above the pre-industrial era. Global climate models reach these temperature thresholds at different years.
+
+For example, the Paris Agreement (2012) refers to global warming levels in its aims:
+
+“…to strengthen the global response to the threat of climate change by keeping a global temperature rise this century well below 2 degrees Celsius above pre-industrial levels and to pursue efforts to limit the temperature increase even further to 1.5 degrees Celsius.”
+
+Find more information here https://github.com/AusClimateService/gwls
+
+The plotting functions have been designed to accommodate present and future global warming levels. This is indicated by argument names containing "gwl12", "gwl15", "gwl20", "gwl30". If you want to use the function for other time periods or scenarios, you can still use these functions. The functions will work for any data in the right format (eg 2D xarray data array with lat and lon).
+
+### I am not using GWLs but I want to use these functions. How can I can the subtitles?
+
+
+### I only want to plot data below 30S latitude, is there a mask for this?
+There is no specific mask for this, but it is easy to adjust your input to achieve this.
+
+If you just want to plot the data below 30S, you can use ```plot_acs_hazard(data=  ds.where(ds["lat"]<-30)[var] , ...)```
+![image](https://github.com/user-attachments/assets/549ccef8-3aed-4dfa-9ee0-c08e225ab386)
+
+
+You may also like to apply a custom mask to the stats function using "clipped" to only select by a lat lon box:
+```
+import geopandas as gpd
+from glob import glob
+from shapely.geometry import box
+import regionmask
+import xarray as xr
+from acs_area_statistics import acs_regional_stats, get_regions
+
+# get the shapefile for australia
+PATH = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data"
+shapefile = "australia"
+gdf = gpd.read_file(glob(f"{PATH}/{shapefile}/*.shp")[0]).to_crs("EPSG:4326")
+
+# set your limits
+# box(xmin, ymin, xmax, ymax)
+clipped = gdf.clip( box(100, -45, 160, -30))
+
+regions = regionmask.from_geopandas(clipped, name= "clipped_shapefile", overlap=True) 
+
+# need some data
+filename = "/g/data/ia39/ncra/extratropical_storms/5km/GWLs/lows_AGCD-05i_ACCESS-CM2_ssp370_r4i1p1f1_BOM_BARPA-R_v1-r1_GWL12.nc"
+ds = xr.open_dataset(filename, use_cftime = True,)
+
+mask = regions.mask_3D(ds)
+
+# then calculate the stats for this clipped region
+dims = ("lat", "lon",)
+var="low_freq"
+df_summary = acs_regional_stats(ds=ds,var=var, mask=mask, dims = dims, how = ["min", "median", "max"])
+df_summary
+```
+### Stats FAQs...?
+tba
 
 ## Development principles
 This code has been developed to make consistent plotting and statistical analysis quick and easy across ACS hazard teams. These teams regularly get information requests with quick turn around times (~days), so having easy to use and flexible code to produce report ready plots is critical for devilering high quality figures and data summaries.
