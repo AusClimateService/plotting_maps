@@ -22,23 +22,27 @@ There's many possibilities built into this function. ```plot_acs_hazard``` is th
 
 To access docstrings and learn about input arguments, use ```plot_acs_hazard?```. This will describe each parameter you can give to the function to customise your plot.
 
- - Basic usage: Single plot of Australia eg temperature  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb), [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb)
+ - Basic usage: Single plot of Australia eg temperature  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb) and [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb)
 <img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/ch_report/Annual-maximum-daily%0Amaximum-temperature.png" width="300">
 
- - Plot ocean data: Plots of ocean data eg marine heat waves [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb),  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
- - Plot stations data: Single plot of station data eg coastal flooding [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb), [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb),  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
+ - Plot ocean data: Plots of ocean data eg marine heat waves [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb), and  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
+<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/Ocean-acidification.png" width="300">
+ - Plot stations data: Single plot of station data eg coastal flooding [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb) , [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb) and [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
+
 <img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/ch_report/Change-in-frequency-of-flood-days.png" width="300">
   
  - Plot multiple data types in one figure. Gridded data and station data can be plotted on the same plot: eg ocean data and station data (station and gridded data on the same plot)
  - Plot categorical data: Single plot of categorical data eg [aridity](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_ai.ipynb) and [aridity or fire climate classes](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/plotting_and_stats_examples.ipynb)
  - Plot categorical data with stippling: Single plot of hazard data with stippling eg [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb), [Fire climate classes](https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb)
-<img src="https://github.com/user-attachments/assets/3c83470d-d9bd-4307-9254-aa88e12faa56" width="800">
+![Fire-climate-classes-and-shift](https://github.com/user-attachments/assets/606762e1-d9f5-41a7-8df4-1f089f2c8596)
 
  - Mask remote data sparse regions of Australia using agcd_mask. Particularly for maps that depend on *in situ* rainfall observations. See issue https://github.com/AusClimateService/plotting_maps/issues/28 and [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb).
  - Plot a selected region: Single plot of single state/region [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb)
  - Plot a selection of regions: Single plot of multiple selected regions [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb)
  - Plot only data below particular latitude [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
- - Plot multi-paneled plots with shared colorbars for multiple future global warming levels (GWLs). For example, `plot_acs_hazard_4pp` and `plot_acs_hazard_1plus3` are both four-panel plots for gwl1.2, gwl1.5, gwl2.0, and gwl3.0.  `plot_acs_hazard_1plus3` plots the first (gwl1.2) panel as the baseline and the subsequent 3 gwls as anomalies from this baseline. [Multiplots examples](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb), [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb), [ncra_briefing_plots](https://github.com/AusClimateService/plotting_maps/blob/main/reports/ncra_briefing_plots.ipynb), [fire_climate_classes_projections](https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb)
+ - Plot multi-panelled plots with shared colour bars for multiple future global warming levels (GWLs). For example, `plot_acs_hazard_4pp` and `plot_acs_hazard_1plus3` are both four-panel plots for gwl1.2, gwl1.5, gwl2.0, and gwl3.0.  `plot_acs_hazard_1plus3` plots the first (gwl1.2) panel as the baseline and the subsequent 3 gwls as anomalies from this baseline. [Multiplots examples](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb), [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb), [ncra_briefing_plots](https://github.com/AusClimateService/plotting_maps/blob/main/reports/ncra_briefing_plots.ipynb), [fire_climate_classes_projections](https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb)
+  ![Average-daily-maximum-temperature](https://github.com/user-attachments/assets/05e67c12-a6d5-478d-a088-7af5c6eaaadd)
+
  - All the above functionality is available in multi-panelled plots. Functions exist for 1, 2, 3, and 4-panelled plots in vertical or horizontal orientations eg [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb). (also 2-by-2 “square” for 4pp) The hazard plotting function eg plot_acs_hazard_4pp for four-panelled-plots is constructed using helper functions 
 
 **Limitations**
@@ -154,7 +158,7 @@ $ git clone https://github.com/AusClimateService/plotting_maps.git plotting_maps
 ```
 You will now be able to access the functions, python scripts, and Jupyter notebooks from your user.
 
-### Pull the lastest version of the repo
+### Update to the lastest version of the repo (pull)
 Navigate to your existing version of the plotting maps repository (if you don't have an existing version, follow the above directions for cloning).
 
 ```
@@ -251,7 +255,7 @@ plot_acs_hazard_3pp(ds_gwl15 = ds_gwl15[var],
                     cmap = cmap_dict["tasmax"],
                     ticks = np.arange(18,53,2),)
 ```
-![HWAtx_3pp](https://github.com/user-attachments/assets/b01ba38c-afbb-4d08-9514-ecd33f587907)
+![Maximum-Temperature-of-Hottest-Heatwave-for-future-warming-scenarios](https://github.com/user-attachments/assets/6741a325-aac5-44bd-b878-d1aab1dab2ba)
 
 
 6. **Calculate summary statistics for the range of models.**
@@ -301,6 +305,149 @@ For example only, this would make a dataframe in this format:
 |        8 | NQ        | Queensland North        |  264.447 |   766.444 |  7146.55 |
 |        9 | AUS       | Australia               |  123.614 |   742.735 |  7146.55 |
 
+## FAQs
+### Something is not working and I don't know why!
+Here are some common suggestions for troubleshooting: 
+ -	see “getting started” above and make sure you have followed all the instructions
+ -	Check you are using the right venv. This code is designed to work with hh5 analysis3-24.04 virtual environment.
+ -	Restart the kernel and rerun all cells from start. Especially if you have made a variety of modifications, you may have renamed a function/variable.
+ -	If python can't find the module, check you have the .py module in your working directory. If not cd to the directory with the module.
+ -	Make sure you have requested access to all the right gdata projects (eg gdata/ia39)
+
+### An argument I have used before using this code no longer works. What's happening?
+During development, priorities and requests have changed what the functions needed to do. As a result, there are a few deprecated features and functionalities. Some things that were needed that are now not required:
+ -	 “show_logo”, it was initially requested to have an ACS logo in the figures. The comms team now prefers only the copywrite in the bottom
+ -	Contour and contourf are generally not recommended now due to errors in plotting and long computational time. They are left in the function because they can be useful for lower resolution data, eg ocean data.
+ -	“infile” is not used. The idea was to use this for well-organised data with a consistent DRS to enable a good plot to be made without lots of keyword inputs. The data we have is not organised consistently enough for this.
+ -	“regions_dict” in acs_plotting_maps.py made to module very slow to load Shapefiles can take many seconds to load. It is inefficient to load all these regions even when you don’t use them all. This was replaced with a class
+ -	“regions” in acs_area_stats had preloaded shapefiles. Shapefiles can take many seconds to load. It is inefficient to load all these regions even when you don’t use them all. This was replaced with “get_regions”
+```python
+ from acs_area_statistics import acs_regional_stats, get_regions
+regions = get_regions(["ncra_regions", "australia"])
+```
+
+### How can I add stippling (hatching) to plots to indicate model agreement?
+The plotting scripts can add stippling to the plots using the stippling keyword(s).
+You will need to calculate the mask and provide this as a dataarray with "lat" and "lon". The mask must be a True/False boolean mask. It does not have to be the same resolution as the underlying data (you may wish to coarsen the mask if the underlying data is high-resolution and noisy).
+See [this link](https://github.com/AusClimateService/plotting_maps/issues/2) for a brief example of applying stippling.
+
+For the multi-panel plots, you can give a mask for each of the plots eg see [fire_climate_classes_projections.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb) (you may ignore the "coarsen..." this is needed so smooth out the fuzzy edges of the fire climate classes). In this
+
+Your function will look something like this:
+```python
+plot_acs_hazard_4pp(ds_gwl12=ds_gwl12[var],
+                    ds_gwl15=ds_gwl15[var],
+                    ds_gwl20=ds_gwl20[var],
+                    ds_gwl30=ds_gwl30[var],
+                    stippling_gwl12=stippling_gwl12,
+                    stippling_gwl15=stippling_gwl15,
+                    stippling_gwl20=stippling_gwl20,
+                    stippling_gwl30=stippling_gwl30,
+                    regions = regions,
+                    title = "Fire Climate Classes",
+                    # figsize=(7,2),
+                    # baseline="GWL1.2",
+                    cmap = cmap_dict["fire_climate"],
+                    ticks = tick_dict["fire_climate_ticks"],
+                    tick_labels = ["Tropical\nSavanna","Arid grass \n& woodland","Wet Forest","Dry Forest","Grassland",],
+                    cbar_label = "classes",
+                    dataset_name = "BARPA MRNBC-ACGD",
+                    watermark="",
+                    orientation="horizontal",
+                    issued_date="",
+                    );
+```
+
+### Why is the stippling weird?
+You may need to check that the stippling is in the areas you expect it to be. There is a bug in contourf that causes the stippling to get confused when plotting noisy high-resolution mask. If that is the case, I recommend coarsening the stippling mask 
+E.g. 
+new_stippling_mask =  stippling_mask.coarsen(lat=2, boundary="pad").mean().coarsen(lon=2, boundary="pad").mean()>0.4
+
+(full example here https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb)
+
+
+### Is there a way to use the 4pp plot with the average conditions for GWL1.2 and the change % for GWL1.5 to GWL3? Or does it only work for plots that use a consistent colourbar?
+plot_acs_hazard_1plus3
+
+### How can I change the orientation (eg from vertical to horizontal) of the figures in a multipaneled plot?
+orientation
+
+### Can I use my own shapefiles to define regions?
+Yes, you can provide any shapefiles you like. We have provided some helpful Australian regions from /g/data/ia39, but the functions are flexible to take custom regions. 
+
+### I want to use a divergent colormap, but the neutral color isn't in the middle of my ticks. What can I do to align the centre of the colormap to zero?
+vcentre
+
+### What does gwl mean?
+GWL describe global warming levels. These are 20 year periods centred on the year when a climate model is projected to reach a specified global surface temperature above the pre-industrial era. Global climate models reach these temperature thresholds at different years.
+
+For example, the Paris Agreement (2012) refers to global warming levels in its aims:
+
+“…to strengthen the global response to the threat of climate change by keeping a global temperature rise this century well below 2 degrees Celsius above pre-industrial levels and to pursue efforts to limit the temperature increase even further to 1.5 degrees Celsius.”
+
+Find more information here https://github.com/AusClimateService/gwls
+
+The plotting functions have been designed to accommodate present and future global warming levels. This is indicated by argument names containing "gwl12", "gwl15", "gwl20", "gwl30". If you want to use the function for other time periods or scenarios, you can still use these functions. The functions will work for any data in the right format (eg 2D xarray data array with lat and lon).
+
+### I am not using GWLs but I want to use these functions. How can I can the subtitles?
+
+
+### I only want to plot data below 30S latitude, is there a mask for this?
+There is no specific mask for this, but it is easy to adjust your input to achieve this.
+
+If you just want to plot the data below 30S, you can use ```plot_acs_hazard(data=  ds.where(ds["lat"]<-30)[var] , ...)```
+![image](https://github.com/user-attachments/assets/549ccef8-3aed-4dfa-9ee0-c08e225ab386)
+
+
+You may also like to apply a custom mask to the stats function using "clipped" to only select by a lat lon box:
+```
+import geopandas as gpd
+from glob import glob
+from shapely.geometry import box
+import regionmask
+import xarray as xr
+from acs_area_statistics import acs_regional_stats, get_regions
+
+# get the shapefile for australia
+PATH = "/g/data/ia39/aus-ref-clim-data-nci/shapefiles/data"
+shapefile = "australia"
+gdf = gpd.read_file(glob(f"{PATH}/{shapefile}/*.shp")[0]).to_crs("EPSG:4326")
+
+# set your limits
+# box(xmin, ymin, xmax, ymax)
+clipped = gdf.clip( box(100, -45, 160, -30))
+
+regions = regionmask.from_geopandas(clipped, name= "clipped_shapefile", overlap=True) 
+
+# need some data
+filename = "/g/data/ia39/ncra/extratropical_storms/5km/GWLs/lows_AGCD-05i_ACCESS-CM2_ssp370_r4i1p1f1_BOM_BARPA-R_v1-r1_GWL12.nc"
+ds = xr.open_dataset(filename, use_cftime = True,)
+
+mask = regions.mask_3D(ds)
+
+# then calculate the stats for this clipped region
+dims = ("lat", "lon",)
+var="low_freq"
+df_summary = acs_regional_stats(ds=ds,var=var, mask=mask, dims = dims, how = ["min", "median", "max"])
+df_summary
+```
+### Stats FAQs...?
+tba
+
+## Development principles
+This code has been developed to make consistent plotting and statistical analysis quick and easy across ACS hazard teams. These teams regularly get information requests with quick turn around times (~days), so having easy to use and flexible code to produce report ready plots is critical for devilering high quality figures and data summaries.
+
+We want to enable scientists to focus on producing data and interpreting that information.
+
+These plotting and stats tools should reduce the duplication of work for scientists who spend time adjusting their plots. We want these tools to be easy to use and flexible for all purposes across the hazard teams so all the plots are presented consistently and all teams are supported.
+
+Using these functions should be the easiest way to produce a nice plot. We want this to be the path of least resistance. The easier the functions are to use, the more people will use them. This means supporting with good documentation, good example notebooks, and adding new functionalities according to user feedback.
+
+These plotting and stats tools are optimised for Australian hazard maps, but flexible so that they can be adjusted for any data, anywhere in the world, with any shape files, any color schemes, or any projection etc.
+
+To test updates in [acs_area_stats.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_area_stats.py)  or [acs_plotting_maps.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_plotting_maps.py), we rerun the example notebooks to ensure the functions still perform as expected. (This could be automated to run when changes are pushed to git.)
+
+This code is in active use by a range of teams. Take care to maintain backward compatibility while adding features. If that is not practical, then, comunicate the changes with the users. Ideally, I would like to “release” this version of the code. Eg see https://github.com/AusClimateService/plotting_maps/releases/new
 
 ## TODO
 **Figures to make:**
@@ -309,6 +456,7 @@ For example only, this would make a dataframe in this format:
 
 **Documentation:**
 -	Clear tutorials for how to use different functionalities
+-	“release” this version of the code as v1.0.0. It is in wide use and care is being taken to keep backward compatibility while adding features. Eg see https://github.com/AusClimateService/plotting_maps/releases/new
 
 **Improve plotting function and axillaries:**
 -	Improve the aesthetics and proportions of plotting, especially with dataset/date_range/baseline annotations. Design aesthetics where focused on vertical orientations for 4 panel plots without these annotations for a particular report.
