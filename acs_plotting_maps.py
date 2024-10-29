@@ -156,7 +156,22 @@ cmap_dict = {
     "ipcc_temp_div": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/temp_div.txt")),
     "ipcc_temp_seq": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/temp_seq.txt")),
     "ipcc_wind_div": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/wind_div.txt")),
-    "ipcc_wind_seq": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/wind_seq.txt"))
+    "ipcc_wind_seq": LinearSegmentedColormap.from_list('colormap', np.loadtxt(f"{cmap_dir}/wind_seq.txt")),
+    "acs_geophysical_biochemical_div1": cm.PRGn, #LinearSegmentedColormap.from_list('colormap',["#762a83", "#9970ab", "#c2a5cf", "#e7d4e8", "#d9f0d3", "#a6dba0", "#5aae61", "#1b7837", ], N=255),
+    "acs_geophysical_biochemical_div2": cm.PiYG, #LinearSegmentedColormap.from_list('colormap',["#c51b7d", "#de77ae", "#f1b6da", "#fde0ef", "#e6f5d0", "#b8e186", "#7fbc41", "#4d9221",], N=255),
+    "acs_geophysical_biochemical_seq1": cm.BuGn, #LinearSegmentedColormap.from_list('colormap', ["#f7fcfd", "#e5f5f9", "#ccece6", "#99d8c9", "#66c2a4", "#41ae76", "#238b45", "#005824",], N=255),
+    "acs_geophysical_biochemical_seq2": cm.RdPu, #LinearSegmentedColormap.from_list('colormap', ["#fff7f3", "#fde0dd", "#fcc5c0", "#fa9fb5", "#f768a1", "#dd3497", "#ae017e", "#7a0177",], N=255),
+    "acs_geophysical_biochemical_seq3": cm.Greys, #LinearSegmentedColormap.from_list('colormap',["#ffffff", "#f0f0f0", "#d9d9d9", "#bdbdbd", "#969696", "#737373", "#525252", "#252525",], N=255),
+    "acs_precipitation_div1": cm.RdBu, #LinearSegmentedColormap.from_list('colormap',["#b2182b", "#d6604d", "#f4a582", "#fddbc7", "#d1e5f0", "#92c5de", "#4393c3", "#2166ac",], N=255),
+    "acs_precipitation_div2": cm.BrBG, #LinearSegmentedColormap.from_list('colormap',["#8c510a", "#bf812d", "#dfc27d", "#f6e8c3", "#c7eae5", "#80cdc1", "#35978f", "#01665e",], N=255),
+    "acs_precipitation_seq1": cm.Blues, #LinearSegmentedColormap.from_list('colormap',["#f7fbff", "#deebf7", "#c6dbef", "#9ecae1", "#6baed6", "#4292c6", "#2171b5", "#084594",], N=255),
+    "acs_precipitation_seq2": cm.GnBu, #LinearSegmentedColormap.from_list('colormap',["#f7fcf0", "#e0f3db", "#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cbe", "#08589e",], N=255), 
+    "acs_precipitation_seq3": cm.PuBuGn, #LinearSegmentedColormap.from_list('colormap',["#fff7fb", "#ece2f0", "#d0d1e6", "#a6bddb", "#67a9cf", "#3690c0", "#02818a", "#016450",], N=255),
+    "acs_temperature_div1": cm.RdYlBu_r, #LinearSegmentedColormap.from_list('colormap',['#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#fee090', '#fdae61', '#f46d43', '#d73027'], N=255),
+    "acs_temperature_div2": cm.PuOr_r, #LinearSegmentedColormap.from_list('colormap',['#542788', '#8073ac', '#b2abd2', '#d8daeb', '#fee0b6', '#fdb863', '#e08214', '#b35806'], N=255),
+    "acs_temperature_seq1": cm.YlOrRd, #LinearSegmentedColormap.from_list('colormap',["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026",], N=255),
+    "acs_temperature_seq2": cm.Reds, #LinearSegmentedColormap.from_list('colormap',["#fff5f0", "#fee0d2", "#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c", "#cb181d", "#99000d",], N=255), 
+    "acs_temperature_seq3": cm.YlGnBu, #LinearSegmentedColormap.from_list('colormap',["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#0c2c84",], N=255),
 }
 
 
@@ -354,15 +369,17 @@ def crop_cmap_center(cmap, ticks, mid, extend=None):
     N = below+above
     
     #porportion below mid point 
-    prop_below_mid = below/(max(below,above))
+    prop_below_mid = below/(max(below,above)+1)
     # propotion above mid point
-    prop_above_mid = above/(max(below,above))
+    prop_above_mid = above/(max(below,above)+1)
+
+    bounds = np.linspace(0.5*(1-prop_below_mid),
+                     0.5*(1+prop_above_mid),
+                     N+1)
+    between_bounds = [(n0+n1)/2 for n0, n1 in zip(bounds[:-1], bounds[1:])]
     
-    new_cmap_list = cmap(np.linspace(0.5*(1-prop_below_mid),
-                                     0.5*(1+prop_above_mid),
-                                     N)
-                        )
-    new_cmap = LinearSegmentedColormap.from_list("new_cmap",new_cmap_list)
+    new_cmap_list = cmap(between_bounds)
+    new_cmap = LinearSegmentedColormap.from_list("new_cmap",new_cmap_list, N)
     return new_cmap
 
 
@@ -1026,8 +1043,8 @@ def plot_titles(title="title",
     else:
         string = f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, Australian Climate Service"
     ax.text(
-        x=0.01,
-        y=0.00,
+        x=0.02,
+        y=0.01,
         s=string,
         fontsize=8,
         transform=ax.transAxes,
@@ -1087,7 +1104,7 @@ def plot_titles(title="title",
 # This is the function you call to plot all the graphs
 def plot_acs_hazard(
     name='ncra_regions',
-    regions=regions_dict['ncra_regions'],
+    regions=None,
     data=None,
     station_df=None,
     markersize=None,
@@ -1097,13 +1114,13 @@ def plot_acs_hazard(
     agcd_mask=False,
     facecolor="none",
     edgecolor="black",
-    figsize=(6.7,4),
-    title=None,
+    figsize=(6,4.5),
+    title="",
     date_range="",
     projection=None,
     area_linewidth=0.3,
-    xlim=(114, 162),
-    ylim=(-43, -8),
+    xlim=(114,154),
+    ylim=(-43.5, -7.5),
     cmap=cm.Greens,
     cmap_bad="lightgrey",
     cbar_extend="both",
@@ -1346,7 +1363,6 @@ def plot_acs_hazard(
         figsize=figsize,
         zorder=1,
         layout="constrained",
-        frameon=False,
     )
     ax = plt.axes(
         projection=projection,
@@ -1356,7 +1372,6 @@ def plot_acs_hazard(
 
     if infile is not None:
         data = xr.open_dataset(infile)
-
 
     if contourf:
         cbar_extend = "neither"
@@ -1402,20 +1417,25 @@ def plot_acs_hazard(
     # ---------------------------------------------
 
     # colorbar------------------------
-    if data is not None:
+  
+    if cont is not None and norm is not None:
         cbar = plot_cbar(cont=cont,
-                      norm=norm,
-                      ax=ax,
-                      cbar_extend=cbar_extend, 
-                      cbar_label=cbar_label,
-                      location = "right",
-                      ticks=ticks, 
-                      tick_labels=tick_labels,
-                      middle_ticks=middle_ticks,
-                      cax_bounds = [0.82, 0.15, 0.03, 0.7],
+                         norm=norm,
+                         ax=ax,
+                         cbar_extend=cbar_extend, 
+                         cbar_label=cbar_label,
+                         location = "right",
+                         ticks=ticks, 
+                         tick_labels=tick_labels,
+                         middle_ticks=middle_ticks,
+                         cax_bounds = [1.04,0.08,0.04,0.84],
                          rotation = tick_rotation,
                       )
     # ---------------------------------------
+
+    # set the limits of the plotted data
+    plots_rect = (0.02,0.02,0.9,0.96) #left bottom width height
+    fig.get_layout_engine().set(rect=plots_rect)
 
     # Annotations and titles ---------------------
 
@@ -1440,7 +1460,7 @@ def plot_acs_hazard(
                         )
     # draw border
     # ax111.axis(True)
-    ax111.axis(False)
+    # ax111.axis(False)
 
     # -----------------------------------------------
 
