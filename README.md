@@ -63,7 +63,7 @@ We have provided dictionaries with suggested region shapefiles, cmap colormaps, 
 
 Below are suggested colormaps matched with possible variables to plot.  This includes color maps for the total amount and anomalies. They are stored as `cmap_dict` in the `acs_plotting_maps` module.
 
-<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/colormaps_aus_maps.png" width="300">
+<img src="https://github.com/AusClimateService/plotting_maps/blob/main/colormaps_aus_maps.png" width="300">
 
 ### [acs_area_stats.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_area_stats.py) for area statistics
 This module enables calculating a range of statistics for areas defined by shapefiles, including area averages. It is best used for reducing 2D maps into a table of summary statistics for each region or state. The function can be used for more dimensions (eg, lat, lon, time, model) but may be slow and memory intensive depending on the size of the data and the number of regions.  
@@ -318,6 +318,14 @@ For minimal plotting and statistics examples:
 * Coastal station data example [minimal_plotting_example_station.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_station.ipynb)
 * Temperature hazard example [minimal_plotting_example_tx.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_tx.ipynb)
 
+For a large range of examples showcasing a range of functionalities:
+* [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb)
+
+Statistic examples:
+* Basic example of acs_regional_stats [area_statistics_example.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/area_statistics_example.ipynb)
+* Region and ensemble member mean table for NCRA regions [ensemble-table.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/ensemble-table.ipynb)
+* Using acs_regional_stats to calculate area averages with custom regions [area_statistics_example_basin_gpkg.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/area_statistics_example_basin_gpkg.ipynb)
+
 ### Something is not working and I don't know why!
 Here are some common suggestions for troubleshooting: 
  -	see “getting started” above and make sure you have followed all the instructions
@@ -504,8 +512,27 @@ df_summary
 ### Stats FAQs...?
 tba
 
+### Can I use any regions for the acs_regional_stats statistics function?
+Yes, provide any mask for your data. The more regions, the slower and 
+
+### Can I use acs_regional_stats for NaNs?
+Some of the statistics will not work if you have NaNs. eg mean, std, var
+
+### How do I calculate statistics for categorical data? 
+Different types of data need different tools to summarise the data. For example, some data is not numerical but is defined as a class or category eg ["forest", "grassland", "arid"]. We cannot calculate a `sum` or `mean` of different classes.
+Categorical statistics include the `mode` (most common category) and `proportion` (proportion of each category relative to the whole).
+If there is an order to the classes eg ["low", "moderate", "high", "extreme"], we can also calculate `min`, `median`, and `max` values.
+
+### Calculating time series using acs_regional_stats
+use the dims keyword and don't include "time". This may be very memory intensive depending on your data size.
+
+
+### Calculating statistics for multidimensional data
+use the dims keyword
+
+
 ## Development principles
-This code has been developed to make consistent plotting and statistical analysis quick and easy across ACS hazard teams. These teams regularly get information requests with quick turn around times (~days), so having easy to use and flexible code to produce report ready plots is critical for devilering high quality figures and data summaries.
+This code has been developed to make consistent plotting and statistical analysis quick and easy across ACS hazard teams. These teams regularly get information requests with quick turn around times (~days), so having easy to use and flexible code to produce report ready plots is critical for delivering high quality figures and data summaries.
 
 We want to enable scientists to focus on producing data and interpreting that information.
 
