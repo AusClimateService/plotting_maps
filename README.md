@@ -306,6 +306,18 @@ For example only, this would make a dataframe in this format:
 |        9 | AUS       | Australia               |  123.614 |   742.735 |  7146.55 |
 
 ## FAQs
+### Where can I find some worked examples to get started?
+I have collected [example_notebooks](https://github.com/AusClimateService/plotting_maps/tree/main/example_notebooks) which contain examples of creating plots with a variety of hazards and using a range of functionalities available.
+
+Notebooks used to make plots for specific requests and reports can be found under [reports](https://github.com/AusClimateService/plotting_maps/tree/main/reports). These are good references for the range of plots we can create using these functions and you are welcome to look through them and copy code you like. 
+
+For minimal plotting and statistics examples:
+* Aridity example [minimal_plotting_example_ai.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_ai.ipynb)
+* Plotting ocean data [minimal_plotting_example_ocean.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_ocean.ipynb)
+* Precipitation example [minimal_plotting_example_pr.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_pr.ipynb)
+* Coastal station data example [minimal_plotting_example_station.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_station.ipynb)
+* Temperature hazard example [minimal_plotting_example_tx.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_tx.ipynb)
+
 ### Something is not working and I don't know why!
 Here are some common suggestions for troubleshooting: 
  -	see “getting started” above and make sure you have followed all the instructions
@@ -327,8 +339,10 @@ regions = get_regions(["ncra_regions", "australia"])
 ```
 
 ### How can I add stippling (hatching) to plots to indicate model agreement?
-The plotting scripts can add stippling to the plots using the stippling keyword(s).
+The plotting scripts can add stippling to the plots using the stippling keyword(s). [Here is a notebook showing examples of using stippling](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_stippling.ipynb).
+
 You will need to calculate the mask and provide this as a dataarray with "lat" and "lon". The mask must be a True/False boolean mask. It does not have to be the same resolution as the underlying data (you may wish to coarsen the mask if the underlying data is high-resolution and noisy).
+
 See [this link](https://github.com/AusClimateService/plotting_maps/issues/2) for a brief example of applying stippling.
 
 For the multi-panel plots, you can give a mask for each of the plots eg see [fire_climate_classes_projections.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb) (you may ignore the "coarsen..." this is needed so smooth out the fuzzy edges of the fire climate classes). In this
@@ -367,16 +381,68 @@ new_stippling_mask =  stippling_mask.coarsen(lat=2, boundary="pad").mean().coars
 
 
 ### Is there a way to use the 4pp plot with the average conditions for GWL1.2 and the change % for GWL1.5 to GWL3? Or does it only work for plots that use a consistent colourbar?
-plot_acs_hazard_1plus3
+`plot_acs_hazard_1plus3` is a specific version of the plotting function to address this situation. While `plot_acs_hazard_4pp` assumes a shared colorbar and scale for all four maps, `plot_acs_hazard_1plus3` provides additional key word arguments to define a separate colorbar and scale for the first plot (as a baseline), while the last three figures share a different colorbar and scale.  
+
+See example here: [FAQ_example_4pp_1plus3.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_4pp_1plus3.ipynb)
+
+```python
+from acs_plotting_maps import *
+import xarray as xr
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+from matplotlib import colors, cm
+
+regions = regions_dict['ncra_regions']
+
+var = "TXm"
+
+# "current" with absolute values
+ds_gwl12 = xr.open_dataset(f"/g/data/ia39/ncra/heat/data/{var}/bias-corrected/ensemble/GWL-average/{var}_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL12.nc")
+# "future" with anomalies/change values
+ds_gwl15 = xr.open_dataset(f"/g/data/ia39/ncra/heat/data/{var}/bias-corrected/ensemble/GWL-change/{var}_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL15-GWL12-change.nc")
+ds_gwl20 = xr.open_dataset(f"/g/data/ia39/ncra/heat/data/{var}/bias-corrected/ensemble/GWL-change/{var}_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL20-GWL12-change.nc")
+ds_gwl30 = xr.open_dataset(f"/g/data/ia39/ncra/heat/data/{var}/bias-corrected/ensemble/GWL-change/{var}_AGCD-05i_MME50_ssp370_v1-r1-ACS-QME-AGCD-1960-2022_GWL30-GWL12-change.nc")
+
+plot_acs_hazard_1plus3(ds_gwl12=ds_gwl12[var],
+                       gwl12_cmap=cmap_dict["tasmax"],
+                       gwl12_cbar_extend= "both",
+                       gwl12_cbar_label= "temperature [\N{DEGREE SIGN}C]",
+                       gwl12_ticks= np.arange(8,43,2),
+                       ds_gwl15=ds_gwl15[var],
+                       ds_gwl20=ds_gwl20[var],
+                       ds_gwl30=ds_gwl30[var],
+                       regions = regions,
+                       title = "Average daily maximum temperature",
+                       cmap = cmap_dict["tas_anom"],
+                       ticks = np.arange(-0.5, 3.1, 0.5),
+                       cbar_label = "change in temperature [\N{DEGREE SIGN}C]",
+                       watermark="",
+                       orientation="horizontal",
+                       issued_date="",
+                       vcentre=0,
+                       outfile = "figures/FAQ_example_1plus3.png",
+                       )
+```
 
 ### How can I change the orientation (eg from vertical to horizontal) of the figures in a multipaneled plot?
-orientation
+For multi-panelled plots, we have provided a keyword `orientation` to easily change `"vertical"` stacked plots to `"horizontal"` aligned subplots. For four panelled plots there is also a `"square"` option for a 2-by-2 arrangement. 
+
+These options specify the axes grid, figsize, and location of titles etc.
+
+See [FAQ_example_orientation.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_orientation.ipynb) for an example.
 
 ### Can I use my own shapefiles to define regions?
-Yes, you can provide any shapefiles you like. We have provided some helpful Australian regions from /g/data/ia39, but the functions are flexible to take custom regions. 
+Yes, you can provide any shapefiles you like. Here is an example: [FAQ_example_custom_mask.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_custom_mask.ipynb).
+
+We have provided some helpful Australian regions from /g/data/ia39, but the functions are flexible to take custom regions. [See more about the provided shapefiles here](https://github.com/aus-ref-clim-data-nci/shapefiles/).
+You will need to define [regionmask regions](https://regionmask.readthedocs.io/en/stable/notebooks/mask_3D.html) with unique abbreviations and names
 
 ### I want to use a divergent colormap, but the neutral color isn't in the middle of my ticks. What can I do to align the centre of the colormap to zero?
-vcentre
+When we plot anomalies, it is best to use divergent colormaps. However, some climate change signals are highly skewed or only in one direction. For example, heat hazards are nearly always increasing. To use divergent colormaps, but not waste space in the color scale on large cool anomalies, we can use the "vcentre" key word to centre the neutral centre of the colormap at zero, but only show relevant ticks on the scale.
+
+See this notebook for an example: [FAQ_example_vcentre.ipynb](example_notebooks/FAQ_example_vcentre.ipynb)
 
 ### What does gwl mean?
 GWL describe global warming levels. These are 20 year periods centred on the year when a climate model is projected to reach a specified global surface temperature above the pre-industrial era. Global climate models reach these temperature thresholds at different years.
@@ -390,10 +456,14 @@ Find more information here https://github.com/AusClimateService/gwls
 The plotting functions have been designed to accommodate present and future global warming levels. This is indicated by argument names containing "gwl12", "gwl15", "gwl20", "gwl30". If you want to use the function for other time periods or scenarios, you can still use these functions. The functions will work for any data in the right format (eg 2D xarray data array with lat and lon).
 
 ### I am not using GWLs but I want to use these functions. How can I can the subtitles?
+The plotting functions have been designed to accommodate present and future global warming levels. This is indicated by argument names containing "gwl12", "gwl15", "gwl20", "gwl30". If you want to use the function for other time periods or scenarios, you can still use these functions. The functions will work for any data in the right format (eg 2D xarray data array with lat and lon).
 
+You can use `subplot_titles` to provide a list of titles for each subplot in your figure. You may also use this to suppress the default subplot titles, or label the plots differently.
+
+This example shows the subplot_title being renamed for sea level rise increments instead of GWLs: [FAQ_example_subplot_titles.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_subplot_titles.ipynb)
 
 ### I only want to plot data below 30S latitude, is there a mask for this?
-There is no specific mask for this, but it is easy to adjust your input to achieve this.
+There is no specific mask for this, but it is easy to adjust your input to achieve this. Here is a notebook to demonstrate [FAQ_example_cropo_mask.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_crop_mask.ipynb)
 
 If you just want to plot the data below 30S, you can use ```plot_acs_hazard(data=  ds.where(ds["lat"]<-30)[var] , ...)```
 ![image](https://github.com/user-attachments/assets/549ccef8-3aed-4dfa-9ee0-c08e225ab386)
