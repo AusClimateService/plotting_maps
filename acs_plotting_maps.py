@@ -566,7 +566,7 @@ def plot_data(regions=None,
             # if ticks are labelled or if there is one more tick than tick labels,
             # do the usual normalisation
             if tick_labels is None or (len(tick_labels) == len(ticks) - 1):
-                norm = BoundaryNorm(ticks, cmap.N, extend = cbar_extend)
+                norm = BoundaryNorm(ticks, cmap.N+1, extend = cbar_extend)
                 if tick_labels is not None:
                     middle_ticks = [
                         (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
