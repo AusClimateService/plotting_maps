@@ -1,0 +1,41 @@
+,gwl,abbrevs,names,min,median,max
+0,GWL12,WANorth,Western Australia North,51,58,71
+1,GWL12,WASouth,Western Australia South,25,29,33
+2,GWL12,NSW,New South Wales and Australian Capital Territory,8,10,12
+3,GWL12,VIC,Victoria,2,3,4
+4,GWL12,SA,South Australia,22,25,30
+5,GWL12,TAS,Tasmania,0,0,0
+6,GWL12,NT,Northern Territory,34,37,46
+7,GWL12,QLDNorth,Queensland North,11,14,17
+8,GWL12,QLDSouth,Queensland South,24,27,31
+9,GWL12,AUS,Australia,26,29,33
+10,GWL15,WANorth,Western Australia North,55,66,86
+11,GWL15,WASouth,Western Australia South,28,31,39
+12,GWL15,NSW,New South Wales and Australian Capital Territory,7,12,15
+13,GWL15,VIC,Victoria,2,4,5
+14,GWL15,SA,South Australia,24,28,36
+15,GWL15,TAS,Tasmania,0,0,0
+16,GWL15,NT,Northern Territory,38,43,58
+17,GWL15,QLDNorth,Queensland North,13,16,23
+18,GWL15,QLDSouth,Queensland South,24,32,39
+19,GWL15,AUS,Australia,29,34,42
+20,GWL20,WANorth,Western Australia North,68,79,110
+21,GWL20,WASouth,Western Australia South,35,40,47
+22,GWL20,NSW,New South Wales and Australian Capital Territory,9,15,19
+23,GWL20,VIC,Victoria,2,5,6
+24,GWL20,SA,South Australia,28,35,41
+25,GWL20,TAS,Tasmania,0,0,0
+26,GWL20,NT,Northern Territory,48,54,76
+27,GWL20,QLDNorth,Queensland North,17,22,32
+28,GWL20,QLDSouth,Queensland South,29,38,48
+29,GWL20,AUS,Australia,36,41,53
+30,GWL30,WANorth,Western Australia North,93,110,143
+31,GWL30,WASouth,Western Australia South,45,55,66
+32,GWL30,NSW,New South Wales and Australian Capital Territory,14,22,31
+33,GWL30,VIC,Victoria,4,7,10
+34,GWL30,SA,South Australia,39,46,58
+35,GWL30,TAS,Tasmania,0,0,0
+36,GWL30,NT,Northern Territory,69,82,104
+37,GWL30,QLDNorth,Queensland North,31,35,52
+38,GWL30,QLDSouth,Queensland South,44,55,69
+39,GWL30,AUS,Australia,50,59,71
