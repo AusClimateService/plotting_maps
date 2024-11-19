@@ -278,13 +278,16 @@ def acs_regional_stats(
     if start is not None and end is not None:
         # select GWL time slice
         ds = ds.sel(time=slice(str(start), str(end)))
-
+    
     # calculate weights due to latitude
     lat_weights = np.cos(np.deg2rad(ds["lat"]))
     # drop redundant coords
     redundant_coords = set(lat_weights.coords) - set(lat_weights.dims)
     lat_weights = lat_weights.drop_vars(redundant_coords)
-    mask = mask.drop_vars(redundant_coords)
+    try:
+        mask = mask.drop_vars(redundant_coords)
+    except:
+        pass
 
     # create your weighted 3D xr.Dataset
     if var is None:
@@ -297,6 +300,8 @@ def acs_regional_stats(
         except:
             print(f"Please enter var. One of {list(ds.keys())}")
             return None
+
+    ds[var].values = np.ma.masked_invalid(ds[var].values)
 
     ds_masked = ds.where(mask)[var]
     ds_weighted = ds[var].weighted(mask * lat_weights)
