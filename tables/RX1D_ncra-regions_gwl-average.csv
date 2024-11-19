@@ -1,41 +1,41 @@
 ,gwl,abbrevs,names,min,median,max
-0,GWL12,WANorth,Western Australia North,55.6,62.9,70.5
-1,GWL12,WASouth,Western Australia South,31.6,37.6,41.4
+0,GWL12,WANorth,Western Australia North,67.1,74.4,81.6
+1,GWL12,WASouth,Western Australia South,34.8,40.8,44.1
 2,GWL12,NSW,New South Wales and Australian Capital Territory,48.7,53.9,62.0
 3,GWL12,VIC,Victoria,41.0,46.2,49.4
-4,GWL12,SA,South Australia,29.5,34.2,40.4
+4,GWL12,SA,South Australia,30.8,36.4,43.0
 5,GWL12,TAS,Tasmania,52.5,55.6,58.8
-6,GWL12,NT,Northern Territory,59.8,69.1,79.5
+6,GWL12,NT,Northern Territory,61.9,71.1,82.0
 7,GWL12,QLDNorth,Queensland North,81.5,88.4,101.3
 8,GWL12,QLDSouth,Queensland South,53.5,59.0,69.8
-9,GWL12,AUS,Australia,50.8,56.5,61.8
-10,GWL15,WANorth,Western Australia North,55.8,64.2,72.6
-11,GWL15,WASouth,Western Australia South,34.1,37.2,43.0
+9,GWL12,AUS,Australia,54.0,59.2,65.4
+10,GWL15,WANorth,Western Australia North,63.7,75.0,83.0
+11,GWL15,WASouth,Western Australia South,36.4,40.4,45.6
 12,GWL15,NSW,New South Wales and Australian Capital Territory,49.9,54.7,65.5
 13,GWL15,VIC,Victoria,41.7,46.5,53.8
-14,GWL15,SA,South Australia,28.3,35.3,42.3
+14,GWL15,SA,South Australia,29.7,36.7,44.3
 15,GWL15,TAS,Tasmania,53.6,57.0,65.6
-16,GWL15,NT,Northern Territory,62.6,67.7,81.0
+16,GWL15,NT,Northern Territory,64.4,69.9,83.7
 17,GWL15,QLDNorth,Queensland North,76.4,86.0,103.3
 18,GWL15,QLDSouth,Queensland South,51.4,60.6,68.4
-19,GWL15,AUS,Australia,52.6,56.0,62.1
-20,GWL20,WANorth,Western Australia North,49.4,66.1,78.0
-21,GWL20,WASouth,Western Australia South,31.2,37.9,43.6
+19,GWL15,AUS,Australia,55.2,58.9,65.3
+20,GWL20,WANorth,Western Australia North,58.3,76.3,88.0
+21,GWL20,WASouth,Western Australia South,33.7,41.0,46.3
 22,GWL20,NSW,New South Wales and Australian Capital Territory,51.1,55.7,67.7
 23,GWL20,VIC,Victoria,41.7,47.1,58.7
-24,GWL20,SA,South Australia,30.3,34.5,45.7
+24,GWL20,SA,South Australia,32.0,36.1,47.3
 25,GWL20,TAS,Tasmania,54.8,57.4,66.2
-26,GWL20,NT,Northern Territory,54.7,71.1,83.4
+26,GWL20,NT,Northern Territory,56.3,73.3,85.6
 27,GWL20,QLDNorth,Queensland North,80.3,91.6,113.1
 28,GWL20,QLDSouth,Queensland South,55.2,61.7,68.0
-29,GWL20,AUS,Australia,48.5,58.5,64.6
-30,GWL30,WANorth,Western Australia North,55.5,71.6,90.9
-31,GWL30,WASouth,Western Australia South,33.3,40.1,48.2
+29,GWL20,AUS,Australia,51.5,61.7,67.8
+30,GWL30,WANorth,Western Australia North,64.5,82.4,107.3
+31,GWL30,WASouth,Western Australia South,34.9,42.6,50.3
 32,GWL30,NSW,New South Wales and Australian Capital Territory,51.1,61.8,73.1
 33,GWL30,VIC,Victoria,41.0,47.8,60.1
-34,GWL30,SA,South Australia,29.5,36.5,46.5
+34,GWL30,SA,South Australia,30.6,37.7,48.3
 35,GWL30,TAS,Tasmania,50.3,58.5,65.0
-36,GWL30,NT,Northern Territory,62.1,74.3,89.8
+36,GWL30,NT,Northern Territory,64.1,76.9,92.1
 37,GWL30,QLDNorth,Queensland North,85.0,98.2,116.3
 38,GWL30,QLDSouth,Queensland South,58.4,64.5,73.2
-39,GWL30,AUS,Australia,54.0,60.9,69.6
+39,GWL30,AUS,Australia,56.8,64.2,72.7

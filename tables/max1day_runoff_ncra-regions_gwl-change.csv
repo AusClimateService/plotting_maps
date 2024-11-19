@@ -1,0 +1,31 @@
+,gwl,abbrevs,names,min,median,max
+0,1.5-1.2,WANorth,Western Australia North,-49.1,-6.1,313.6
+1,1.5-1.2,WASouth,Western Australia South,-59.5,18.6,252.5
+2,1.5-1.2,NSW,New South Wales and Australian Capital Territory,-18.8,27.1,200.8
+3,1.5-1.2,VIC,Victoria,-38.0,-2.9,211.5
+4,1.5-1.2,SA,South Australia,-47.3,7.4,224.5
+5,1.5-1.2,TAS,Tasmania,-27.4,7.8,50.6
+6,1.5-1.2,NT,Northern Territory,-64.6,13.1,653.1
+7,1.5-1.2,QLDNorth,Queensland North,-61.8,68.1,1158.9
+8,1.5-1.2,QLDSouth,Queensland South,-45.6,16.2,355.7
+9,1.5-1.2,AUS,Australia,-36.5,4.0,327.3
+10,2-1.2,WANorth,Western Australia North,-82.9,36.0,342.8
+11,2-1.2,WASouth,Western Australia South,-61.0,3.6,135.6
+12,2-1.2,NSW,New South Wales and Australian Capital Territory,-42.6,32.8,274.8
+13,2-1.2,VIC,Victoria,-61.6,18.1,123.9
+14,2-1.2,SA,South Australia,-79.5,35.3,353.7
+15,2-1.2,TAS,Tasmania,-22.0,-3.5,51.4
+16,2-1.2,NT,Northern Territory,-74.2,58.7,470.1
+17,2-1.2,QLDNorth,Queensland North,-83.0,51.7,411.9
+18,2-1.2,QLDSouth,Queensland South,-69.5,37.4,320.2
+19,2-1.2,AUS,Australia,-66.8,48.1,273.8
+20,3-1.2,WANorth,Western Australia North,-82.3,7.4,244.4
+21,3-1.2,WASouth,Western Australia South,-67.5,11.3,257.4
+22,3-1.2,NSW,New South Wales and Australian Capital Territory,-32.0,47.3,297.7
+23,3-1.2,VIC,Victoria,-70.0,0.6,144.5
+24,3-1.2,SA,South Australia,-61.4,5.6,430.0
+25,3-1.2,TAS,Tasmania,-31.3,5.5,149.1
+26,3-1.2,NT,Northern Territory,-75.4,34.0,836.4
+27,3-1.2,QLDNorth,Queensland North,-69.5,84.6,1159.3
+28,3-1.2,QLDSouth,Queensland South,-59.9,55.7,487.7
+29,3-1.2,AUS,Australia,-57.2,53.5,421.5
