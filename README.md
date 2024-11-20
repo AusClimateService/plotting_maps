@@ -639,6 +639,7 @@ plot_acs_hazard(data=data[var],
 ### Can I use my own shapefiles to define regions?
 <details>
  <summary> Expand </summary>
+ 
 Yes, you can provide any shapefiles you like. Here is an example: [FAQ_example_custom_mask.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_custom_mask.ipynb).
 
 We have provided some helpful Australian regions from /g/data/ia39, but the functions are flexible to take custom regions. [See more about the provided shapefiles here](https://github.com/aus-ref-clim-data-nci/shapefiles/).
@@ -705,27 +706,41 @@ regions = regionmask.from_geopandas(gdf,
 <details>
  <summary> Expand </summary>
 
- Updated 19 Nov 2020: New update allows for statistics on NaNs and infinite values by applying the following.
+Be careful when calculating statistics over areas with many missing data. Investigate your own data and make sure that the statistics are still meaningful when the non-finite values are ignored. Depending on your data, consider filling missing data with a value (eg 0) if that results in more representative statistics. 
+
+New update (19 Nov 2020) allows for statistics on NaNs and infinite values by applying the following.
 
  ```python
     ds[var].values = np.ma.masked_invalid(ds[var].values)
 ```
 
 Previously, some of the statistics would not work if you had NaNs. eg mean, std, var
+
 </details>
 
 ### How do I calculate statistics for categorical data? 
 <details>
  <summary> Expand </summary>
+ 
 Different types of data need different tools to summarise the data. For example, some data is not numerical but is defined as a class or category eg ["forest", "grassland", "arid"]. We cannot calculate a `sum` or `mean` of different classes.
 Categorical statistics include the `mode` (most common category) and `proportion` (proportion of each category relative to the whole).
 If there is an order to the classes eg ["low", "moderate", "high", "extreme"], we can also calculate `min`, `median`, and `max` values.
+
+[plotting_and_stats_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/plotting_and_stats_examples.ipynb) shows examples of plotting and calculating statistics of categorical data.
+
 </details>
 
 ### Calculating time series using acs_regional_stats
 <details>
  <summary> Expand </summary>
-use the dims keyword and don't include "time". This may be very memory intensive depending on your data size.
+ 
+Although many examples for applying acs_regional_stats use dims=("lat", "lon") to reduce 2D data to regional averages, the function is very flexible. For example, if you have a time dimension, then you can calculate regional averaged (or min/median/max/any stat) time series by excluding time "time" dimension from the dims tuple. This may be very memory intensive depending on your data size, so  request lots of memory if you need to.
+
+
+Future development will look to manage memory more effectively.
+
+An example of extracting time series from point locations can be found here: https://github.com/AusClimateService/TimeSeriesExtraction
+
 </details>
 
 
