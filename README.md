@@ -347,7 +347,8 @@ For example only, this would make a dataframe in this format:
 ### Where can I find some worked examples to get started?
 <details>
  <summary> Expand </summary>
-I have collected [example_notebooks](https://github.com/AusClimateService/plotting_maps/tree/main/example_notebooks) which contain examples of creating plots with a variety of hazards and using a range of functionalities available.
+ 
+I have collected [example notebooks](https://github.com/AusClimateService/plotting_maps/tree/main/example_notebooks) which contain examples of creating plots with a variety of hazards and using a range of functionalities available.
 
 Notebooks used to make plots for specific requests and reports can be found under [reports](https://github.com/AusClimateService/plotting_maps/tree/main/reports). These are good references for the range of plots we can create using these functions and you are welcome to look through them and copy code you like. 
 
@@ -365,37 +366,46 @@ Statistic examples:
 * Basic example of acs_regional_stats [area_statistics_example.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/area_statistics_example.ipynb)
 * Region and ensemble member mean table for NCRA regions [ensemble-table.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/ensemble-table.ipynb)
 * Using acs_regional_stats to calculate area averages with custom regions [area_statistics_example_basin_gpkg.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/area_statistics_example_basin_gpkg.ipynb)
+
 </details>
 
 ### Something is not working and I don't know why!
 <details>
  <summary> Expand </summary>
+ 
 Here are some common suggestions for troubleshooting: 
- -	see “getting started” above and make sure you have followed all the instructions
- -	Check you are using the right venv. This code is designed to work with hh5 analysis3-24.04 virtual environment.
- -	Restart the kernel and rerun all cells from start. Especially if you have made a variety of modifications, you may have renamed a function/variable.
- -	If python can't find the module, check you have the .py module in your working directory. If not cd to the directory with the module.
- -	Make sure you have requested access to all the right gdata projects (eg gdata/ia39)
+ 
+ *	see “getting started” above and make sure you have followed all the instructions
+ *	Check you are using the right venv. This code is designed to work with hh5 analysis3-24.04 virtual environment.
+ *	Restart the kernel and rerun all cells from start. Especially if you have made a variety of modifications, you may have renamed a function/variable.
+ *	If python can't find the module, check you have the .py module in your working directory. If not cd to the directory with the module.
+ *	Make sure you have requested access to all the right gdata projects (eg gdata/ia39)
+   
 </details>
 
 ### An argument I have used before using this code no longer works. What's happening?
 <details>
  <summary> Expand </summary>
+ 
 During development, priorities and requests have changed what the functions needed to do. As a result, there are a few deprecated features and functionalities. Some things that were needed that are now not required:
- -	 “show_logo”, it was initially requested to have an ACS logo in the figures. The comms team now prefers only the copywrite in the bottom
- -	Contour and contourf are generally not recommended now due to errors in plotting and long computational time. They are left in the function because they can be useful for lower resolution data, eg ocean data.
- -	“infile” is not used. The idea was to use this for well-organised data with a consistent DRS to enable a good plot to be made without lots of keyword inputs. The data we have is not organised consistently enough for this.
- -	“regions_dict” in acs_plotting_maps.py made to module very slow to load Shapefiles can take many seconds to load. It is inefficient to load all these regions even when you don’t use them all. This was replaced with a class
- -	“regions” in acs_area_stats had preloaded shapefiles. Shapefiles can take many seconds to load. It is inefficient to load all these regions even when you don’t use them all. This was replaced with “get_regions”
+
+ *	 “show_logo”, it was initially requested to have an ACS logo in the figures. The comms team now prefers only the copywrite in the bottom
+ *	Contour and contourf are generally not recommended now due to errors in plotting and long computational time. They are left in the function because they can be useful for lower resolution data, eg ocean data.
+ *	“infile” is not used. The idea was to use this for well-organised data with a consistent DRS to enable a good plot to be made without lots of keyword inputs. The data we have is not organised consistently enough for this.
+ *	“regions_dict” in acs_plotting_maps.py made to module very slow to load Shapefiles can take many seconds to load. It is inefficient to load all these regions even when you don’t use them all. This was replaced with a class
+ *	“regions” in acs_area_stats had preloaded shapefiles. Shapefiles can take many seconds to load. It is inefficient to load all these regions even when you don’t use them all. This was replaced with “get_regions”
+   
 ```python
  from acs_area_statistics import acs_regional_stats, get_regions
 regions = get_regions(["ncra_regions", "australia"])
 ```
+
 </details>
 
 ### How can I add stippling (hatching) to plots to indicate model agreement?
 <details>
  <summary> Expand </summary>
+ 
 The plotting scripts can add stippling to the plots using the stippling keyword(s). [Here is a notebook showing examples of using stippling](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_stippling.ipynb).
 
 You will need to calculate the mask and provide this as a dataarray with "lat" and "lon". The mask must be a True/False boolean mask. It does not have to be the same resolution as the underlying data (you may wish to coarsen the mask if the underlying data is high-resolution and noisy).
@@ -428,21 +438,25 @@ plot_acs_hazard_4pp(ds_gwl12=ds_gwl12[var],
                     issued_date="",
                     );
 ```
+
 </details>
 
 ### Why is the stippling weird?
 <details>
  <summary> Expand </summary>
+ 
 You may need to check that the stippling is in the areas you expect it to be. There is a bug in contourf that causes the stippling to get confused when plotting noisy high-resolution mask. If that is the case, I recommend coarsening the stippling mask 
 E.g. 
 new_stippling_mask =  stippling_mask.coarsen(lat=2, boundary="pad").mean().coarsen(lon=2, boundary="pad").mean()>0.4
 
 (full example here https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb)
+
 </details>
 
 ### Is there a way to use the 4pp plot with the average conditions for GWL1.2 and the change % for GWL1.5 to GWL3? Or does it only work for plots that use a consistent colourbar?
 <details>
  <summary> Expand </summary>
+ 
 `plot_acs_hazard_1plus3` is a specific version of the plotting function to address this situation. While `plot_acs_hazard_4pp` assumes a shared colorbar and scale for all four maps, `plot_acs_hazard_1plus3` provides additional key word arguments to define a separate colorbar and scale for the first plot (as a baseline), while the last three figures share a different colorbar and scale.  
 
 See example here: [FAQ_example_4pp_1plus3.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_4pp_1plus3.ipynb)
@@ -487,11 +501,13 @@ plot_acs_hazard_1plus3(ds_gwl12=ds_gwl12[var],
                        outfile = "figures/FAQ_example_1plus3.png",
                        )
 ```
+
 </details>
 
 ### How can I change the orientation (eg from vertical to horizontal) of the figures in a multipaneled plot?
 <details>
  <summary> Expand </summary>
+ 
 For multi-panelled plots, we have provided a keyword `orientation` to easily change `"vertical"` stacked plots to `"horizontal"` aligned subplots. For four panelled plots there is also a `"square"` option for a 2-by-2 arrangement. 
 
 These options specify the axes grid, figsize, and location of titles etc.
@@ -499,26 +515,21 @@ These options specify the axes grid, figsize, and location of titles etc.
 See [FAQ_example_orientation.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_orientation.ipynb) for an example.
 </details>
 
-### Can I use my own shapefiles to define regions?
-<details>
- <summary> Expand </summary>
-Yes, you can provide any shapefiles you like. Here is an example: [FAQ_example_custom_mask.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_custom_mask.ipynb).
-
-We have provided some helpful Australian regions from /g/data/ia39, but the functions are flexible to take custom regions. [See more about the provided shapefiles here](https://github.com/aus-ref-clim-data-nci/shapefiles/).
-You will need to define [regionmask regions](https://regionmask.readthedocs.io/en/stable/notebooks/mask_3D.html) with unique abbreviations and names
-</details>
 
 ### I want to use a divergent colormap, but the neutral color isn't in the middle of my ticks. What can I do to align the centre of the colormap to zero?
 <details>
  <summary> Expand </summary>
+ 
 When we plot anomalies, it is best to use divergent colormaps. However, some climate change signals are highly skewed or only in one direction. For example, heat hazards are nearly always increasing. To use divergent colormaps, but not waste space in the color scale on large cool anomalies, we can use the "vcentre" key word to centre the neutral centre of the colormap at zero, but only show relevant ticks on the scale.
 
 See this notebook for an example: [FAQ_example_vcentre.ipynb](example_notebooks/FAQ_example_vcentre.ipynb)
+
 </details>
 
 ### What does gwl mean?
 <details>
  <summary> Expand </summary>
+ 
 GWL describe global warming levels. These are 20 year periods centred on the year when a climate model is projected to reach a specified global surface temperature above the pre-industrial era. Global climate models reach these temperature thresholds at different years.
 
 For example, the Paris Agreement (2012) refers to global warming levels in its aims:
@@ -528,21 +539,25 @@ For example, the Paris Agreement (2012) refers to global warming levels in its a
 Find more information here https://github.com/AusClimateService/gwls
 
 The plotting functions have been designed to accommodate present and future global warming levels. This is indicated by argument names containing "gwl12", "gwl15", "gwl20", "gwl30". If you want to use the function for other time periods or scenarios, you can still use these functions. The functions will work for any data in the right format (eg 2D xarray data array with lat and lon).
+
 </details>
 
 ### I am not using GWLs but I want to use these functions. How can I change the subtitles?
 <details>
  <summary> Expand </summary>
+ 
 The plotting functions have been designed to accommodate present and future global warming levels. This is indicated by argument names containing "gwl12", "gwl15", "gwl20", "gwl30". If you want to use the function for other time periods or scenarios, you can still use these functions. The functions will work for any data in the right format (eg 2D xarray data array with lat and lon).
 
 You can use `subplot_titles` to provide a list of titles for each subplot in your figure. You may also use this to suppress the default subplot titles, or label the plots differently.
 
 This example shows the subplot_title being renamed for sea level rise increments instead of GWLs: [FAQ_example_subplot_titles.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_subplot_titles.ipynb)
+
 </details>
 
 ### I only want to plot data below 30S latitude, is there a mask for this?
 <details>
  <summary> Expand </summary>
+ 
 There is no specific mask for this, but it is easy to adjust your input to achieve this. Here is a notebook to demonstrate [FAQ_example_cropo_mask.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_crop_mask.ipynb)
 
 If you just want to plot the data below 30S, you can use ```plot_acs_hazard(data=  ds.where(ds["lat"]<-30)[var] , ...)```
@@ -581,11 +596,13 @@ var="low_freq"
 df_summary = acs_regional_stats(ds=ds,var=var, mask=mask, dims = dims, how = ["min", "median", "max"])
 df_summary
 ```
+
 </details>
 
 ### How may I plot gridded data and station data on the same figure?
 <details>
  <summary> Expand </summary>
+ 
 You can plot gridded data and station data on the same plot if they share the same colorscale and ticks. All you need to do is provide valid `data` and `station_df`. Similarly, this is possible for multipanelled plots. 
  
 ```python
@@ -616,18 +633,85 @@ plot_acs_hazard(data=data[var],
                vcentre=0)
 ```
 <img src="https://github.com/user-attachments/assets/0b641920-cc7d-46f1-b928-180a8212770b" width="500">
+
+</details>
+
+### Can I use my own shapefiles to define regions?
+<details>
+ <summary> Expand </summary>
+Yes, you can provide any shapefiles you like. Here is an example: [FAQ_example_custom_mask.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_custom_mask.ipynb).
+
+We have provided some helpful Australian regions from /g/data/ia39, but the functions are flexible to take custom regions. [See more about the provided shapefiles here](https://github.com/aus-ref-clim-data-nci/shapefiles/).
+You will need to define [regionmask regions](https://regionmask.readthedocs.io/en/stable/notebooks/mask_3D.html) with unique abbreviations and names
+
 </details>
 
 ### Can I use any regions for the acs_regional_stats statistics function?
 <details>
  <summary> Expand </summary>
-Yes, provide any mask for your data. The more regions, the slower and 
+ 
+Yes, provide any mask for your data. Calculation take more memory and time when more regions are provided. For example, 500 local government areas require much more memory than calculating statistics for 10 State areas.
+
+[FAQ_example_custom_mask.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_custom_mask.ipynb) describes defining a mask froma shape file then applying the acs_regional_stats function.
+
+Depending on the format of the original shapefile, you may need to preprocess the regions to be in  the correct format, for example, defining the names of the names and abbrevs columns, and ensuring unique index.
+
+```python
+# you need to rename the "name" column and "abbrevs" column
+# have a look at the table and see what makes sense, for example:
+name_column = "regionname"
+abbr_column = "short_name"
+
+# specify the name of the geopandas dataframe. any str
+shapefile_name = "custom_regions"
+
+# update the crs to lats and lons. Some original shapefiles will use northings etc 
+gdf =gdf.to_crs(crs = "GDA2020")
+
+# ensure the index has unique values from zero
+gdf.index = np.arange(0, len(gdf))
+
+regions= regionmask.from_geopandas(gdf,
+                                   names=name_column, 
+                                   abbrevs=abbr_column, 
+                                   name=shapefile_name,
+                                   overlap=True)
+```
+
+You may also need to change the CRS to "lat" and "lon". You may also need to create uniqueness by "dissolving" repeated named areas. In [area_statistics_example_basin_gpkg.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/area_statistics_example_basin_gpkg.ipynb), the geometries are read from a *.gpkg, the northings/eastings need to be converted to lat and lons, and dissolve is used to create uniquely named regions.
+
+```python
+# read in the data for the areas to average across
+gdf = gpd.read_file("/g/data/mn51/users/ah7841/NCBLevel2DrainageBasinGroup_gda2020_v01.gpkg")
+
+#convert geometry to lat lon (from northings)
+gdf.geometry = gdf.geometry.to_crs("EPSG:4326")
+
+# There are duplicated of IDs. Merge geometries with the same IDs
+gdf = gdf.dissolve(by="HydroID").reset_index()
+
+# use the geopandas dataframe to make a regionmask object
+# you will need to change the names, abbrevs and, name for your custom file. 
+regions = regionmask.from_geopandas(gdf, 
+                                    names= "Level2Name",
+                                    abbrevs= "HydroID",
+                                    name="NCBLevel2DrainageBasinGroup_gda2020_v01", 
+                                    overlap=True)
+```
+
 </details>
 
-### Can I use acs_regional_stats for NaNs?
+### Can I use acs_regional_stats for NaNs and infinite values?
 <details>
  <summary> Expand </summary>
-Some of the statistics will not work if you have NaNs. eg mean, std, var
+
+ Updated 19 Nov 2020: New update allows for statistics on NaNs and infinite values by applying the following.
+
+ ```python
+    ds[var].values = np.ma.masked_invalid(ds[var].values)
+```
+
+Previously, some of the statistics would not work if you had NaNs. eg mean, std, var
 </details>
 
 ### How do I calculate statistics for categorical data? 
