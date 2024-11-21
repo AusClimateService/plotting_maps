@@ -19,6 +19,7 @@ import cmaps
 from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
 
 from shapely.geometry import box
+import shapely
 
 import matplotlib as mpl
 mpl.rcParams['hatch.linewidth'] = 0.3 
@@ -249,7 +250,7 @@ class RegionShapefiles:
                 # the data under the masked area is still loaded and computed, but not visualised
                 base_name = name[4:]  # Remove 'not_' prefix
                 base_region = self(base_name).copy()
-                base_region.crs = crs
+                base_region = base_region.to_crs(crs = "GDA2020")
                 # This mask is a rectangular box around the maximum land extent of Australia
                 # with a buffer of 20 degrees on every side,
                 # with the Australian land area cut out, only the ocean is hidden.
@@ -310,6 +311,9 @@ australia = regions_dict["australia"].copy()
 
 # Define the CRS of the shapefile manually
 australia = australia.to_crs(crs = "GDA2020")
+
+tolerance = 0.001 # approx 100 m resolution
+australia[["geometry"]] =shapely.simplify(australia[["geometry"]], tolerance)
 
 # This mask is a rectangular box around the maximum land extent of Australia
 # with a buffer of 10 degrees on every side,
