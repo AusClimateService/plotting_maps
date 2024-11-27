@@ -768,6 +768,7 @@ This code is being used actively by a range of teams. Take care to maintain back
 ## TODO
 <details>
  <summary> Expand </summary>
+ 
 **Figures to make:**
 -	SLR observations with station data. For the Climate Hazards report, recreate the sea level observations of gridded ocean data and station data in the same plot.
 -	Lightning plot. For the Climate Hazards report, recreate the lightning observations plot using the plot_acs_hazards function so that it is in the consistent format.
@@ -777,17 +778,18 @@ This code is being used actively by a range of teams. Take care to maintain back
 -	“release” this version of the code as v1.0.0. It is in wide use and care is being taken to keep backward compatibility while adding features. Eg see https://github.com/AusClimateService/plotting_maps/releases/new
 
 **Improve plotting function and axillaries:**
--	Improve the aesthetics and proportions of plotting, especially with dataset/date_range/baseline annotations. Design aesthetics where focused on vertical orientations for 4 panel plots without these annotations for a particular report.
+-	Improve the aesthetics and proportions of plotting, especially with dataset/date_range/baseline annotations. Design aesthetics were focused on vertical orientations for 4-panel plots without these annotations for a particular report.
 -	Improve the aesthetics of plotting select_area. Eg remove boundaries of neighbouring regions (if desired)
--	Try plotting Antarctica and see what settings work. Especially xlim, ylim, projection. I think this code should work for any region of the world, with the right settings.
+-	Try plotting Antarctica and see what settings work. Especially xlim, ylim, projection. This code should work for any region of the world, with the right settings.
 -	Forest mask for forested areas. For example, FFDI is not useful in places where there is not connected vegetation/fuel. This is probably particularly for arid desert areas of central Australia. Changes in climate and land use may cause changes over time.
--	Improve colormap for fire climate classes. This colour scheme is not completely colourblind friendly. Perhaps modify the colours to increase the contrast. 
--	Enable rotating all labels and tick labels so that they are horizontal (easier to read). May need to reduce the labels to every second increment. Eg for temperature.
--	Create dictionaries for each hazard to enable automation of figures. Eg, use one keyword to select titles, colormaps and ticks.
+-	Improve colormap for fire climate classes. This colour scheme is not completely colourblind-friendly. Perhaps modify the colours to increase the contrast. 
+-	Enable rotating all labels and tick labels so that they are horizontal (easier to read). We may need to reduce the labels to every second increment. Eg for temperature.
+-	Create dictionaries for each hazard to enable the automation of figures. Eg, use one keyword to select titles, colormaps and ticks.
 -	Possibly automate the scaling of the colourbar to the data limits of the plot. (I am personally against this idea. Let's come up with standard colormaps and colourscales so that all figures of that one variable or hazard have a standard and comparable scale.)\
 -	Possibly automate the arrows of the colourbar. (I don’t think the arrows on the colorbar should be determined by the data in the plot, I think they should be only limited by possible physical values of that metric so that all colourbars of that metric are comparable. Determine if you want the arrows to be determined by the plotting data or the metric’s possible physical values.)
 -	If hazard data had consistent file naming practices (DRS) and consistent attribute labels, then the plotting functions could be further automated. At the moment, the data files are named in different patterns, the files might have different names for coordinates (eg “time”, “lat”, “lon”)
 -	Use a keyword to make plots appropriate for different uses eg journal, report, powerpoint, poster etc similar to https://seaborn.pydata.org/generated/seaborn.set_context.html
+-	Simplify stored shapefiles or masks. Current masks are 1mm precision, this means that calculations with these regions are more intense than necessary. Most climate data is in the order of ~10 km (rarely ~100 m). Simplifying the geometries of the shapefiles can save lots of resources for no loss in results. 
 
 **New plotting function:**
 -	Fully flexible custom n x m grid of plots. At the moment, minor modifications within multiplot are needed to make a custom plot for new layouts. It may be possible to make a function that can take in dimensions and a list of dataarrays to make a figure of many plots. This should use a similar format to the existing multi-panel plots and allow plotting gridded data, station data, stippling, ocean data, etc.
