@@ -652,7 +652,26 @@ Yes, you can provide any shapefiles you like. Here is an example: [FAQ_example_c
 We have provided some helpful Australian regions from /g/data/ia39, but the functions are flexible to take custom regions. [See more about the provided shapefiles here](https://github.com/aus-ref-clim-data-nci/shapefiles/).
 You will need to define [regionmask regions](https://regionmask.readthedocs.io/en/stable/notebooks/mask_3D.html) with unique abbreviations and names
 
+You may have region data in other formats. [area_statistics_example_basin_gpkg.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/area_statistics_example_basin_gpkg.ipynb) is an example using custom regions defined by a GeoPackage (GPKG). 
+
 </details>
+
+### Can I plot Antarctica or other non-Australian areas of the world?
+<details>
+ <summary> Expand </summary>
+ 
+Yes, although `acs_plotting_maps` is designed to plot Australian hazard data, the functions are flexible to plot data for any area of the world. 
+
+For example, to plot Antarctica, you must adjust `xlim`, `ylim` and `projection`. In [FAQ_example_antarctica.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_antarctica.ipynb), we use `projection=ccrs.SouthPolarStereo()` for a polar projection as used by the Bureau of Meteorology for Southern Hemisphere maps. Limit the longitude and latitude with `xlim=(-180, 180)` and `ylim=(-90, -60)`. To plot the outline of the Antarctic continent (and other coastlines), set `coastlines = True`.
+
+![Antarctica_sst_climatology](https://github.com/user-attachments/assets/bbdbdf45-173f-4dee-9441-c842b0723dd7)
+
+In a similar way you can Europe by setting `coastlines=True`, `xlim=(-15, 45)`, `ylim=(30, 70)`, and `projection=ccrs.AlbersEqualArea(15, 50)`. See [FAQ_example_antarctica.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_antarctica.ipynb) for the full code to recreate this plot.
+
+![Europe-sst_climatology](https://github.com/user-attachments/assets/ae0e52dd-240f-4438-9dcb-26951ed51ea6)
+
+</details>
+
 
 ### Can I use any regions for the acs_regional_stats statistics function?
 <details>
@@ -774,7 +793,7 @@ b) When you use acs_regional_stats to reduce the data with ```dims = ("lat", "lo
 da_summary =  acs_regional_stats(ds=ds, var=var, mask = mask, dims = ("lat", "lon", "model",), how = ["mean"],)
 ```
 
-https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_timeseries_stats_for_ensemble_region.ipynb
+[FAQ_example_timeseries_stats_for_ensemble_region.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_timeseries_stats_for_ensemble_region.ipynb) shows example of calculating regional means over multidimensional data.
 
 </details>
 
@@ -798,17 +817,14 @@ A range of teams are actively using this code. Take care to maintain backward co
  <summary> Expand </summary>
  
 **Figures to make:**
--	SLR observations with station data. For the Climate Hazards report, recreate the sea level observations of gridded ocean data and station data in the same plot.
 -	Lightning plot. For the Climate Hazards report, recreate the lightning observations plot using the plot_acs_hazards function so that it is in the consistent format.
 
 **Documentation:**
--	Clear tutorials for how to use different functionalities
 -	“release” this version of the code as v1.0.0. It is in wide use and care is being taken to keep backward compatibility while adding features. Eg see https://github.com/AusClimateService/plotting_maps/releases/new
 
 **Improve plotting function and axillaries:**
 -	Improve the aesthetics and proportions of plotting, especially with dataset/date_range/baseline annotations. Design aesthetics were focused on vertical orientations for 4-panel plots without these annotations for a particular report.
 -	Improve the aesthetics of plotting select_area. Eg remove boundaries of neighbouring regions (if desired)
--	Try plotting Antarctica and see what settings work. Especially xlim, ylim, projection. This code should work for any region of the world, with the right settings.
 -	Forest mask for forested areas. For example, FFDI is not useful in places where there is not connected vegetation/fuel. This is probably particularly for arid desert areas of central Australia. Changes in climate and land use may cause changes over time.
 -	Improve colormap for fire climate classes. This colour scheme is not completely colourblind-friendly. Perhaps modify the colours to increase the contrast. 
 -	Enable rotating all labels and tick labels so that they are horizontal (easier to read). We may need to reduce the labels to every second increment. Eg for temperature.
