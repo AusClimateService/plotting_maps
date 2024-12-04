@@ -11,9 +11,9 @@ The code has been developed to be flexible and functional for different hazards;
 
 Figures have been developed to align with ACS design guidelines and IPCC standards, where possible and applicable.
 
-This work has been developed with advice from ACS, CSIRO, and BOM scientists, ACS communication teams, and stakeholders.
+This work was developed with advice from ACS, CSIRO, BOM scientists, ACS communication teams, and stakeholders.
 
-This repo has been developed by Gen Tolhurst (gentolhurst@gmail.com or Gen.Tolhurst@bom.gov.au) and supervised by Mitch Black (Mitchell.Black@bom.gov.au). Work has been undertaken from May 2024 to October 2024.\
+This repo has been developed by Gen Tolhurst (gentolhurst@gmail.com or Gen.Tolhurst@bom.gov.au) and supervised by Mitch Black (Mitchell.Black@bom.gov.au). Work has been undertaken from May 2024 to December 2024.\
 Funded by ACS.
 
 ## What's possible?
@@ -23,7 +23,7 @@ Funded by ACS.
 <details>
  <summary> Expand </summary>
  
-There's many possibilities built into this function. ```plot_acs_hazard``` is the single plot function. Multiple plots can be made in the same figure using ```plot_acs_hazard_2pp```, ```plot_acs_hazard_3pp```, ```plot_acs_hazard_4pp```, and ```plot_acs_hazard_1plus3```; these multi-panel plots have the same functionalities as the single plot function.
+There are many possibilities built into this function. ```plot_acs_hazard``` is the single plot function. Multiple plots can be made in the same figure using ```plot_acs_hazard_2pp```, ```plot_acs_hazard_3pp```, ```plot_acs_hazard_4pp```, and ```plot_acs_hazard_1plus3```; these multi-panel plots have the same functionalities as the single plot function.
 
 To access docstrings and learn about input arguments, use ```plot_acs_hazard?```. This will describe each parameter you can give to the function to customise your plot.
 
@@ -62,6 +62,7 @@ To access docstrings and learn about input arguments, use ```plot_acs_hazard?```
 
 <details>
  <summary> Expand </summary>
+ 
 Using suggested colormaps and scales will improve the consistency across teams producing similar variables. This will support comparison across different plots.
 
 Most colours have been tested for common red-green colorblindness eg Deuteranopia. [Coblis](https://www.color-blindness.com/coblis-color-blindness-simulator/) is a handy tool to understand what your plots look like with a range of colorblind types.
@@ -129,7 +130,9 @@ dict_keys(['aus_local_gov', 'aus_states_territories', 'australia', 'nrm_regions'
 ### other
 <details>
  <summary> Expand </summary>
+ 
 See the github “issues” https://github.com/AusClimateService/plotting_maps/issues?q=is%3Aissue for some history of added functionality etc.
+
 </details>
 
 ## Getting started:
@@ -137,6 +140,7 @@ See the github “issues” https://github.com/AusClimateService/plotting_maps/i
 ### Python environment
 <details>
  <summary> Expand </summary>
+ 
 This code is designed to work with hh5 analysis3-24.04 virtual environment.
 
 In your terminal, this may look like:
@@ -154,6 +158,7 @@ When starting a new ARE JupyterLab session (https://are.nci.org.au/pun/sys/dashb
 ### Access shapefiles
 <details>
  <summary> Expand </summary>
+ 
 This code references shapefiles stored in ```/g/data/ia39/```. You will need to be a member of this project to access the data. Request membership https://my.nci.org.au/mancini/project/ia39
 
 See https://github.com/aus-ref-clim-data-nci/shapefiles for more information on the shapefiles.
@@ -166,6 +171,7 @@ Include the projects you need when you start an ARE session. Eg, storage: "gdata
 ### Cloning this repo
 <details>
  <summary> Expand </summary>
+ 
 Before you can ```import acs_plotting_maps``` to use the plotting function ```plot_acs_hazard```, you will need to clone a copy of this repository to your own working directory.
 
 If you are working in your home directory, navigate there:
@@ -193,6 +199,7 @@ You will now be able to access the functions, python scripts, and Jupyter notebo
 ### Update to the lastest version of the repo (pull)
 <details>
  <summary> Expand </summary>
+ 
 Navigate to your existing version of the plotting maps repository (if you don't have an existing version, follow the above directions for cloning).
 
 ```
@@ -645,7 +652,26 @@ Yes, you can provide any shapefiles you like. Here is an example: [FAQ_example_c
 We have provided some helpful Australian regions from /g/data/ia39, but the functions are flexible to take custom regions. [See more about the provided shapefiles here](https://github.com/aus-ref-clim-data-nci/shapefiles/).
 You will need to define [regionmask regions](https://regionmask.readthedocs.io/en/stable/notebooks/mask_3D.html) with unique abbreviations and names
 
+You may have region data in other formats. [area_statistics_example_basin_gpkg.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/area_statistics_example_basin_gpkg.ipynb) is an example using custom regions defined by a GeoPackage (GPKG). 
+
 </details>
+
+### Can I plot Antarctica or other non-Australian areas of the world?
+<details>
+ <summary> Expand </summary>
+ 
+Yes, although `acs_plotting_maps` is designed to plot Australian hazard data, the functions are flexible to plot data for any area of the world. 
+
+For example, to plot Antarctica, you must adjust `xlim`, `ylim` and `projection`. In [FAQ_example_antarctica.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_antarctica.ipynb), we use `projection=ccrs.SouthPolarStereo()` for a polar projection as used by the Bureau of Meteorology for Southern Hemisphere maps. Limit the longitude and latitude with `xlim=(-180, 180)` and `ylim=(-90, -60)`. To plot the outline of the Antarctic continent (and other coastlines), set `coastlines = True`.
+
+![Antarctica_sst_climatology](https://github.com/user-attachments/assets/bbdbdf45-173f-4dee-9441-c842b0723dd7)
+
+In a similar way you can Europe by setting `coastlines=True`, `xlim=(-15, 45)`, `ylim=(30, 70)`, and `projection=ccrs.AlbersEqualArea(15, 50)`. See [FAQ_example_antarctica.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_antarctica.ipynb) for the full code to recreate this plot.
+
+![Europe-sst_climatology](https://github.com/user-attachments/assets/ae0e52dd-240f-4438-9dcb-26951ed51ea6)
+
+</details>
+
 
 ### Can I use any regions for the acs_regional_stats statistics function?
 <details>
@@ -653,7 +679,7 @@ You will need to define [regionmask regions](https://regionmask.readthedocs.io/e
  
 Yes, provide any mask for your data. Calculation take more memory and time when more regions are provided. For example, 500 local government areas require much more memory than calculating statistics for 10 State areas.
 
-[FAQ_example_custom_mask.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_custom_mask.ipynb) describes defining a mask froma shape file then applying the acs_regional_stats function.
+[FAQ_example_custom_mask.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_custom_mask.ipynb) describes defining a mask from a shape file then applying the acs_regional_stats function.
 
 Depending on the format of the original shapefile, you may need to preprocess the regions to be in  the correct format, for example, defining the names of the names and abbrevs columns, and ensuring unique index.
 
@@ -734,8 +760,9 @@ If there is an order to the classes eg ["low", "moderate", "high", "extreme"], w
 <details>
  <summary> Expand </summary>
  
-Although many examples for applying acs_regional_stats use dims=("lat", "lon") to reduce 2D data to regional averages, the function is very flexible. For example, if you have a time dimension, then you can calculate regional averaged (or min/median/max/any stat) time series by excluding time "time" dimension from the dims tuple. This may be very memory intensive depending on your data size, so  request lots of memory if you need to.
+Although many examples for applying acs_regional_stats use dims=("lat", "lon") to reduce 2D data to regional averages, the function is very flexible. For example, if you have a time dimension, then you can calculate regional averaged (or min/median/max/any stat) time series by excluding the "time" dimension from the dims tuple. This may be very memory intensive depending on your data size, so  request lots of memory if you need to.
 
+[FAQ_example_timeseries_stats_for_ensemble_region.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/)
 
 Future development will look to manage memory more effectively.
 
@@ -747,40 +774,57 @@ An example of extracting time series from point locations can be found here: htt
 ### Calculating statistics for multidimensional data
 <details>
  <summary> Expand </summary>
-use the dims keyword
+ 
+Use the dims keyword in acs_regional_stats to control which dimensions to calculate statistics.
+
+For example, a dataset has model, time, lat, and lon dimensions.
+
+a) When you use acs_regional_stats to reduce the data with ```dims = ("lat", "lon",)```, the resulting dimensions are ```model, time, region```
+
+```python
+# use acs_regional_stats to calculate the regional mean for each model and timestep
+da_summary =  acs_regional_stats(ds=ds, var=var, mask = mask, dims = ("lat", "lon",), how = ["mean"],)
+```
+
+b) When you use acs_regional_stats to reduce the data with ```dims = ("lat", "lon", "model",)```, the resulting dimensions are ```time, region```
+
+```python
+# use acs_regional_stats to calculate the ensemble regional mean for each timestep
+da_summary =  acs_regional_stats(ds=ds, var=var, mask = mask, dims = ("lat", "lon", "model",), how = ["mean"],)
+```
+
+[FAQ_example_timeseries_stats_for_ensemble_region.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_timeseries_stats_for_ensemble_region.ipynb) shows example of calculating regional means over multidimensional data.
+
 </details>
 
 ## Development principles
-This code has been developed to make consistent plotting and statistical analysis quick and easy across ACS hazard teams. These teams regularly get information requests with quick turn around times (~days), so having easy to use and flexible code to produce report ready plots is critical for delivering high quality figures and data summaries.
+This code has been developed to make consistent plotting and statistical analysis quick and easy across ACS hazard teams. These teams regularly get information requests with quick turnaround times (~days), so having easy-to-use and flexible code to produce report-ready plots is critical for delivering high-quality figures and data summaries.
 
 We want to enable scientists to focus on producing data and interpreting that information.
 
-These plotting and stats tools should reduce the duplication of work for scientists who spend time adjusting their plots. We want these tools to be easy to use and flexible for all purposes across the hazard teams so all the plots are presented consistently and all teams are supported.
+These plotting and stats tools should reduce the duplication of work for scientists who spend time adjusting their plots. We want these tools to be easy to use and flexible for all purposes across the hazard teams so that all the plots are presented consistently and all teams are supported.
 
 Using these functions should be the easiest way to produce a nice plot. We want this to be the path of least resistance. The easier the functions are to use, the more people will use them. This means supporting with good documentation, good example notebooks, and adding new functionalities according to user feedback.
 
-These plotting and stats tools are optimised for Australian hazard maps, but flexible so that they can be adjusted for any data, anywhere in the world, with any shape files, any colour schemes, or any projection etc.
+These plotting and stats tools are optimised for Australian hazard maps, but flexible so that they can be adjusted for any data, anywhere in the world, with any shape files, colour schemes, projection, etc.
 
 To test updates in [acs_area_stats.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_area_stats.py)  or [acs_plotting_maps.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_plotting_maps.py), we rerun the example notebooks to ensure the functions still perform as expected. (This could be automated to run when changes are pushed to git.)
 
-This code is being used actively by a range of teams. Take care to maintain backward compatibility while adding features. If that is not practical, communicate the changes with the users. Ideally, I would like to “release” this code version. Eg see https://github.com/AusClimateService/plotting_maps/releases/new
+A range of teams are actively using this code. Take care to maintain backward compatibility while adding features. If that is not practical, communicate the changes with the users. Ideally, I would like to “release” this code version. Eg see https://github.com/AusClimateService/plotting_maps/releases/new
 
 ## TODO
 <details>
  <summary> Expand </summary>
  
 **Figures to make:**
--	SLR observations with station data. For the Climate Hazards report, recreate the sea level observations of gridded ocean data and station data in the same plot.
 -	Lightning plot. For the Climate Hazards report, recreate the lightning observations plot using the plot_acs_hazards function so that it is in the consistent format.
 
 **Documentation:**
--	Clear tutorials for how to use different functionalities
 -	“release” this version of the code as v1.0.0. It is in wide use and care is being taken to keep backward compatibility while adding features. Eg see https://github.com/AusClimateService/plotting_maps/releases/new
 
 **Improve plotting function and axillaries:**
 -	Improve the aesthetics and proportions of plotting, especially with dataset/date_range/baseline annotations. Design aesthetics were focused on vertical orientations for 4-panel plots without these annotations for a particular report.
 -	Improve the aesthetics of plotting select_area. Eg remove boundaries of neighbouring regions (if desired)
--	Try plotting Antarctica and see what settings work. Especially xlim, ylim, projection. This code should work for any region of the world, with the right settings.
 -	Forest mask for forested areas. For example, FFDI is not useful in places where there is not connected vegetation/fuel. This is probably particularly for arid desert areas of central Australia. Changes in climate and land use may cause changes over time.
 -	Improve colormap for fire climate classes. This colour scheme is not completely colourblind-friendly. Perhaps modify the colours to increase the contrast. 
 -	Enable rotating all labels and tick labels so that they are horizontal (easier to read). We may need to reduce the labels to every second increment. Eg for temperature.
