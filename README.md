@@ -39,11 +39,19 @@ To access docstrings and learn about input arguments, use ```plot_acs_hazard?```
 
 <img src="https://github.com/user-attachments/assets/7e75cccc-b6d4-449c-a1ce-c118696dbee8" width="600">
 
- - Plot stations data: Single plot of station data eg coastal flooding [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb) , [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb) and [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
+- Plot atmospheric data above ocean and land, for example, Tropical Cyclones [FAQ_example_TCs.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_TCs.ipynb)
+
+<img src="https://github.com/user-attachments/assets/b5f21e58-831e-4016-8992-e612060c04da" width="600">
+
+
+ - Plot stations data: Single plot of station data eg coastal flooding [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb), [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb) and [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
 
 <img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/ch_report/Change-in-frequency-of-flood-days.png" width="300">
   
- - Plot multiple data types in one figure. Gridded data and station data can be plotted on the same plot: eg ocean data and station data (station and gridded data on the same plot)
+ - Plot multiple data types in one figure. Gridded data and station data can be plotted on the same plot: eg ocean data and station data (station and gridded data on the same plot) [minimal_plotting_example_station.ipynb]((https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_station.ipynb)
+
+<img src="https://github.com/user-attachments/assets/c4ae7738-4eb8-4e49-865e-32440f13cd0f" width="300">
+
  - Plot categorical data: Single plot of categorical data eg [aridity](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_ai.ipynb) and [aridity or fire climate classes](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/plotting_and_stats_examples.ipynb)
  - Plot categorical data with stippling: Single plot of hazard data with stippling eg [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb), [Fire climate classes](https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb)
 ![Fire-climate-classes-and-shift](https://github.com/user-attachments/assets/606762e1-d9f5-41a7-8df4-1f089f2c8596)
@@ -397,6 +405,24 @@ Here are some common suggestions for troubleshooting:
    
 </details>
 
+### Why is my code so slow? Or why did my kernel die?
+<details>
+ <summary> Expand </summary>
+
+Expected run times are shown in the [example notebooks](https://github.com/AusClimateService/plotting_maps/tree/main/example_notebooks).
+
+Importing acs_plotting_maps may take several seconds to load. This is normal.
+
+NetCDF data files may take several seconds to load. This is normal.
+
+The shapefiles take a while to load and calculate in both plotting and regional averaging scripts. Some of this slowness is unavoidable.
+
+If `plot_acs_hazard` is very slow (multiple minutes), please pull recent changes to the plotting code. New code simplifies the shapefile to speed up plotting calculations from minutes to seconds. Plotting a figure (including multiple panels) should not take more than a minute.
+
+Make sure you request lots of memory and compute resources. For example, I regularly request "Large (7 cpus, 32G mem)" for these notebooks. When calculating area averages for many regions, you will probably need more than this or your kernel will die. The more regions you are averaging, the more memory you need. Current work is investigating how to reduce memory demands for this function.
+
+</details>
+
 ### An argument I have used before using this code no longer works. What's happening?
 <details>
  <summary> Expand </summary>
@@ -741,7 +767,7 @@ regions = regionmask.from_geopandas(gdf,
 
 Be careful when calculating statistics over areas with many missing data. Investigate your own data and make sure that the statistics are still meaningful when the non-finite values are ignored. Depending on your data, consider filling missing data with a value (eg 0) if that results in more representative statistics. 
 
-New update (19 Nov 2020) allows for statistics on NaNs and infinite values by applying the following.
+New update (19 Nov 2024) allows for statistics on NaNs and infinite values by applying the following.
 
  ```python
     ds[var].values = np.ma.masked_invalid(ds[var].values)
