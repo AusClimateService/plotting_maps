@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib import image, cm
 import xarray as xr
 import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 from glob import glob
 
 # import colormap packages
@@ -20,6 +21,9 @@ from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColor
 
 from shapely.geometry import box
 import shapely
+# set tolerance for simplifying geometries
+# this tolerance is approx 110 m resolution for lat lon data
+tolerance=0.001
 
 import matplotlib as mpl
 mpl.rcParams['hatch.linewidth'] = 0.3 
@@ -242,15 +246,19 @@ class RegionShapefiles:
         """
         if name not in self._regions_dict:
             if name in self.shapefiles:
-                self._regions_dict[name] = gpd.read_file(glob(f"{self.path}/{name}/*.shp")[0])
+                regions = gpd.read_file(glob(f"{self.path}/{name}/*.shp")[0]).to_crs(crs = "GDA2020")
+                regions[["geometry"]] =shapely.simplify(regions[["geometry"]], tolerance)
+                self._regions_dict[name] = regions
+                
             elif name == "not_australia":
                 # Define a white mask for the area outside of Australian land
                 # We will use this to hide data outside the Australian land borders.
                 # note that this is not a data mask,
                 # the data under the masked area is still loaded and computed, but not visualised
                 base_name = name[4:]  # Remove 'not_' prefix
-                base_region = self(base_name).copy()
-                base_region = base_region.to_crs(crs = "GDA2020")
+                base_region = self(base_name).copy().to_crs(crs = "GDA2020")
+                base_region[["geometry"]] =shapely.simplify(base_region[["geometry"]], tolerance)
+                
                 # This mask is a rectangular box around the maximum land extent of Australia
                 # with a buffer of 20 degrees on every side,
                 # with the Australian land area cut out, only the ocean is hidden.
@@ -309,23 +317,18 @@ regions_dict = RegionShapefiles(PATH, shapefile_list)
 # the data under the masked area is still loaded and computed, but not visualised
 australia = regions_dict["australia"].copy()
 
-# Define the CRS of the shapefile manually
-australia = australia.to_crs(crs = "GDA2020")
-
-tolerance = 0.001 # approx 100 m resolution
-australia[["geometry"]] =shapely.simplify(australia[["geometry"]], tolerance)
-
 # This mask is a rectangular box around the maximum land extent of Australia
 # with a buffer of 10 degrees on every side,
 # with the Australian land area cut out so only the ocean is hidden.
-not_australia = gpd.GeoSeries(
-    data=[
-        box(*box(*australia.total_bounds).buffer(20).bounds).difference(
-            australia["geometry"].values[0]
-        )
-    ],
-    crs=ccrs.PlateCarree(),
-)
+not_australia =  regions_dict["not_australia"].copy()
+# not_australia = gpd.GeoSeries(
+#     data=[
+#         box(*box(*australia.total_bounds).buffer(20).bounds).difference(
+#             australia["geometry"].values[0]
+#         )
+#     ],
+#     crs=ccrs.PlateCarree(),
+# )
 
 
 def crop_cmap_center(cmap, ticks, mid, extend=None):
@@ -408,6 +411,7 @@ def plot_data(regions=None,
               facecolor="none",
               edgecolor="k",
               area_linewidth=0.3,
+              coastlines=False,
               mask_not_australia = True,
               mask_australia=False,
               agcd_mask=False,
@@ -525,6 +529,10 @@ def plot_data(regions=None,
 
     area_linewidth: float, optional
         the width of state/region borders only. All other linewidths are hardcoded.
+
+    coastlines: boolean
+        If True, add cartopy coastlines for all coasts (not just Australia). 
+        Default is False.
 
     select_area: list
         If None, then don't add region borders geometries.
@@ -688,6 +696,13 @@ def plot_data(regions=None,
             linewidth=area_linewidth,
             zorder=6,
         )
+
+    if coastlines:
+        try:
+            ax.add_feature(cfeature.BORDERS, zorder=5, linewidth=area_linewidth*0.8,)
+        except:
+            print("could not download borders")
+        ax.coastlines(resolution = "10m", zorder=5, linewidth=area_linewidth*0.8,)
 
     # subtitle
     if subtitle_xy is None:
@@ -889,6 +904,7 @@ def plot_select_area(select_area=None,
         name_column = [name for name in regions.columns if "NAME" in name.upper()][0]
         area = regions.loc[regions[name_column].isin(select_area)]
         area= area.to_crs(crs = "GDA2020")
+        area[["geometry"]] =shapely.simplify(area[["geometry"]], tolerance)
         map_total_bounds = area.total_bounds
         minx, miny, maxx, maxy = map_total_bounds
         mid_x = (minx + maxx) / 2
@@ -1123,6 +1139,7 @@ def plot_acs_hazard(
     date_range="",
     projection=None,
     area_linewidth=0.3,
+    coastlines=False,
     xlim=(114,154),
     ylim=(-43.5, -7.5),
     cmap=cm.Greens,
@@ -1222,6 +1239,10 @@ def plot_acs_hazard(
 
     area_linewidth: float, optional
         the width of state/region borders only. All other linewidths are hardcoded.
+
+    coastlines: boolean
+        If True, add cartopy coastlines for all coasts (not just Australia). 
+        Default is False.
 
     xlim: tuple, optional
         longitude min and max of the plot area.
@@ -1346,9 +1367,7 @@ def plot_acs_hazard(
             regions = regions_dict[name]
         except:
             print(f"Could not read regions_dict[{name}]")
-
-    regions = regions.to_crs(crs = "GDA2020")
-
+    
     # Set default crs for Australia maps and selection maps
     if projection is None:
         if select_area is None:
@@ -1403,6 +1422,7 @@ def plot_acs_hazard(
                                             mask_australia=mask_australia,
                                             agcd_mask=agcd_mask,
                                             area_linewidth=area_linewidth,
+                                            coastlines=coastlines,
                                             stippling=stippling,
                                             vcentre=vcentre,
                                             )
@@ -1505,6 +1525,7 @@ def plot_acs_hazard_3pp(
     subplot_titles=None,
     projection=None,
     area_linewidth=0.3,
+    coastlines=False,
     xlim=(114,154),
     ylim=(-43.5, -7.5),
     cmap=cm.Greens,
@@ -1652,6 +1673,10 @@ def plot_acs_hazard_3pp(
     area_linewidth: float
         linewidth of state/region borders.
         Default =0.3
+
+    coastlines: boolean
+        If True, add cartopy coastlines for all coasts (not just Australia). 
+        Default is False.    
         
     xlim: tuple of floats
         longitude limits
@@ -1822,8 +1847,6 @@ def plot_acs_hazard_3pp(
         except:
             print(f"Could not read regions_dict[{name}]")
 
-    regions = regions.to_crs(crs = "GDA2020")
-
     # Set default projection for Australia maps and selection maps
     if projection is None:
         if select_area is None:
@@ -1876,6 +1899,7 @@ def plot_acs_hazard_3pp(
                                               mask_australia=mask_australia,
                                               agcd_mask=agcd_mask,
                                               area_linewidth=area_linewidth,
+                                              coastlines=coastlines,
                                               stippling=stippling,
                                                 vcentre=vcentre,
                                                 )
@@ -1972,6 +1996,7 @@ def plot_acs_hazard_4pp(
                 subplot_titles=None,
                 projection=None,
                 area_linewidth=0.3,
+                coastlines=False,
                 xlim=(113, 154),
                 ylim=(-43.5, -9.5),
                 cmap=cm.Greens,
@@ -2130,6 +2155,10 @@ def plot_acs_hazard_4pp(
     area_linewidth: float
         linewidth of state/region borders.
         Default =0.3
+
+    coastlines: boolean
+        If True, add cartopy coastlines for all coasts (not just Australia). 
+        Default is False.
         
     xlim: tuple of floats
         longitude limits
@@ -2320,8 +2349,6 @@ def plot_acs_hazard_4pp(
         except:
             print(f"Could not read regions_dict[{name}]")
 
-    regions = regions.to_crs(crs = "GDA2020")
-
     # Set default projection for Australia maps and selection maps
     if projection is None:
         if select_area is None:
@@ -2374,6 +2401,7 @@ def plot_acs_hazard_4pp(
                                               mask_australia=mask_australia,
                                               agcd_mask=agcd_mask,
                                               area_linewidth=area_linewidth,
+                                              coastlines=coastlines,
                                               stippling=stippling,
                                                 vcentre=vcentre,)
         
@@ -2479,6 +2507,7 @@ def plot_acs_hazard_1plus3(
                 subplot_titles=None,
                 projection=None,
                 area_linewidth=0.3,
+                coastlines=False,
                 xlim=(113, 154),
                 ylim=(-43.5, -9.5),
                 cmap=cm.Greens,
@@ -2670,6 +2699,10 @@ def plot_acs_hazard_1plus3(
     area_linewidth: float
         linewidth of state/region borders.
         Default =0.3
+
+    coastlines: boolean
+        If True, add cartopy coastlines for all coasts (not just Australia). 
+        Default is False.
         
     xlim: tuple of floats
         longitude limits
@@ -2861,8 +2894,6 @@ def plot_acs_hazard_1plus3(
         except:
             print(f"Could not read regions_dict[{name}]")
 
-    regions = regions.to_crs(crs = "GDA2020")
-
     # Set default projection for Australia maps and selection maps
     if projection is None:
         if select_area is None:
@@ -2915,6 +2946,7 @@ def plot_acs_hazard_1plus3(
                                              mask_australia=mask_australia,
                                              agcd_mask=agcd_mask,
                                              area_linewidth=area_linewidth,
+                                             coastlines=coastlines,
                                              stippling=stippling_gwl12,
                                              vcentre=gwl12_vcentre,
                                             )
@@ -2957,6 +2989,7 @@ def plot_acs_hazard_1plus3(
                                                  mask_australia=mask_australia,
                                                  agcd_mask=agcd_mask,
                                                  area_linewidth=area_linewidth,
+                                                 coastlines=coastlines,
                                                  stippling=stippling,
                                                 vcentre=vcentre,)
         
@@ -3042,6 +3075,7 @@ def plot_acs_hazard_2pp(
     subplot_titles=None,
     projection=None,
     area_linewidth=0.3,
+    coastlines=False,
     xlim=(114,154),
     ylim=(-43.5, -7.5),
     cmap=cm.Greens,
@@ -3109,8 +3143,6 @@ def plot_acs_hazard_2pp(
         except:
             print(f"Could not read regions_dict[{name}]")
 
-    regions = regions.to_crs(crs = "GDA2020")
-
     # Set default projection for Australia maps and selection maps
     if projection is None:
         if select_area is None:
@@ -3163,6 +3195,7 @@ def plot_acs_hazard_2pp(
                                               mask_australia=mask_australia,
                                               agcd_mask=agcd_mask,
                                               area_linewidth=area_linewidth,
+                                              coastlines=coastlines,
                                               stippling=stippling,
                                                 vcentre=vcentre,
                                                 )
