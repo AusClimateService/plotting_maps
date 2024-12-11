@@ -315,20 +315,13 @@ regions_dict = RegionShapefiles(PATH, shapefile_list)
 # We will use this to hide data outside of the Australian land borders.
 # note that this is not a data mask,
 # the data under the masked area is still loaded and computed, but not visualised
-australia = regions_dict["australia"].copy()
+australia = regions_dict["australia"]
 
 # This mask is a rectangular box around the maximum land extent of Australia
 # with a buffer of 10 degrees on every side,
 # with the Australian land area cut out so only the ocean is hidden.
-not_australia =  regions_dict["not_australia"].copy()
-# not_australia = gpd.GeoSeries(
-#     data=[
-#         box(*box(*australia.total_bounds).buffer(20).bounds).difference(
-#             australia["geometry"].values[0]
-#         )
-#     ],
-#     crs=ccrs.PlateCarree(),
-# )
+not_australia =  regions_dict["not_australia"]
+
 
 
 def crop_cmap_center(cmap, ticks, mid, extend=None):
@@ -402,6 +395,7 @@ def plot_data(regions=None,
               cmap=cm.Greens,
               cbar_extend="both",
               ticks=None,
+              tick_interval=1,
               tick_labels=None,
               contourf=False,
               contour=False,
@@ -472,6 +466,10 @@ def plot_data(regions=None,
         This will make the color for each interval one discrete color, 
         instead of a smooth color gradient.
         If None, linear ticks will be auto-generated to fit the provided data.
+
+    tick_interval: int
+        Default 1
+        For showing every second tick label, set tick_interval=2
 
     tick_labels: list
         Labels for categorical data. 
@@ -727,6 +725,7 @@ def plot_cbar(cont=None,
               cbar_extend=None, 
               cbar_label=None,
               ticks=None, 
+              tick_interval=1,
               tick_labels=None,
               middle_ticks=[], 
               cax_bounds =None,
@@ -757,6 +756,10 @@ def plot_cbar(cont=None,
         
     ticks: list or array
         numerical location of ticks
+
+    tick_interval: int
+        Default 1
+        For showing every second tick label, set tick_interval=2
         
     tick_labels: list
         If categorical data, these labels go inbetween the numerical bounds set by ticks
@@ -806,6 +809,13 @@ def plot_cbar(cont=None,
             fraction=0.046, 
             pad=0.04
         )
+        # only label ticks at specified tick intervals
+        [l.set_visible(False) for (i,l) in enumerate(cax.xaxis.get_ticklabels()) if i % tick_interval != 0]
+        [l.set_visible(False) for (i,l) in enumerate(cax.yaxis.get_ticklabels()) if i % tick_interval != 0]
+
+        # plt.setp(cbar.ax.get_xticklabels()[::tick_interval], visible=True)
+        # plt.setp(cbar.ax.get_yticklabels(), visible=False)
+        # plt.setp(cbar.ax.get_yticklabels()[::tick_interval], visible=True)
     else:
         # for categorical data
         cbar = plt.colorbar(
@@ -1146,6 +1156,7 @@ def plot_acs_hazard(
     cmap_bad="lightgrey",
     cbar_extend="both",
     ticks=None,
+    tick_interval=1,
     tick_labels=None,
     cbar_label="",
     baseline=None,
@@ -1270,6 +1281,10 @@ def plot_acs_hazard(
         This will make the color for each interval one discrete color, 
         instead of a smooth color gradient.
         If None, linear ticks will be auto-generated to fit the provided data.
+
+    tick_interval: int
+        Default 1
+        For showing every second tick label, set tick_interval=2
 
     tick_labels: list
         Labels for categorical data. 
@@ -1450,6 +1465,7 @@ def plot_acs_hazard(
                          cbar_label=cbar_label,
                          location = "right",
                          ticks=ticks, 
+                         tick_interval=tick_interval,
                          tick_labels=tick_labels,
                          middle_ticks=middle_ticks,
                          cax_bounds = [1.04,0.08,0.04,0.84],
@@ -1532,6 +1548,7 @@ def plot_acs_hazard_3pp(
     cmap_bad="lightgrey",
     cbar_extend="both",
     ticks=None,
+    tick_interval=1,
     tick_labels=None,
     cbar_label="",
     baseline=None,
@@ -1931,6 +1948,7 @@ def plot_acs_hazard_3pp(
                   cbar_extend=cbar_extend, 
                   cbar_label=cbar_label,
                   ticks=ticks, 
+                  tick_interval=tick_interval,
                   tick_labels=tick_labels,
                   middle_ticks=middle_ticks,
                   cax_bounds = cax_bounds,
@@ -2003,6 +2021,7 @@ def plot_acs_hazard_4pp(
                 cmap_bad="lightgrey",
                 cbar_extend="both",
                 ticks=None,
+                tick_interval=1,
                 tick_labels=None,
                 cbar_label="",
                 baseline=None,
@@ -2189,6 +2208,10 @@ def plot_acs_hazard_4pp(
         This will make the color for each interval one discrete color, 
         instead of a smooth color gradient.
         If None, linear ticks will be auto-generated to fit the provided data.
+
+    tick_interval: int
+        Default 1
+        For showing every second tick label, set tick_interval=2
 
     tick_labels: list
         Labels for categorical data. 
@@ -2435,6 +2458,7 @@ def plot_acs_hazard_4pp(
                      cbar_label=cbar_label,
                      location=cbar_location,
                      ticks=ticks, 
+                     tick_interval=tick_interval,
                      tick_labels=tick_labels,
                      middle_ticks=middle_ticks,
                      cax_bounds=cax_bounds,
@@ -2483,6 +2507,7 @@ def plot_acs_hazard_1plus3(
                 gwl12_cbar_extend="both",
                 gwl12_cbar_label=None,
                 gwl12_ticks=None,
+                gwl12_tick_interval=1,
                 gwl12_tick_labels=None,
                 gwl12_tick_rotation=None,
                 gwl12_vcentre=None,
@@ -2514,6 +2539,7 @@ def plot_acs_hazard_1plus3(
                 cmap_bad="lightgrey",
                 cbar_extend="both",
                 ticks=None,
+                tick_interval=1,
                 tick_labels=None,
                 cbar_label="",
                 baseline=None,
@@ -2587,6 +2613,10 @@ def plot_acs_hazard_1plus3(
     gwl12_ticks: list or np.array
         ticks for normalising colorbar for gwl12 data. 
         Used for both gridded (ds_gwl12) and station data (gwl12_station_df)
+
+    gwl12_tick_interval: int
+        Default 1
+        For showing every second tick label for gwl12 data, set tick_interval=2
         
     gwl12_tick_labels: list
         tick labels for gwl12 data if categorical data
@@ -2733,6 +2763,10 @@ def plot_acs_hazard_1plus3(
         This will make the color for each interval one discrete color, 
         instead of a smooth color gradient.
         If None, linear ticks will be auto-generated to fit the provided data.
+
+    tick_interval: int
+        Default 1
+        For showing every second tick label, set tick_interval=2
 
     tick_labels: list
         Labels for categorical data. 
@@ -2957,6 +2991,7 @@ def plot_acs_hazard_1plus3(
                   cbar_label=gwl12_cbar_label,
                      location=cbar_location,
                   ticks=gwl12_ticks, 
+                  tick_interval=gwl12_tick_interval,
                   tick_labels=gwl12_tick_labels,
                   middle_ticks=middle_ticks,
                   cax_bounds=cax_bounds,
@@ -3012,6 +3047,7 @@ def plot_acs_hazard_1plus3(
                   cbar_extend=cbar_extend, 
                   cbar_label=cbar_label,
                   ticks=ticks, 
+                  tick_interval=tick_interval,
                   tick_labels=tick_labels,
                   middle_ticks=middle_ticks,
                   cax_bounds =cax_bounds,
@@ -3082,6 +3118,7 @@ def plot_acs_hazard_2pp(
     cmap_bad="lightgrey",
     cbar_extend="both",
     ticks=None,
+    tick_interval=1,
     tick_labels=None,
     cbar_label="",
     baseline=None,
@@ -3227,6 +3264,7 @@ def plot_acs_hazard_2pp(
                   cbar_extend=cbar_extend, 
                   cbar_label=cbar_label,
                   ticks=ticks, 
+                     tick_interval=tick_interval,
                   tick_labels=tick_labels,
                   middle_ticks=middle_ticks,
                   cax_bounds = cax_bounds,
@@ -3264,3 +3302,436 @@ def plot_acs_hazard_2pp(
     if savefig:
         plt.savefig(outfile, dpi=300,)
     return fig, ax
+
+
+def plot_acs_hazard_mxn(
+                nrows,
+                ncols,
+                name='ncra_regions',
+                regions=None,
+                ds_list=None,
+                station_dfs=None,                    
+                stippling_list=None,
+                mask_not_australia=True,
+                mask_australia=False,
+                agcd_mask=False,
+                facecolor="none",
+                edgecolor="black",
+                figsize=None,
+                markersize=None,
+                title=None,
+                date_range="",
+                subplot_titles=None,
+                projection=None,
+                area_linewidth=0.3,
+                coastlines=False,
+                xlim=(113, 154),
+                ylim=(-43.5, -9.5),
+                cmap=cm.Greens,
+                cmap_bad="lightgrey",
+                cbar_extend="both",
+                ticks=None,
+                tick_interval=1,
+                tick_labels=None,
+                cbar_label="",
+                baseline=None,
+                dataset_name=None,
+                issued_date=None,
+                label_states=False,
+                contourf=False,
+                contour=False,
+                select_area=None,
+                land_shadow=False,
+                watermark="EXPERIMENTAL\nIMAGE ONLY",
+                watermark_color = "r",
+                infile=None,
+                outfile=None,
+                savefig=True,
+                tick_rotation=None,
+                vcentre=None,
+            ):
+    """
+    m-by-n panel plot with shared cmap and titles etc. 
+    As with plot_acs_hazard, but takes a list of xarray data arrays.
+
+    Parameters
+    ----------
+    name: str
+        name of a shapefile collection in 
+        /g/data/ia39/aus-ref-clim-data-nci/shapefiles/data/
+        to get regions from.
+        
+    regions: geopandas.GeoDataFrame
+        if None, then will try to read from regions_dict[{name}].
+
+    ds_list: list of xr.DataArray
+        The list of DataArrays to plot.
+        Expects a list of 2D xarray DataArray that has already computed the 
+        average, sum, anomaly, metric or index you wish to visualise.
+        This function is resolution agnostic.
+
+    station_dfs: list of pd.DataFrame, optional
+        The list of pandas.DataFrame with columns ["lon", "lat", variable]. 
+        If station_df_list is given, then variable values are represented as dots on 
+        the map according to the lat lon coordinates and coloured according to
+        cmap colours and ticks. Use markersize to change dot size.
+        
+    stippling_list: list of xr.DataArray
+        A list of True/False masks to define regions of stippling hatching 
+        for the first subplot. 
+        Intended to show model agreement, eg for the direction of change.
+
+    mask_not_australia: boolean
+        decides whether or not the area outside of Australian land is hidden 
+        under white shape.
+        Default is True.
+
+    mask_australia: boolean
+        decides whether or not Australian land is hidden under white shape.
+        Eg, use when plotting ocean only.
+        Default is False.
+
+    agcd_mask: boolean
+        If True, applies a ~5km mask for data-sparse inland areas of Australia.
+        Default is False.
+
+    facecolor: color
+        color of land when plotting the regions without climate data. 
+        facecolor recommendations include "white", "lightgrey", "none".
+        Default is "none"
+
+    edgecolor: color
+        defines the color of the state/region borders. 
+        edgecolor recommendations include "black" and "white".
+        Default is "black"
+
+    figsize: tuple
+        defines the width and height of the figure in inches.
+        ACS recommends a maximum width of 6.7" (17cm) and 
+        maximum height of ~7.5" (19cm)
+
+    markersize: optional 
+        Markersize for station_df dots.
+        default None. If None then the markersize will adjust to the size of the
+        figure and the number of markers in the plot such that when there are
+        many markers and the figure is small, the markersize is smaller.
+        
+    title: str
+        A title should describe what is shown in the map. 
+        The title should be written in plain English and 
+        centred at the top of the visualization.
+        If title is None, then defaults to the name of the shapefile.
+        
+    date_range: str
+        date_range (or subtitle)
+        Expected to decribe the start and end date of the data analysed. 
+        This is printed under the title. 
+        format: dd Month yyyy to dd Month yyy.
+        Default=""
+        
+    subplot_titles: list of strings
+        subplot_titles for labeling each subplot title, Default None
+        
+    projection:
+        Specify projection of the maps. The default suits Australia.
+        Formally "crs".
+        If None, defaults to
+        ccrs.LambertConformal(central_latitude=-24.75,
+                              central_longitude=134.0,
+                              cutoff=30,
+                              standard_parallels=(-10, -40),
+        unless select_area is not None, then defaults to
+        ccrs.PlateCarree()
+                            
+    area_linewidth: float
+        linewidth of state/region borders.
+        Default =0.3
+
+    coastlines: boolean
+        If True, add cartopy coastlines for all coasts (not just Australia). 
+        Default is False.
+        
+    xlim: tuple of floats
+        longitude limits
+        Default = (113,154)
+        
+    ylim: tuple of floats
+        latitude limits
+        Default = (-43.5, -9.5)
+        
+    cmap: matplotlib colormap
+        color map for gridded and/or station data
+        See cmap_dict for suggested colormaps.
+        Default cmap set to cm.Greens.
+        Please choose appropriate colormaps for your data.
+
+    cmap_bad: color
+        define the color to set for "bad" or missing values
+        default "lightgrey"
+        
+    cbar_extend: one of {'neither', 'both', 'min', 'max'}.
+        eg "both" changes the ends of the colorbar to arrows to indicate that
+        values are possible outside the scale show.
+        If contour or contourf is True, then cbar_extend will be overridden to "none".
+        Default is "both"
+        
+    ticks: list or arraylike
+        Define the ticks on the colorbar. Define any number of intervals. 
+        This will make the color for each interval one discrete color, 
+        instead of a smooth color gradient.
+        If None, linear ticks will be auto-generated to fit the provided data.
+
+    tick_interval: int
+        Default 1
+        For showing every second tick label, set tick_interval=2
+
+    tick_labels: list
+        Labels for categorical data. 
+        If tick_labels is used, then pcolormesh is used to plot data 
+        and does not allow contour or contourf to be used.
+        Tick labels will correspond to the ticks.
+        
+    cbar_label: string
+        defines the title for the color bar. 
+        This should indicate the variable name and the units eg 
+        "daily rainfall [mm]",
+        "annual rainfall [mm]", 
+        "monthly rainfall anomaly [mm]",
+        "tas [\N{DEGREE SIGN}C]".
+        Default is ""
+        
+    baseline: string
+        the baseline period for anomalies, eg "1961 - 1990".
+        
+    dataset_name: string
+        describes the source of the data eg "AGCD v2" or "BARPA-R ACCESS-CM2"
+        
+    issued_date: string
+        The date of issue. If None is supplied, then today's date is printed.
+        To supress, set to ""
+        
+    label_states: bool
+        if set to True and Australian states are the shapefile selected,
+        then each state is labelled with its three-letter abbreviation. 
+        Default False.
+        
+    contourf: bool
+        if True then the gridded data is visualised as smoothed filled contours. 
+        Default is False.
+        Use with caution when plotting data with negative and positive values;
+        Check output for NaNs and misaligned values.  
+
+    contour: bool
+        if True then the gridded data is visualised as smoothed unfilled grey contours.
+        Default is True.
+        Using both contourf and contour results in smooth filled contours
+        with grey outlines between the color levels.
+
+    select_area: list
+        A list of areas (eg states) that are in the geopandas.GeoDataFrame.
+        Inspect the regions gdf for area names. eg ["Victoria", "New South Wales"]
+
+    land_shadow: bool
+        Used when select_area is not None. 
+        This option controls whether to show Australian land area that is outside 
+        the select area in grey for visual context.
+        Default False.
+
+    watermark: str
+        text over the plot for images not in their final form. 
+        If the plot is in final form, set to None. 
+        Suggestions include "PRELIMINARY DATA", "DRAFT ONLY", 
+        "SAMPLE ONLY (NOT A FORECAST)", "EXPERIMENTAL IMAGE ONLY"
+        default "EXPERIMENTAL\nIMAGE ONLY"
+
+    watermark_color: default "r"
+        for the watermark, this changes the colour of the text.
+        The default is red. Only change color if red is not visible. 
+
+    infile: str
+        Not yet tested. 
+        The idea is to read in 2D netCDF data and use this as the mappable data.
+
+    outfile: str
+        The location to save the figure. 
+        If None, then figure is saved here f"figures/{title.replace(' ', '-')}.png"
+
+    savefig: bool
+        default is True
+        If set to False, then fig is not saved.
+ 
+    tick_rotation: int [-360,360]
+        Angle to rotate colorbar tick labels.
+        Default is None. Tick labels will be horizontal if colorbar is vertical,
+        or vertical if colorbar is horizontal.
+        Easiest to read if tick_rotation = 0
+        
+    vcentre: float, eg 0
+        default is None.
+        Align centre of colormap to this value. 
+        Intended for using a divergent colormap with uneven number of ticks 
+        around the centre, eg for future temperature anomalies with a larger
+        positive range compared to the negative range.
+
+    Returns
+    -------
+    A multi panel plot saved as a png in a "figures" file in your working directory.
+    This function returns fig and ax.
+    """
+ 
+    if tick_rotation is None:
+        tick_rotation = -90
+
+    if ds_list is None:
+        ds_list = [None for i in np.arange(ncols*nrows)]
+
+    if station_dfs is None:
+        station_dfs = [None for i in np.arange(ncols*nrows)]
+
+    if stippling_list is None:
+        stippling_list = [None for i in np.arange(ncols*nrows)]
+
+    if subplot_titles is None:
+        subplot_titles = [None for i in np.arange(ncols*nrows)]
+
+    cbar_location = "right"
+    plots_rect = (0.01,0.05,0.84,0.85) #left bottom width height
+    cax_bounds = [0.1,0,0.5,1]
+    cbar_rect = [0.85, 0.2, 0.03, 0.5]
+
+    # text annotation xy locations for multi-panel plot
+    text_xy = {"title": (0.5, 0.96),
+               "date_range": (0.5, 0.95),
+               "watermark": (0.45, 0.41),}
+    subtitle_xy = None
+
+    if figsize is None:
+        figsize=(6, 4.5)
+
+    if regions is None:
+        try:
+            regions = regions_dict[name]
+        except:
+            print(f"Could not read regions_dict[{name}]")
+
+    # Set default projection for Australia maps and selection maps
+    if projection is None:
+        if select_area is None:
+            # Default for Australian map
+            projection = ccrs.LambertConformal(
+                central_latitude=-24.75,
+                central_longitude=134.0,
+                cutoff=30,
+                standard_parallels=(-10, -40),
+            )
+        else:
+            projection = ccrs.PlateCarree()
+
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols,
+                            sharey=True, sharex=True, 
+                            figsize=figsize,
+                            layout="constrained",
+                            subplot_kw={'projection': projection, "frame_on":False},)
+    
+    cmap.set_bad(cmap_bad)
+
+    if any(df is not None for df in station_dfs) and markersize is None:
+        markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/4
+        
+    for i, ds in enumerate(ds_list):
+        station_df = station_dfs[i]
+        stippling = stippling_list[i]
+        subtitle = subplot_titles[i]
+        ax, _norm, _cont, _middle_ticks = plot_data(regions=regions,
+                                              data=ds,
+                                                 station_df=station_df,
+                                                 markersize=markersize,
+                                              xlim=xlim,
+                                              ylim=ylim,
+                                              cmap=cmap,
+                                              cbar_extend=cbar_extend,
+                                              ticks=ticks,
+                                              tick_labels=tick_labels,
+                                              contourf=contourf,
+                                              contour=contour,
+                                              ax=axs.flatten()[i],
+                                              subtitle=subtitle,
+                                                 subtitle_xy=subtitle_xy,
+                                              facecolor=facecolor,
+                                              mask_not_australia = mask_not_australia,
+                                              mask_australia=mask_australia,
+                                              agcd_mask=agcd_mask,
+                                              area_linewidth=area_linewidth,
+                                              coastlines=coastlines,
+                                              stippling=stippling,
+                                                vcentre=vcentre,)
+        if _norm is not None:
+            norm=_norm
+            cont=_cont 
+            middle_ticks=_middle_ticks
+
+        # if select a specific area -----------
+        ax = plot_select_area(select_area=select_area, 
+                              ax=ax,
+                              xlim=xlim,
+                              ylim=ylim,
+                              regions=regions,
+                              land_shadow=land_shadow,
+                              area_linewidth=area_linewidth,
+                              )
+        # ---------------------------------------------
+    
+                    
+        ax.axis('off')
+    
+    # colorbar -----------------------------------------------------------
+    fig.get_layout_engine().set(rect=plots_rect)
+    
+    cbar_ax = fig.add_axes(cbar_rect) #left bottom width height
+    cbar_ax.axis('off')
+    
+    cbar = plot_cbar(cont=cont,
+                     norm=norm,
+                     ax=cbar_ax,
+                     cbar_extend=cbar_extend, 
+                     cbar_label=cbar_label,
+                     location=cbar_location,
+                     ticks=ticks, 
+                     tick_interval=tick_interval,
+                     tick_labels=tick_labels,
+                     middle_ticks=middle_ticks,
+                     cax_bounds=cax_bounds,
+                     rotation = tick_rotation,
+                     )    
+    #------------------------------------------
+    
+    
+    # plot border and annotations -----------------
+    ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
+    
+    
+    ax111 = plot_titles(title=title,
+                        date_range = date_range, 
+                        baseline = baseline, 
+                        dataset_name= dataset_name,
+                        issued_date=issued_date,
+                        watermark=watermark, 
+                        watermark_color=watermark_color,
+                        ax=ax111,
+                        text_xy = text_xy,
+                        title_ha = "center",
+                   )
+    # draw border
+    # ax111.axis(True)
+    ax111.axis(False)
+    # --------------------------------------------
+    
+    if outfile is None:
+        PATH = os.path.abspath(os.getcwd())
+        outfile = f"{PATH}/figures/{title.replace(' ', '-')}.png"
+        os.makedirs(os.path.dirname(outfile), exist_ok=True)
+    
+    if savefig:
+        plt.savefig(outfile, dpi=300,)
+    return fig, ax
+
