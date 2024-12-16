@@ -3304,7 +3304,7 @@ def plot_acs_hazard_2pp(
     return fig, ax
 
 
-def plot_acs_hazard_mxn(
+def plot_acs_hazard_multi(
                 nrows,
                 ncols,
                 name='ncra_regions',
@@ -3334,6 +3334,7 @@ def plot_acs_hazard_mxn(
                 tick_interval=1,
                 tick_labels=None,
                 cbar_label="",
+                cbar_location="bottom",
                 baseline=None,
                 dataset_name=None,
                 issued_date=None,
@@ -3499,6 +3500,9 @@ def plot_acs_hazard_mxn(
         "monthly rainfall anomaly [mm]",
         "tas [\N{DEGREE SIGN}C]".
         Default is ""
+
+    cbar_location: ["bottom", "right", "all"]
+        location of the shared cbar. If not shared, then select "all"
         
     baseline: string
         the baseline period for anomalies, eg "1961 - 1990".
@@ -3580,7 +3584,7 @@ def plot_acs_hazard_mxn(
     """
  
     if tick_rotation is None:
-        tick_rotation = -90
+        tick_rotation = 0
 
     if ds_list is None:
         ds_list = [None for i in np.arange(ncols*nrows)]
@@ -3594,19 +3598,29 @@ def plot_acs_hazard_mxn(
     if subplot_titles is None:
         subplot_titles = [None for i in np.arange(ncols*nrows)]
 
-    cbar_location = "right"
-    plots_rect = (0.01,0.05,0.84,0.85) #left bottom width height
-    cax_bounds = [0.1,0,0.5,1]
-    cbar_rect = [0.85, 0.2, 0.03, 0.5]
+    if cbar_location == "right":
+        plots_rect = (0.01,0.05,0.84,0.85) #left bottom width height
+        cax_bounds = [0.2,0,0.5,1]
+        cbar_rect = [0.91, 0.2, 0.06, 0.5]
+        
+    elif cbar_location == "bottom":
+        plots_rect = (0.01,0.15,0.98,0.75) #left bottom width height
+        cax_bounds = [0, 0.50, 1, 0.50]
+        cbar_rect = [0.2, 0.05, 0.6, 0.05]
+
+    else:
+        # cbar for each plot
+        pass
 
     # text annotation xy locations for multi-panel plot
     text_xy = {"title": (0.5, 0.96),
                "date_range": (0.5, 0.95),
                "watermark": (0.45, 0.41),}
     subtitle_xy = None
+  
 
     if figsize is None:
-        figsize=(6, 4.5)
+        figsize=(6.7, 4.5)
 
     if regions is None:
         try:
