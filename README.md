@@ -247,7 +247,7 @@ cd ~/plotting_maps
 
 2. **Import the ACS plotting maps function and dictionaries and Xarray.** 
 ```python 
-from acs_plotting_maps import plot_acs_hazard, regions_dict, cmap_dict, tick_dict, plot_acs_hazard_3pp
+from acs_plotting_maps import plot_acs_hazard, cmap_dict, tick_dict, plot_acs_hazard_3pp
 import xarray as xr
 ```
 
