@@ -33,7 +33,7 @@ To access docstrings and learn about input arguments, use ```plot_acs_hazard?```
  - Plot ocean data: Plots of ocean data eg marine heat waves [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb), and  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
 <img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/Ocean-acidification.png" width="300">
 
- - Plot data from anywhere in the world eg Antartica or Europe [FAQ_example_antarctica.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_antarctica.ipynb)
+ - Plot data from anywhere in the world eg Antarctica or Europe [FAQ_example_antarctica.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_antarctica.ipynb)
 
 <img src="https://github.com/user-attachments/assets/12e113ca-efd7-4147-9f97-446e7f0a4da2" width="600">
 
@@ -875,10 +875,10 @@ A range of teams are actively using this code. Take care to maintain backward co
 -	Simplify stored shapefiles or masks. Current masks are 1mm precision, this means that calculations with these regions are more intense than necessary. Most climate data is in the order of ~10 km (rarely ~100 m). Simplifying the geometries of the shapefiles can save lots of resources for no loss in results. 
 
 **New plotting function:**
--	Fully flexible custom n x m grid of plots. At the moment, minor modifications within multiplot are needed to make a custom plot for new layouts. It may be possible to make a function that can take in dimensions and a list of dataarrays to make a figure of many plots. This should use a similar format to the existing multi-panel plots and allow plotting gridded data, station data, stippling, ocean data, etc.
+-	Fully flexible custom n x m grid of plots. At the moment, minor modifications within multiplot are needed to make a custom plot for new layouts. It may be possible to make a function that can take in dimensions and a list of dataarrays to make a figure of many plots. This should use a similar format to the existing multi-panel plots and allow plotting gridded data, station data, stippling, ocean data, etc. (in progress issue #29)
 
 **Stats functions:**
--	Optimise workflow to enable area-averaged time series (stats or just area mean). This function can be very memory intensive. Need to apply a strategy or strategies to reduce memory use. A possible option may be to calculate and save area averages for every year. Saving outputs in annual files is a common practice for climate models.
+-	Optimise workflow to enable area-averaged time series (stats or just area mean). This function can be very memory intensive. Need to apply a strategy or strategies to reduce memory use. A possible option may be to calculate and save area averages for every year. Saving outputs in annual files is a common practice for climate models. 
 -	Calculate statistics along streamlines. Similar to area averages, but for a custom transect. Eg for rivers instead of catchments. Eg issue https://github.com/AusClimateService/plotting_maps/issues/23
 
 </details>
