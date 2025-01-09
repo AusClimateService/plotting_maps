@@ -71,14 +71,19 @@ To access docstrings and learn about input arguments, use ```plot_acs_hazard?```
  - Plot multi-panelled plots with shared colour bars for multiple future global warming levels (GWLs). For example, `plot_acs_hazard_4pp` and `plot_acs_hazard_1plus3` are both four-panel plots for gwl1.2, gwl1.5, gwl2.0, and gwl3.0.  `plot_acs_hazard_1plus3` plots the first (gwl1.2) panel as the baseline and the subsequent 3 gwls as anomalies from this baseline. [Multiplots examples](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb), [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb), [ncra_briefing_plots](https://github.com/AusClimateService/plotting_maps/blob/main/reports/ncra_briefing_plots.ipynb), [fire_climate_classes_projections](https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb)
   ![Average-daily-maximum-temperature](https://github.com/user-attachments/assets/05e67c12-a6d5-478d-a088-7af5c6eaaadd)
 
- - All the above functionality is available in multi-panelled plots. Functions exist for 1, 2, 3, and 4-panelled plots in vertical or horizontal orientations eg [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb). (also 2-by-2 “square” for 4pp) The hazard plotting function eg plot_acs_hazard_4pp for four-panelled-plots is constructed using helper functions 
+ - All the above functionality is available in multi-panelled plots. Functions exist for 1, 2, 3, and 4-panelled plots in vertical or horizontal orientations eg [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb). (also 2-by-2 “square” for 4pp) The hazard plotting function eg `plot_acs_hazard_4pp` for four-panelled-plots is constructed using helper functions
+
+ - Plot any arrangement of m x n plots using `plot_acs_hazard_multi`. This function can cope with missing subplots. [multi_plots.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb)
+<img src="https://github.com/user-attachments/assets/198ac8cf-a842-484f-9e6d-69d8ff68c153" width="300">
+
 
 **Limitations**
+
 See active and past issues https://github.com/AusClimateService/plotting_maps/issues
 
 -	Region shapefiles with many regions (eg LGAs) are very slow to load (big regions, like states, are ok)
--	Stippling can be weird when the mask has fuzzy edges (ie data is noisy), the stippling can get confused about what should be stippled and what shouldn’t be and may put hatches where there shouldn’t be hatches. (problem with contour). This is a problem with stippling for fire climate classes, to overcome this, I coarsened the mask to a larger grid see [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb), [Fire climate classes](https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb)
--	Setting contourf=True to smoothly plot your gridded data can cause errors for particular data and particular projections. This is a known issue with contourf, be careful if you use it (check with contour=False plots). Contour and contourf are quite slow to calculate for noisy high-resolution data. (see issue https://github.com/AusClimateService/plotting_maps/issues/10)
+-	Stippling can be weird when the mask has fuzzy edges (ie data is noisy), the stippling can get confused about what should be stippled and what shouldn’t be and may put hatches where there shouldn’t be hatches. (problem with `contour`). This is a problem with stippling for fire climate classes, to overcome this, I coarsened the mask to a larger grid see [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb), [Fire climate classes](https://github.com/AusClimateService/plotting_maps/blob/main/reports/fire_climate_classes_projections.ipynb)
+-	Setting `contourf=True` to smoothly plot your gridded data can cause errors for particular data and particular projections. This is a known issue with `contourf`, be careful if you use it (check with `contour=False` plots). `contour` and `contourf` are quite slow to calculate for noisy high-resolution data. (see issue https://github.com/AusClimateService/plotting_maps/issues/10)
 -	Specifying tick_labels for non-categorical data produces unexpected results. The tick_labels argument is designed to label categorical data. It might be misunderstood to allow for labelling only major ticks or for labelling data with the units on the tick labels. Be aware of this. Possibly could change the functionality, if desired. (see issue https://github.com/AusClimateService/plotting_maps/issues/7)
 
 
@@ -97,15 +102,33 @@ Below are suggested colormaps matched with possible variables to plot.  This inc
 
 <img src="https://github.com/AusClimateService/plotting_maps/blob/main/colormaps_aus_maps.png" width="300">
 
-### [acs_area_statistics.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_area_stats.py) for area statistics
+### [acs_area_statistics.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_area_statistics.py) for area statistics
 
 This module enables calculating a range of statistics for areas defined by shapefiles, including area averages. It is best used for reducing 2D maps into a table of summary statistics for each region or state. The function can be used for more dimensions (eg, lat, lon, time, model) but may be slow and memory intensive depending on the size of the data and the number of regions.  
+
+ - Statistics available include 'mean', 'median', 'min', 'max', 'mode', 'sum', 'std', 'var', 'proportions', 'p10', and 'p90' (any pxx where xx is between 0 and 100).
  - Here's a [verbose example](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/area_statistics_example.ipynb) of using the function.
+![image](https://github.com/user-attachments/assets/d76837e9-cac5-4b24-89a5-a64d7781759c)
+
  - The function works for continuous and numerical variables eg [rainfall](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_pr.ipynb), [marine heatwaves](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_ocean.ipynb), [temperature](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_tx.ipynb)
  - The function also works for calculating stats for [categorical data](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/plotting_and_stats_examples.ipynb), including calculating mode, median (if ordinal), and each category's proportions.
+![image](https://github.com/user-attachments/assets/bb62ae57-4cdf-4c41-b41f-f5e6f0ed5338)
+
  - The function can calculate the area averages for many models individually or across the multi-member ensemble. eg [ensemble-table](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/ensemble-table.ipynb)
+![image](https://github.com/user-attachments/assets/c24b0ce4-78a4-493f-a5b0-1c8807eaa284)
+
+ - The function can provide data to visualise as [ensemble heatmaps](https://github.com/AusClimateService/hazards-drought/blob/main/percentiles/plot_percentiles.ipynb)
+  ![heatmap](https://github.com/user-attachments/assets/d3731f80-ab9a-4759-a30c-4b16b5881c73)
+
  - The function can [work with any custom shapefile](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/area_statistics_example_basin_gpkg.ipynb)
- - The function can be used for time series extraction for regions. This can be very memory intensive. For time series extraction for regions, see [FAQ_example_timeseries_stats.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_timeseries_stats.ipynb) and [FAQ_example_timeseries_stats_for_ensemble_region.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_timeseries_stats_for_ensemble_region.ipynb)
+ - The function can be used for time series extraction for regions. This can be very memory intensive. For time series extraction for regions, see [FAQ_example_timeseries_stats.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_timeseries_stats.ipynb)
+
+![image](https://github.com/user-attachments/assets/779d1df2-1293-4057-a9ee-79882ef43dbe)
+
+ - The function can be used for multiple models to show the ensemble spread of area averages [FAQ_example_timeseries_stats_for_ensemble_region.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_timeseries_stats_for_ensemble_region.ipynb)
+![monthly_ensemble](https://github.com/user-attachments/assets/21d5deab-4dad-40d9-bcee-cde61eff7148)
+
+
  
 **Limitations**
 -	Be careful when working with NaNs and non-finite values. Previous versions of this code could not cope with non-finite values, now the function will mask non-finite values (inf, NaN etc) before calculating statistics. See https://github.com/AusClimateService/plotting_maps/issues/31
@@ -123,7 +146,7 @@ Shapefiles and masks that define regions can be at /g/data/ia39/shapefiles/data 
 
 These shapefiles and masks can be used to outline some selected regions, calculate area statistics, or any other use you like. 
 
-More information on [the Australian Community Reference Climate Data Collection @ NCI shapefile collection](https://github.com/aus-ref-clim-data-nci/shapefiles) is in the readme and example notebooks. These shapefiles are lightly processed from official sources such as the Australian Bureau of Statistics. The shapefiles can be much more precise than we need, so `acs_area_statistics.py` and `acs_plotting_maps.py` automatically simplify the geometries (sometimes from ~1 mm precision) to ~100 m precision. Most climate data is only on the scale of kilometres or tens of kilometres,
+More information on [the Australian Community Reference Climate Data Collection @ NCI shapefile collection](https://github.com/aus-ref-clim-data-nci/shapefiles) is in the readme and example notebooks. These shapefiles are lightly processed from official sources such as the Australian Bureau of Statistics. The shapefiles can be much more precise than we need, so `acs_area_statistics.py` and `acs_plotting_maps.py` automatically simplify the geometries (sometimes from ~1 mm precision) to ~100 m precision. Most climate data is only on the scale of kilometres or tens of kilometres.
 
 You may apply your own shapefiles or masks. You may need to rename some columns so that functions work as intended.
 
@@ -145,8 +168,6 @@ dict_keys(['aus_local_gov',
            'broadacre_regions',
            'ncra_regions'])
 ```
-
-These masks are from very precise data which are used for ma. Shapefile geometries are provided
 
 ### other
  
@@ -587,7 +608,7 @@ This example shows the subplot_title being renamed for sea level rise increments
 <details>
  <summary> Expand </summary>
  
-There is no specific mask for this, but it is easy to adjust your input to achieve this. Here is a notebook to demonstrate [FAQ_example_cropo_mask.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_crop_mask.ipynb)
+There is no specific mask for this, but it is easy to adjust your input to achieve this. Here is a notebook to demonstrate [FAQ_example_crop_mask.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_crop_mask.ipynb)
 
 If you just want to plot the data below 30S, you can use ```plot_acs_hazard(data=  ds.where(ds["lat"]<-30)[var] , ...)```
 ![image](https://github.com/user-attachments/assets/549ccef8-3aed-4dfa-9ee0-c08e225ab386)
@@ -834,13 +855,15 @@ Using these functions should be the easiest way to produce a nice plot. We want 
 
 These plotting and stats tools are optimised for Australian hazard maps, but flexible so that they can be adjusted for any data, anywhere in the world, with any shape files, colour schemes, projection, etc.
 
-To test updates in [acs_area_stats.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_area_stats.py)  or [acs_plotting_maps.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_plotting_maps.py), we rerun the example notebooks to ensure the functions still perform as expected. (This could be automated to run when changes are pushed to git.)
+To test updates in [acs_area_statistics.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_area_statistics.py)  or [acs_plotting_maps.py](https://github.com/AusClimateService/plotting_maps/blob/main/acs_plotting_maps.py), we rerun the example notebooks to ensure the functions still perform as expected. (This could be automated to run when changes are pushed to git.)
 
 A range of teams are actively using this code. Take care to maintain backward compatibility while adding features. If that is not practical, communicate the changes with the users. Ideally, I would like to “release” this code version. Eg see https://github.com/AusClimateService/plotting_maps/releases/new
 
 ## TODO
 <details>
  <summary> Expand </summary>
+
+See for current issues: https://github.com/AusClimateService/plotting_maps/issues/
  
 **Figures to make:**
 -	Lightning plot. For the Climate Hazards report, recreate the lightning observations plot using the plot_acs_hazards function so that it is in the consistent format.
