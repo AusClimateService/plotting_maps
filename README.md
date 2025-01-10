@@ -1,4 +1,7 @@
 # plotting_maps
+
+[![HitCount](https://hits.dwyl.com/xenct/AusClimateService/plotting_maps.svg?style=flat-square)](http://hits.dwyl.com/xenct/AusClimateService/plotting_maps) since 10 Jan 2025
+
 This repo enables standardised statistics and plotting of ACS climate hazard data to support the Australian Climate Service (ACS) Hazard teams and the National Climate Risk Assessment (NCRA). We have developed Python functions and provided examples of mapping and statistically summarising climate hazard metrics for Australia so that data can be consistently and clearly presented.
 
 Examples include maps and stats for Australia with a range of regions including states/territories and NCRA regions. Plotting is also possible for station data and ocean data. The functions are flexible to plot any given lat/lon but are optimised for Australia and default parameters suit Australian data. Examples for mapping Australian states, Antarctica, and Europe are available.
@@ -15,6 +18,8 @@ This work was developed with advice from ACS, CSIRO, BOM scientists, ACS communi
 
 This repo has been developed by Gen Tolhurst (gentolhurst@gmail.com or Gen.Tolhurst@bom.gov.au) and supervised by Mitch Black (Mitchell.Black@bom.gov.au). Work has been undertaken from May 2024 to December 2024.\
 Funded by ACS.
+
+
 
 ## What's possible?
 
