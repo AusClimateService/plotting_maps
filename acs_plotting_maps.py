@@ -39,6 +39,13 @@ projection = ccrs.LambertConformal(
 
 from pathlib import Path
 
+# Set title sizes according to ACS comms guidance (in pt)
+fontsize_title = 14
+fontsize_subtitle = 12
+fontsize_cbar = 10
+fontsize_footnote = 8
+padding = 5
+
 # # Suggested colormaps and scales
 # Using suggested colormaps and scales will improve the consistency across teams
 # producing similar variables. This will support comparison across different plots.
@@ -557,9 +564,32 @@ def plot_data(regions=None,
     ax.set_extent([xlim[0], xlim[1], ylim[0], ylim[1]])
     
     middle_ticks=[]
-    
+
+    # set norm from ticks and cbar_extend
+    if ticks is None:
+        norm = None
+    else:
+        # if ticks are labelled or if there is one more tick than tick labels,
+        # do the usual normalisation
+        if tick_labels is None or (len(tick_labels) == len(ticks) - 1):
+            norm = BoundaryNorm(ticks, cmap.N+1, extend = cbar_extend)
+            if tick_labels is not None:
+                middle_ticks = [
+                    (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
+                ]
+            else:
+                middle_ticks = []
+        else:
+            middle_ticks = [
+                (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
+            ]
+            outside_bound_first = [ticks[0] - (ticks[1] - ticks[0]) / 2]
+            outside_bound_last = [ticks[-1] + (ticks[-1] - ticks[-2]) / 2]
+            bounds = outside_bound_first + middle_ticks + outside_bound_last
+            norm = BoundaryNorm(bounds, cmap.N, extend = "neither")
+
+    # define cont
     if data is None:
-        norm=None
         cont=None
     else:
         data = data.squeeze()
@@ -570,28 +600,7 @@ def plot_data(regions=None,
             agcd = xr.open_dataset(f"{directory}/mask-fraction_agcd_v1-0-2_precip_weight_1960_2022.nc").fraction
             data = data.where(agcd>=0.8)
         
-        if ticks is None:
-            norm = None
-        else:
-            # if ticks are labelled or if there is one more tick than tick labels,
-            # do the usual normalisation
-            if tick_labels is None or (len(tick_labels) == len(ticks) - 1):
-                norm = BoundaryNorm(ticks, cmap.N+1, extend = cbar_extend)
-                if tick_labels is not None:
-                    middle_ticks = [
-                        (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
-                    ]
-                else:
-                    middle_ticks = []
-            else:
-                middle_ticks = [
-                    (ticks[i + 1] + ticks[i]) / 2 for i in range(len(ticks) - 1)
-                ]
-                outside_bound_first = [ticks[0] - (ticks[1] - ticks[0]) / 2]
-                outside_bound_last = [ticks[-1] + (ticks[-1] - ticks[-2]) / 2]
-                bounds = outside_bound_first + middle_ticks + outside_bound_last
-                norm = BoundaryNorm(bounds, cmap.N, extend = "neither")
-    
+
         # plot the hazard data
         if contourf and tick_labels is None:
             if data.max()>=0 and data.min()<=0: 
@@ -639,7 +648,7 @@ def plot_data(regions=None,
             station_df, geometry=gpd.points_from_xy(station_df.lon, station_df.lat), crs=ccrs.PlateCarree()
             )
         var = gdf.columns[[2]][0]
-        norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
+        # norm = BoundaryNorm(ticks, cmap.N, extend=cbar_extend)
         cont = ax.scatter(x=station_df.lon,
                           y=station_df.lat,
                           s=markersize, 
@@ -709,7 +718,7 @@ def plot_data(regions=None,
         x=subtitle_xy[0],
         y=subtitle_xy[1],
         s=subtitle,
-        fontsize=12,
+        fontsize=fontsize_subtitle,
         horizontalalignment="left",
         verticalalignment="top",
         transform=ax.transAxes,
@@ -813,9 +822,6 @@ def plot_cbar(cont=None,
         [l.set_visible(False) for (i,l) in enumerate(cax.xaxis.get_ticklabels()) if i % tick_interval != 0]
         [l.set_visible(False) for (i,l) in enumerate(cax.yaxis.get_ticklabels()) if i % tick_interval != 0]
 
-        # plt.setp(cbar.ax.get_xticklabels()[::tick_interval], visible=True)
-        # plt.setp(cbar.ax.get_yticklabels(), visible=False)
-        # plt.setp(cbar.ax.get_yticklabels()[::tick_interval], visible=True)
     else:
         # for categorical data
         cbar = plt.colorbar(
@@ -855,9 +861,9 @@ def plot_cbar(cont=None,
         cbar.ax.set_title(cbar_label, 
                           zorder=10,
                           loc="center",
-                          fontsize=10,
+                          fontsize=fontsize_cbar,
                           fontstretch=fontstretch,
-                          verticalalignment="baseline",
+                          verticalalignment="bottom",
                          wrap=True)
 
     cbar.ax.tick_params(rotation=rotation) 
@@ -1030,15 +1036,19 @@ def plot_titles(title="title",
     matplotlib.axes.Axes with text for titles etc.
     
     """
+
+    figsize = plt.gcf().get_size_inches()
+    xpt = 1/72/figsize[0]
+    ypt = 1/72/figsize[1]
     
     ax.text(
         x=text_xy["title"][0],
         y=text_xy["title"][1],
         s=f"{title}",
-        fontsize=14,
+        fontsize=fontsize_title,
         weight="bold",
         horizontalalignment=title_ha,
-        verticalalignment="baseline",
+        verticalalignment="bottom",
         transform=ax.transAxes,
         zorder=10,
         wrap=True,
@@ -1048,7 +1058,7 @@ def plot_titles(title="title",
         x=text_xy["date_range"][0],
         y=text_xy["date_range"][1],
         s=f"{date_range}",
-        fontsize=12,
+        fontsize=fontsize_subtitle,
         horizontalalignment=title_ha,
         verticalalignment="top",
         transform=ax.transAxes,
@@ -1059,11 +1069,11 @@ def plot_titles(title="title",
     if baseline is not None:
         # print base period inside bottom left corner
         ax.text(
-            x=0.01,
-            y=0.01,
+            x=padding*xpt,
+            y=(padding+2*fontsize_footnote)*ypt,
             s=f"Base period: {baseline}",
-            fontsize=8,
-            verticalalignment="baseline",
+            fontsize=fontsize_footnote,
+            verticalalignment="bottom",
             transform=ax.transAxes,
             zorder=10,
         )
@@ -1073,25 +1083,25 @@ def plot_titles(title="title",
     else:
         string = f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, Australian Climate Service"
     ax.text(
-        x=0.02,
-        y=0.01,
+        x=padding*xpt,
+        y=(padding+2*fontsize_footnote)*ypt,
         s=string,
-        fontsize=8,
+        fontsize=fontsize_footnote,
         transform=ax.transAxes,
-        verticalalignment="bottom",
+        verticalalignment="top",
         zorder=10,
         wrap=True,
     )
     if dataset_name is not None:
         # print data source inside bottom right
         ax.text(
-            x=0.99,
-            y=0.01,
+            x=1- padding*xpt,
+            y=(padding+2*fontsize_footnote)*ypt,
             s=f"Dataset: {dataset_name}",
-            fontsize=8,
+            fontsize=fontsize_footnote,
             transform=ax.transAxes,
             horizontalalignment="right",
-            verticalalignment="baseline",
+            verticalalignment="bottom",
             zorder=10,
         )
     # print issued date on bottom right under the border.
@@ -1101,10 +1111,10 @@ def plot_titles(title="title",
         issued_date = datetime.datetime.today().date().strftime("%d %B %Y")
     if len(issued_date)>=1:
         ax.text(
-            x=0.99,
-            y=-0.01,
+            x=1- padding*xpt,
+            y=(padding+2*fontsize_footnote)*ypt,
             s=f"Issued: {issued_date}",
-            fontsize=8,
+            fontsize=fontsize_footnote,
             transform=ax.transAxes,
             horizontalalignment="right",
             verticalalignment="top",
@@ -1483,8 +1493,11 @@ def plot_acs_hazard(
     ax111 = fig.add_axes([0.,0.,1,1], xticks=[], yticks=[]) #(left, bottom, width, height)
 
     # text annotation xy locations for 1-panel plot
-    text_xy_1pp = {"title": (0.03, 0.12),  
-                   "date_range": (0.03, 0.09),
+    xpt = 1/72/figsize[0]
+    ypt = 1/72/figsize[1]
+    
+    text_xy_1pp = {"title": (padding*xpt, (padding + 3*fontsize_footnote+fontsize_subtitle+fontsize_title)*ypt), 
+                   "date_range": (padding*xpt, (padding + 3*fontsize_footnote + fontsize_subtitle)*ypt),
                    "watermark": (0.4, 0.5),}
     
     ax111 = plot_titles(title=title,
@@ -1823,169 +1836,74 @@ def plot_acs_hazard_3pp(
     """
 
     if orientation=="horizontal":
-        cax_bounds = [1.05,0,0.1,1]
-        if tick_rotation is None:
-            tick_rotation = 0
         nrows = 1
         ncols = 3
         cbar_location = "right"
-        plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
-        # text annotation xy locations
-        text_xy = {"title": (0.5, 0.9),
-                   "date_range": (0.5, 0.87),
-                   "watermark": (0.45, 0.41),}
-        subtitle_xy = None
         if figsize is None:
-            figsize=(10, 3)
+            figsize=(10, 4)
             
     elif orientation=="vertical":
-        cax_bounds = [-0.4,-0.3,1.6,0.1]
-        if tick_rotation is None:
-            tick_rotation = -90
         nrows = 3
         ncols = 1
         cbar_location = "bottom"
-        plots_rect = (0.01,0.07,0.98,0.85) #left bottom width height
-        # text annotation xy locations
-        text_xy = {"title": (0.5, 0.94),
-               "date_range": (0.5, 0.93),
-               "watermark": (0.45, 0.41),}
-        subtitle_xy = (-0.55, 0.6)
+        if tick_rotation is None:
+            tick_rotation = -90
         if figsize is None:
             figsize=(3, 6.5)
-        
-    else:
-        print('orientation must be one of ["horizontal", "vertical",]')
 
-    
-    if regions is None:
-        try:
-            regions = regions_dict[name]
-        except:
-            print(f"Could not read regions_dict[{name}]")
-
-    # Set default projection for Australia maps and selection maps
-    if projection is None:
-        if select_area is None:
-            # Default for Australian map
-            projection = ccrs.LambertConformal(
-                central_latitude=-24.75,
-                central_longitude=134.0,
-                cutoff=30,
-                standard_parallels=(-10, -40),
-            )
-        else:
-            projection = ccrs.PlateCarree()
-        
-    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, 
-                            sharey=True, sharex=True,
-                            figsize=figsize, 
-                            layout="constrained",
-                            subplot_kw={'projection': projection, "frame_on":False},)
-
-    cmap.set_bad(cmap_bad)
-    
+    ds_list = [ds_gwl15, ds_gwl20, ds_gwl30]
     station_dfs = [station_df_gwl15, station_df_gwl20, station_df_gwl30]
-    if any(df is not None for df in station_dfs) and markersize is None:
-        markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/3
+    stippling_list = [stippling_gwl15, stippling_gwl20, stippling_gwl30]
 
     if subplot_titles is None:
-        subplot_titles = [f"GWL{[1.5,2.0,3.0][i]}" for i in range(3)]
+        subplot_titles = [f"GWL{[1.5, 2.0, 3.0][i]}" for i in range(3)]
         
-    for i, ds in enumerate([ds_gwl15, ds_gwl20, ds_gwl30]):
-        station_df = station_dfs[i]
-        stippling = [stippling_gwl15, stippling_gwl20, stippling_gwl30][i]
-        subtitle = subplot_titles[i]
-        ax, norm, cont, middle_ticks = plot_data(regions=regions,
-                                              data=ds, 
-                                              station_df = station_df,
-                                              markersize=markersize,
-                                              xlim=xlim,
-                                              ylim=ylim,
-                                              cmap=cmap,
-                                              cbar_extend=cbar_extend,
-                                              ticks=ticks,
-                                              tick_labels=tick_labels,
-                                              contourf=contourf,
-                                              contour=contour,
-                                              ax=axs[i],
-                                              subtitle=subtitle,
-                                                 subtitle_xy=subtitle_xy,
-                                              facecolor=facecolor,
-                                              mask_not_australia = mask_not_australia,
-                                              mask_australia=mask_australia,
-                                              agcd_mask=agcd_mask,
-                                              area_linewidth=area_linewidth,
-                                              coastlines=coastlines,
-                                              stippling=stippling,
-                                                vcentre=vcentre,
-                                                )
-        
-        # if select a specific area -----------
-        ax = plot_select_area(select_area=select_area, 
-                              ax=ax,
-                              xlim=xlim,
-                              ylim=ylim,
-                              regions=regions,
-                              land_shadow=land_shadow,
-                              area_linewidth=area_linewidth,
-                              )
-        # ---------------------------------------------
+    return plot_acs_hazard_multi(nrows=nrows,
+                                ncols=ncols,
+                                name=name,
+                                regions=regions,
+                                ds_list=ds_list,
+                                station_dfs=station_dfs,                    
+                                stippling_list=stippling_list,
+                                mask_not_australia=mask_not_australia,
+                                mask_australia=mask_australia,
+                                agcd_mask=agcd_mask,
+                                facecolor=facecolor,
+                                edgecolor=edgecolor,
+                                figsize=figsize,
+                                markersize=markersize,
+                                title=title,
+                                date_range=date_range,
+                                subplot_titles=subplot_titles,
+                                projection=projection,
+                                area_linewidth = area_linewidth,
+                                coastlines=coastlines,
+                                xlim=xlim,
+                                ylim=ylim,
+                                cmap=cmap,
+                                cmap_bad=cmap_bad,
+                                cbar_extend=cbar_extend,
+                                ticks=ticks,
+                                tick_interval=tick_interval,
+                                tick_labels=tick_labels,
+                                cbar_label=cbar_label,
+                                cbar_location=cbar_location,
+                                baseline=baseline,
+                                dataset_name=dataset_name,
+                                issued_date=issued_date,
+                                label_states=label_states,
+                                contourf=contourf,
+                                contour=contour,
+                                select_area=select_area,
+                                land_shadow=land_shadow,
+                                watermark=watermark,
+                                watermark_color = watermark_color,
+                                infile=infile,
+                                outfile=outfile,
+                                savefig=savefig,
+                                tick_rotation=tick_rotation,
+                                vcentre=vcentre,)
 
-                    
-        ax.axis('off')
-
-    # colorbar -----------------------------------------------------------
-    # fig.subplots_adjust(left=0.05, bottom=0, right=0.85, top=0.95, wspace=0.05, hspace=0.05)
-    # cbar_ax = fig.add_axes([0.87, 0.2, 0.03, 0.5]) #left bottom width height
-    # cbar_ax.axis('off')
-    fig.get_layout_engine().set(rect=plots_rect)
-    cbar_ax = axs.flatten()[-1]
-
-    cbar = plot_cbar(cont=cont,
-                  norm=norm,
-                  ax=cbar_ax,
-                  cbar_extend=cbar_extend, 
-                  cbar_label=cbar_label,
-                  ticks=ticks, 
-                  tick_interval=tick_interval,
-                  tick_labels=tick_labels,
-                  middle_ticks=middle_ticks,
-                  cax_bounds = cax_bounds,
-                     rotation=tick_rotation,
-                     location = cbar_location,
-                  )
-    #------------------------------------------
-
-
-    # plot border and annotations -----------------
-    ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
-    
-    ax111 = plot_titles(title=title,
-                        date_range = date_range, 
-                        baseline = baseline, 
-                        dataset_name= dataset_name,
-                        issued_date=issued_date,
-                        watermark=watermark, 
-                        watermark_color=watermark_color,
-                        ax=ax111,
-                        text_xy = text_xy,
-                        title_ha = "center",
-                        orientation = orientation,
-                   )
-    # draw border
-    # ax111.axis(True)
-    ax111.axis(False)
-    # --------------------------------------------
-
-    if outfile is None:
-        PATH = os.path.abspath(os.getcwd())
-        outfile = f"{PATH}/figures/{title.replace(' ', '-')}.png"
-        os.makedirs(os.path.dirname(outfile), exist_ok=True)
-
-    if savefig:
-        plt.savefig(outfile, dpi=300,)
-    return fig, ax
 
 def plot_acs_hazard_4pp(
                 name='ncra_regions',
@@ -2313,189 +2231,219 @@ def plot_acs_hazard_4pp(
     """
 
     if orientation=="horizontal":
-        cax_bounds = [1.05,0,0.1,1]
-        if tick_rotation is None:
-            tick_rotation = 0
         nrows = 1
         ncols = 4
         cbar_location = "right"
-        plots_rect = (0.01,0.02,0.98,0.85) #left bottom width height
-        # text annotation xy locations
-        text_xy = {"title": (0.5, 0.93),
-                   "date_range": (0.5, 0.9),
-                   "watermark": (0.45, 0.41),}
-        subtitle_xy = None
         if figsize is None:
-            figsize=(10, 3)
-            
-    elif orientation=="vertical":
-        cax_bounds = [-0.4,-0.3,1.6,0.1]
+            figsize=(8, 3)
         if tick_rotation is None:
-            tick_rotation = -90
+            tick_rotation = 0  
+
+   
+    elif orientation=="vertical":
         nrows = 4
         ncols = 1
         cbar_location = "bottom"
-        plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
-        # text annotation xy locations
-        text_xy = {"title": (0.5, 0.94),
-               "date_range": (0.5, 0.93),
-               "watermark": (0.45, 0.41),}
-        subtitle_xy = (-0.54, 0.6)
         if figsize is None:
-            figsize=(3, 8)       
-        
-    elif orientation=="square":   
+            figsize=(3, 8) 
         if tick_rotation is None:
             tick_rotation = -90
+            
+    elif orientation=="square":   
         ncols=2
         nrows=2
         cbar_location = "right"
-        figsize=(6, 4.5)
-        plots_rect = (0.01,0.05,0.84,0.85) #left bottom width height
-        cax_bounds = [0.1,0,0.5,1]
-        cbar_rect = [0.85, 0.2, 0.03, 0.5]
-
-        # text annotation xy locations for 3-panel plot
-        text_xy = {"title": (0.5, 0.96),
-                   "date_range": (0.5, 0.95),
-                   "watermark": (0.45, 0.41),}
-        subtitle_xy = None
-
         if figsize is None:
             figsize=(6, 4.5)
+        if tick_rotation is None:
+            tick_rotation = -90
+
     else:
         print('orientation must be one of ["horizontal", "vertical", "square"]')
 
-    if regions is None:
-        try:
-            regions = regions_dict[name]
-        except:
-            print(f"Could not read regions_dict[{name}]")
-
-    # Set default projection for Australia maps and selection maps
-    if projection is None:
-        if select_area is None:
-            # Default for Australian map
-            projection = ccrs.LambertConformal(
-                central_latitude=-24.75,
-                central_longitude=134.0,
-                cutoff=30,
-                standard_parallels=(-10, -40),
-            )
-        else:
-            projection = ccrs.PlateCarree()
-
-    fig, axs = plt.subplots(nrows=nrows, ncols=ncols,
-                            sharey=True, sharex=True, 
-                            figsize=figsize,
-                            layout="constrained",
-                            subplot_kw={'projection': projection, "frame_on":False},)
-    
-    cmap.set_bad(cmap_bad)
-    
+    ds_list = [ds_gwl12, ds_gwl15, ds_gwl20, ds_gwl30]
     station_dfs = [station_df_gwl12, station_df_gwl15, station_df_gwl20, station_df_gwl30]
-    if any(df is not None for df in station_dfs) and markersize is None:
-        markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/4
-
+    stippling_list = [stippling_gwl12, stippling_gwl15, stippling_gwl20, stippling_gwl30]
     if subplot_titles is None:
         subplot_titles = [f"GWL{[1.2, 1.5, 2.0, 3.0][i]}" for i in range(4)]
+
+    return plot_acs_hazard_multi(nrows=nrows,
+                                ncols=ncols,
+                                name=name,
+                                regions=regions,
+                                ds_list=ds_list,
+                                station_dfs=station_dfs,                    
+                                stippling_list=stippling_list,
+                                mask_not_australia=mask_not_australia,
+                                mask_australia=mask_australia,
+                                agcd_mask=agcd_mask,
+                                facecolor=facecolor,
+                                edgecolor=edgecolor,
+                                figsize=figsize,
+                                markersize=markersize,
+                                title=title,
+                                date_range=date_range,
+                                subplot_titles=subplot_titles,
+                                projection=projection,
+                                area_linewidth = area_linewidth,
+                                coastlines=coastlines,
+                                xlim=xlim,
+                                ylim=ylim,
+                                cmap=cmap,
+                                cmap_bad=cmap_bad,
+                                cbar_extend=cbar_extend,
+                                ticks=ticks,
+                                tick_interval=tick_interval,
+                                tick_labels=tick_labels,
+                                cbar_label=cbar_label,
+                                cbar_location=cbar_location,
+                                baseline=baseline,
+                                dataset_name=dataset_name,
+                                issued_date=issued_date,
+                                label_states=label_states,
+                                contourf=contourf,
+                                contour=contour,
+                                select_area=select_area,
+                                land_shadow=land_shadow,
+                                watermark=watermark,
+                                watermark_color = watermark_color,
+                                infile=infile,
+                                outfile=outfile,
+                                savefig=savefig,
+                                tick_rotation=tick_rotation,
+                                vcentre=vcentre,)
+
+    
+    # if regions is None:
+    #     try:
+    #         regions = regions_dict[name]
+    #     except:
+    #         print(f"Could not read regions_dict[{name}]")
+
+    # # Set default projection for Australia maps and selection maps
+    # if projection is None:
+    #     if select_area is None:
+    #         # Default for Australian map
+    #         projection = ccrs.LambertConformal(
+    #             central_latitude=-24.75,
+    #             central_longitude=134.0,
+    #             cutoff=30,
+    #             standard_parallels=(-10, -40),
+    #         )
+    #     else:
+    #         projection = ccrs.PlateCarree()
+
+    # fig, axs = plt.subplots(nrows=nrows, ncols=ncols,
+    #                         sharey=True, sharex=True, 
+    #                         figsize=figsize,
+    #                         layout="constrained",
+    #                         subplot_kw={'projection': projection, "frame_on":False},)
+    
+    # cmap.set_bad(cmap_bad)
+    
+    # station_dfs = [station_df_gwl12, station_df_gwl15, station_df_gwl20, station_df_gwl30]
+    # if any(df is not None for df in station_dfs) and markersize is None:
+    #     markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/4
+
+    # if subplot_titles is None:
+    #     subplot_titles = [f"GWL{[1.2, 1.5, 2.0, 3.0][i]}" for i in range(4)]
         
-    for i, ds in enumerate([ds_gwl12, ds_gwl15, ds_gwl20, ds_gwl30]):
-        station_df = station_dfs[i]
-        stippling = [stippling_gwl12, stippling_gwl15, stippling_gwl20, stippling_gwl30][i]
-        subtitle = subplot_titles[i]
-        ax, norm, cont, middle_ticks = plot_data(regions=regions,
-                                              data=ds,
-                                                 station_df=station_df,
-                                                 markersize=markersize,
-                                              xlim=xlim,
-                                              ylim=ylim,
-                                              cmap=cmap,
-                                              cbar_extend=cbar_extend,
-                                              ticks=ticks,
-                                              tick_labels=tick_labels,
-                                              contourf=contourf,
-                                              contour=contour,
-                                              ax=axs.flatten()[i],
-                                              subtitle=subtitle,
-                                                 subtitle_xy=subtitle_xy,
-                                              facecolor=facecolor,
-                                              mask_not_australia = mask_not_australia,
-                                              mask_australia=mask_australia,
-                                              agcd_mask=agcd_mask,
-                                              area_linewidth=area_linewidth,
-                                              coastlines=coastlines,
-                                              stippling=stippling,
-                                                vcentre=vcentre,)
+    # for i, ds in enumerate([ds_gwl12, ds_gwl15, ds_gwl20, ds_gwl30]):
+    #     station_df = station_dfs[i]
+    #     stippling = [stippling_gwl12, stippling_gwl15, stippling_gwl20, stippling_gwl30][i]
+    #     subtitle = subplot_titles[i]
+    #     ax, norm, cont, middle_ticks = plot_data(regions=regions,
+    #                                           data=ds,
+    #                                              station_df=station_df,
+    #                                              markersize=markersize,
+    #                                           xlim=xlim,
+    #                                           ylim=ylim,
+    #                                           cmap=cmap,
+    #                                           cbar_extend=cbar_extend,
+    #                                           ticks=ticks,
+    #                                           tick_labels=tick_labels,
+    #                                           contourf=contourf,
+    #                                           contour=contour,
+    #                                           ax=axs.flatten()[i],
+    #                                           subtitle=subtitle,
+    #                                              subtitle_xy=subtitle_xy,
+    #                                           facecolor=facecolor,
+    #                                           mask_not_australia = mask_not_australia,
+    #                                           mask_australia=mask_australia,
+    #                                           agcd_mask=agcd_mask,
+    #                                           area_linewidth=area_linewidth,
+    #                                           coastlines=coastlines,
+    #                                           stippling=stippling,
+    #                                             vcentre=vcentre,)
         
-        # if select a specific area -----------
-        ax = plot_select_area(select_area=select_area, 
-                              ax=ax,
-                              xlim=xlim,
-                              ylim=ylim,
-                              regions=regions,
-                              land_shadow=land_shadow,
-                              area_linewidth=area_linewidth,
-                              )
-        # ---------------------------------------------
+    #     # if select a specific area -----------
+    #     ax = plot_select_area(select_area=select_area, 
+    #                           ax=ax,
+    #                           xlim=xlim,
+    #                           ylim=ylim,
+    #                           regions=regions,
+    #                           land_shadow=land_shadow,
+    #                           area_linewidth=area_linewidth,
+    #                           )
+    #     # ---------------------------------------------
     
                     
-        ax.axis('off')
+    #     ax.axis('off')
     
-    # colorbar -----------------------------------------------------------
-    fig.get_layout_engine().set(rect=plots_rect)
+    # # colorbar -----------------------------------------------------------
+    # fig.get_layout_engine().set(rect=plots_rect)
     
-    if orientation == "square":
-        cbar_ax = fig.add_axes(cbar_rect) #left bottom width height
-        cbar_ax.axis('off')
-    else:
-        cbar_ax = axs.flatten()[-1]
+    # if orientation == "square":
+    #     cbar_ax = fig.add_axes(cbar_rect) #left bottom width height
+    #     cbar_ax.axis('off')
+    # else:
+    #     cbar_ax = axs.flatten()[-1]
     
-    cbar = plot_cbar(cont=cont,
-                     norm=norm,
-                     ax=cbar_ax,
-                     cbar_extend=cbar_extend, 
-                     cbar_label=cbar_label,
-                     location=cbar_location,
-                     ticks=ticks, 
-                     tick_interval=tick_interval,
-                     tick_labels=tick_labels,
-                     middle_ticks=middle_ticks,
-                     cax_bounds=cax_bounds,
-                     rotation = tick_rotation,
-                     )    
-    #------------------------------------------
-    
-    
-    # plot border and annotations -----------------
-    ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
+    # cbar = plot_cbar(cont=cont,
+    #                  norm=norm,
+    #                  ax=cbar_ax,
+    #                  cbar_extend=cbar_extend, 
+    #                  cbar_label=cbar_label,
+    #                  location=cbar_location,
+    #                  ticks=ticks, 
+    #                  tick_interval=tick_interval,
+    #                  tick_labels=tick_labels,
+    #                  middle_ticks=middle_ticks,
+    #                  cax_bounds=cax_bounds,
+    #                  rotation = tick_rotation,
+    #                  )    
+    # #------------------------------------------
     
     
-    ax111 = plot_titles(title=title,
-                        date_range = date_range, 
-                        baseline = baseline, 
-                        dataset_name= dataset_name,
-                        issued_date=issued_date,
-                        watermark=watermark, 
-                        watermark_color=watermark_color,
-                        ax=ax111,
-                        text_xy = text_xy,
-                        title_ha = "center",
-                        orientation=orientation,
-                   )
-    # draw border
-    # ax111.axis(True)
-    ax111.axis(False)
-    # --------------------------------------------
+    # # plot border and annotations -----------------
+    # ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
     
-    if outfile is None:
-        PATH = os.path.abspath(os.getcwd())
-        outfile = f"{PATH}/figures/{title.replace(' ', '-')}.png"
-        os.makedirs(os.path.dirname(outfile), exist_ok=True)
     
-    if savefig:
-        plt.savefig(outfile, dpi=300,)
-    return fig, ax
+    # ax111 = plot_titles(title=title,
+    #                     date_range = date_range, 
+    #                     baseline = baseline, 
+    #                     dataset_name= dataset_name,
+    #                     issued_date=issued_date,
+    #                     watermark=watermark, 
+    #                     watermark_color=watermark_color,
+    #                     ax=ax111,
+    #                     text_xy = text_xy,
+    #                     title_ha = "center",
+    #                     orientation=orientation,
+    #                )
+    # # draw border
+    # # ax111.axis(True)
+    # ax111.axis(False)
+    # # --------------------------------------------
+    
+    # if outfile is None:
+    #     PATH = os.path.abspath(os.getcwd())
+    #     outfile = f"{PATH}/figures/{title.replace(' ', '-')}.png"
+    #     os.makedirs(os.path.dirname(outfile), exist_ok=True)
+    
+    # if savefig:
+    #     plt.savefig(outfile, dpi=300,)
+    # return fig, axs
 
 def plot_acs_hazard_1plus3(
                 name='ncra_regions',
@@ -3087,8 +3035,113 @@ def plot_acs_hazard_1plus3(
     
     if savefig:
         plt.savefig(outfile, dpi=300,)
-    return fig, ax
+    return fig, axs
 
+def plot_acs_hazard_1pp(
+    name='ncra_regions',
+    regions=None,
+    data=None,
+    station_df=None,
+    stippling=None,
+    mask_not_australia=True,
+    mask_australia=False,
+    agcd_mask=False,
+    facecolor="none",
+    edgecolor="black",
+    figsize=None,
+    markersize=None,
+    title=None,
+    date_range="",
+    subplot_titles=None,
+    projection=None,
+    area_linewidth=0.3,
+    coastlines=False,
+    xlim=(114,154),
+    ylim=(-43.5, -7.5),
+    cmap=cm.Greens,
+    cmap_bad="lightgrey",
+    cbar_extend="both",
+    ticks=None,
+    tick_interval=1,
+    tick_labels=None,
+    cbar_label="",
+    cbar_location="right",
+    baseline=None,
+    dataset_name=None,
+    issued_date=None,
+    label_states=False,
+    contourf=False,
+    contour=False,
+    select_area=None,
+    land_shadow=False,
+    watermark="EXPERIMENTAL IMAGE ONLY",
+    watermark_color = "r",
+    infile=None,
+    outfile=None,
+    savefig=True,
+    tick_rotation=None,
+    vcentre=None,
+):
+
+    nrows = 1
+    ncols = 1
+    if cbar_location is None:
+        cbar_location = "right"
+    if tick_rotation is None:
+        tick_rotation = 0
+    if figsize is None:
+        figsize=(6, 4.5)
+
+    ds_list = [data]
+    station_dfs = [station_df]
+    stippling_list = [stippling]
+
+    return plot_acs_hazard_multi(nrows=nrows,
+                                ncols=ncols,
+                                name=name,
+                                regions=regions,
+                                ds_list=ds_list,
+                                station_dfs=station_dfs,                    
+                                stippling_list=stippling_list,
+                                mask_not_australia=mask_not_australia,
+                                mask_australia=mask_australia,
+                                agcd_mask=agcd_mask,
+                                facecolor=facecolor,
+                                edgecolor=edgecolor,
+                                figsize=figsize,
+                                markersize=markersize,
+                                title=title,
+                                date_range=date_range,
+                                subplot_titles=subplot_titles,
+                                projection=projection,
+                                area_linewidth = area_linewidth,
+                                coastlines=coastlines,
+                                xlim=xlim,
+                                ylim=ylim,
+                                cmap=cmap,
+                                cmap_bad=cmap_bad,
+                                cbar_extend=cbar_extend,
+                                ticks=ticks,
+                                tick_interval=tick_interval,
+                                tick_labels=tick_labels,
+                                cbar_label=cbar_label,
+                                cbar_location=cbar_location,
+                                baseline=baseline,
+                                dataset_name=dataset_name,
+                                issued_date=issued_date,
+                                label_states=label_states,
+                                contourf=contourf,
+                                contour=contour,
+                                select_area=select_area,
+                                land_shadow=land_shadow,
+                                watermark=watermark,
+                                watermark_color = watermark_color,
+                                infile=infile,
+                                outfile=outfile,
+                                savefig=savefig,
+                                tick_rotation=tick_rotation,
+                                vcentre=vcentre,)
+    
 
 def plot_acs_hazard_2pp(
     name='ncra_regions',
@@ -3138,175 +3191,247 @@ def plot_acs_hazard_2pp(
     tick_rotation=None,
     vcentre=None,
 ):
+
     if orientation=="horizontal":
-        cax_bounds = [1.04,0,0.05,1]
-        if tick_rotation is None:
-            tick_rotation = 0
         nrows = 1
         ncols = 2
         cbar_location = "right"
-        plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
-        # text annotation xy locations
-        text_xy = {"title": (0.5, 0.9),
-                   "date_range": (0.5, 0.87),
-                   "watermark": (0.45, 0.41),}
-        subtitle_xy = None
+        if tick_rotation is None:
+            tick_rotation = 0
         if figsize is None:
-            figsize=(6.7, 3)
+            figsize=(6.7, 4)
             
     elif orientation=="vertical":
-        cax_bounds = [-0.4,-0.3,1.6,0.1]
-        if tick_rotation is None:
-            tick_rotation = -90
         nrows = 2
         ncols = 1
         cbar_location = "bottom"
-        plots_rect = (0.01,0.07,0.98,0.85) #left bottom width height
-        # text annotation xy locations
-        text_xy = {"title": (0.5, 0.94),
-               "date_range": (0.5, 0.93),
-               "watermark": (0.45, 0.41),}
-        subtitle_xy = (-0.55, 0.6)
+        if tick_rotation is None:
+            tick_rotation = -90
         if figsize is None:
-            figsize=(3, 5)
+            figsize=(3.3, 6)
         
     else:
-        print('orientation must be one of ["horizontal", "vertical",]')
+        print('orientation must be one of ["horizontal", "vertical",]')  
+
+    ds_list = [ds1, ds2]
+    station_dfs = [station_df1, station_df2]
+    stippling_list = [stippling1, stippling2]
+
+    return plot_acs_hazard_multi(nrows=nrows,
+                                ncols=ncols,
+                                name=name,
+                                regions=regions,
+                                ds_list=ds_list,
+                                station_dfs=station_dfs,                    
+                                stippling_list=stippling_list,
+                                mask_not_australia=mask_not_australia,
+                                mask_australia=mask_australia,
+                                agcd_mask=agcd_mask,
+                                facecolor=facecolor,
+                                edgecolor=edgecolor,
+                                figsize=figsize,
+                                markersize=markersize,
+                                title=title,
+                                date_range=date_range,
+                                subplot_titles=subplot_titles,
+                                projection=projection,
+                                area_linewidth = area_linewidth,
+                                coastlines=coastlines,
+                                xlim=xlim,
+                                ylim=ylim,
+                                cmap=cmap,
+                                cmap_bad=cmap_bad,
+                                cbar_extend=cbar_extend,
+                                ticks=ticks,
+                                tick_interval=tick_interval,
+                                tick_labels=tick_labels,
+                                cbar_label=cbar_label,
+                                cbar_location=cbar_location,
+                                baseline=baseline,
+                                dataset_name=dataset_name,
+                                issued_date=issued_date,
+                                label_states=label_states,
+                                contourf=contourf,
+                                contour=contour,
+                                select_area=select_area,
+                                land_shadow=land_shadow,
+                                watermark=watermark,
+                                watermark_color = watermark_color,
+                                infile=infile,
+                                outfile=outfile,
+                                savefig=savefig,
+                                tick_rotation=tick_rotation,
+                                vcentre=vcentre,)
+    
+    # if orientation=="horizontal":
+    #     cax_bounds = [1.04,0,0.05,1]
+    #     if tick_rotation is None:
+    #         tick_rotation = 0
+    #     nrows = 1
+    #     ncols = 2
+    #     cbar_location = "right"
+    #     plots_rect = (0.01,0.05,0.98,0.85) #left bottom width height
+    #     # text annotation xy locations
+    #     text_xy = {"title": (0.5, 0.9),
+    #                "date_range": (0.5, 0.87),
+    #                "watermark": (0.45, 0.41),}
+    #     subtitle_xy = None
+    #     if figsize is None:
+    #         figsize=(6.7, 3)
+            
+    # elif orientation=="vertical":
+    #     cax_bounds = [-0.4,-0.3,1.6,0.1]
+    #     if tick_rotation is None:
+    #         tick_rotation = -90
+    #     nrows = 2
+    #     ncols = 1
+    #     cbar_location = "bottom"
+    #     plots_rect = (0.01,0.07,0.98,0.85) #left bottom width height
+    #     # text annotation xy locations
+    #     text_xy = {"title": (0.5, 0.94),
+    #            "date_range": (0.5, 0.93),
+    #            "watermark": (0.45, 0.41),}
+    #     subtitle_xy = (-0.55, 0.6)
+    #     if figsize is None:
+    #         figsize=(3, 5)
+        
+    # else:
+    #     print('orientation must be one of ["horizontal", "vertical",]')
 
     
-    if regions is None:
-        try:
-            regions = regions_dict[name]
-        except:
-            print(f"Could not read regions_dict[{name}]")
+    # if regions is None:
+    #     try:
+    #         regions = regions_dict[name]
+    #     except:
+    #         print(f"Could not read regions_dict[{name}]")
 
-    # Set default projection for Australia maps and selection maps
-    if projection is None:
-        if select_area is None:
-            # Default for Australian map
-            projection = ccrs.LambertConformal(
-                central_latitude=-24.75,
-                central_longitude=134.0,
-                cutoff=30,
-                standard_parallels=(-10, -40),
-            )
-        else:
-            projection = ccrs.PlateCarree()
+    # # Set default projection for Australia maps and selection maps
+    # if projection is None:
+    #     if select_area is None:
+    #         # Default for Australian map
+    #         projection = ccrs.LambertConformal(
+    #             central_latitude=-24.75,
+    #             central_longitude=134.0,
+    #             cutoff=30,
+    #             standard_parallels=(-10, -40),
+    #         )
+    #     else:
+    #         projection = ccrs.PlateCarree()
         
-    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, 
-                            sharey=True, sharex=True,
-                            figsize=figsize, 
-                            layout="constrained",
-                            subplot_kw={'projection': projection, "frame_on":False},)
+    # fig, axs = plt.subplots(nrows=nrows, ncols=ncols, 
+    #                         sharey=True, sharex=True,
+    #                         figsize=figsize, 
+    #                         layout="constrained",
+    #                         subplot_kw={'projection': projection, "frame_on":False},)
 
-    cmap.set_bad(cmap_bad)
+    # cmap.set_bad(cmap_bad)
     
-    station_dfs = [station_df1, station_df2,]
-    if any(df is not None for df in station_dfs) and markersize is None:
-        markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/3
+    # station_dfs = [station_df1, station_df2,]
+    # if any(df is not None for df in station_dfs) and markersize is None:
+    #     markersize=(100 - 80*len(station_dfs[0])/5000)*(figsize[0]*figsize[1])/48/3
         
-    for i, ds in enumerate([ds1, ds2,]):
-        station_df = station_dfs[i]
-        stippling = [stippling1, stippling2,][i]
-        if subplot_titles is not None:
-            subtitle =subplot_titles[i]
-        else:
-            subtitle =""
-        ax, norm, cont, middle_ticks = plot_data(regions=regions,
-                                              data=ds, 
-                                              station_df = station_df,
-                                              markersize=markersize,
-                                              xlim=xlim,
-                                              ylim=ylim,
-                                              cmap=cmap,
-                                              cbar_extend=cbar_extend,
-                                              ticks=ticks,
-                                              tick_labels=tick_labels,
-                                              contourf=contourf,
-                                              contour=contour,
-                                              ax=axs[i],
-                                              subtitle=subtitle,
-                                                 subtitle_xy=subtitle_xy,
-                                              facecolor=facecolor,
-                                              mask_not_australia = mask_not_australia,
-                                              mask_australia=mask_australia,
-                                              agcd_mask=agcd_mask,
-                                              area_linewidth=area_linewidth,
-                                              coastlines=coastlines,
-                                              stippling=stippling,
-                                                vcentre=vcentre,
-                                                )
+    # for i, ds in enumerate([ds1, ds2,]):
+    #     station_df = station_dfs[i]
+    #     stippling = [stippling1, stippling2,][i]
+    #     if subplot_titles is not None:
+    #         subtitle =subplot_titles[i]
+    #     else:
+    #         subtitle =""
+    #     ax, norm, cont, middle_ticks = plot_data(regions=regions,
+    #                                           data=ds, 
+    #                                           station_df = station_df,
+    #                                           markersize=markersize,
+    #                                           xlim=xlim,
+    #                                           ylim=ylim,
+    #                                           cmap=cmap,
+    #                                           cbar_extend=cbar_extend,
+    #                                           ticks=ticks,
+    #                                           tick_labels=tick_labels,
+    #                                           contourf=contourf,
+    #                                           contour=contour,
+    #                                           ax=axs[i],
+    #                                           subtitle=subtitle,
+    #                                              subtitle_xy=subtitle_xy,
+    #                                           facecolor=facecolor,
+    #                                           mask_not_australia = mask_not_australia,
+    #                                           mask_australia=mask_australia,
+    #                                           agcd_mask=agcd_mask,
+    #                                           area_linewidth=area_linewidth,
+    #                                           coastlines=coastlines,
+    #                                           stippling=stippling,
+    #                                             vcentre=vcentre,
+    #                                             )
         
-        # if select a specific area -----------
-        ax = plot_select_area(select_area=select_area, 
-                              ax=ax,
-                              xlim=xlim,
-                              ylim=ylim,
-                              regions=regions,
-                              land_shadow=land_shadow,
-                              area_linewidth=area_linewidth,
-                              )
-        # ---------------------------------------------
+    #     # if select a specific area -----------
+    #     ax = plot_select_area(select_area=select_area, 
+    #                           ax=ax,
+    #                           xlim=xlim,
+    #                           ylim=ylim,
+    #                           regions=regions,
+    #                           land_shadow=land_shadow,
+    #                           area_linewidth=area_linewidth,
+    #                           )
+    #     # ---------------------------------------------
 
                     
-        ax.axis('off')
+    #     ax.axis('off')
 
-    # colorbar -----------------------------------------------------------
-    # fig.subplots_adjust(left=0.05, bottom=0, right=0.85, top=0.95, wspace=0.05, hspace=0.05)
-    # cbar_ax = fig.add_axes([0.87, 0.2, 0.03, 0.5]) #left bottom width height
-    # cbar_ax.axis('off')
-    fig.get_layout_engine().set(rect=plots_rect)
-    cbar_ax = axs.flatten()[-1]
+    # # colorbar -----------------------------------------------------------
+    # # fig.subplots_adjust(left=0.05, bottom=0, right=0.85, top=0.95, wspace=0.05, hspace=0.05)
+    # # cbar_ax = fig.add_axes([0.87, 0.2, 0.03, 0.5]) #left bottom width height
+    # # cbar_ax.axis('off')
+    # fig.get_layout_engine().set(rect=plots_rect)
+    # cbar_ax = axs.flatten()[-1]
 
-    cbar = plot_cbar(cont=cont,
-                  norm=norm,
-                  ax=cbar_ax,
-                  cbar_extend=cbar_extend, 
-                  cbar_label=cbar_label,
-                  ticks=ticks, 
-                     tick_interval=tick_interval,
-                  tick_labels=tick_labels,
-                  middle_ticks=middle_ticks,
-                  cax_bounds = cax_bounds,
-                     rotation=tick_rotation,
-                     location = cbar_location,
-                  )
-    #------------------------------------------
+    # cbar = plot_cbar(cont=cont,
+    #               norm=norm,
+    #               ax=cbar_ax,
+    #               cbar_extend=cbar_extend, 
+    #               cbar_label=cbar_label,
+    #               ticks=ticks, 
+    #                  tick_interval=tick_interval,
+    #               tick_labels=tick_labels,
+    #               middle_ticks=middle_ticks,
+    #               cax_bounds = cax_bounds,
+    #                  rotation=tick_rotation,
+    #                  location = cbar_location,
+    #               )
+    # #------------------------------------------
 
 
-    # plot border and annotations -----------------
-    ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
+    # # plot border and annotations -----------------
+    # ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
     
-    ax111 = plot_titles(title=title,
-                        date_range = date_range, 
-                        baseline = baseline, 
-                        dataset_name= dataset_name,
-                        issued_date=issued_date,
-                        watermark=watermark, 
-                        watermark_color=watermark_color,
-                        ax=ax111,
-                        text_xy = text_xy,
-                        title_ha = "center",
-                        orientation = orientation,
-                   )
-    # draw border
-    # ax111.axis(True)
-    ax111.axis(False)
-    # --------------------------------------------
+    # ax111 = plot_titles(title=title,
+    #                     date_range = date_range, 
+    #                     baseline = baseline, 
+    #                     dataset_name= dataset_name,
+    #                     issued_date=issued_date,
+    #                     watermark=watermark, 
+    #                     watermark_color=watermark_color,
+    #                     ax=ax111,
+    #                     text_xy = text_xy,
+    #                     title_ha = "center",
+    #                     orientation = orientation,
+    #                )
+    # # draw border
+    # # ax111.axis(True)
+    # ax111.axis(False)
+    # # --------------------------------------------
 
-    if outfile is None:
-        PATH = os.path.abspath(os.getcwd())
-        outfile = f"{PATH}/figures/{title.replace(' ', '-')}.png"
-        os.makedirs(os.path.dirname(outfile), exist_ok=True)
+    # if outfile is None:
+    #     PATH = os.path.abspath(os.getcwd())
+    #     outfile = f"{PATH}/figures/{title.replace(' ', '-')}.png"
+    #     os.makedirs(os.path.dirname(outfile), exist_ok=True)
 
-    if savefig:
-        plt.savefig(outfile, dpi=300,)
-    return fig, ax
+    # if savefig:
+    #     plt.savefig(outfile, dpi=300,)
+    # return fig, axs
 
 
 def plot_acs_hazard_multi(
-                nrows,
-                ncols,
+                nrows=None,
+                ncols=None,
                 name='ncra_regions',
                 regions=None,
                 ds_list=None,
@@ -3598,29 +3723,46 @@ def plot_acs_hazard_multi(
     if subplot_titles is None:
         subplot_titles = [None for i in np.arange(ncols*nrows)]
 
+    if figsize is None:
+        figsize=(6.7, 4.5)
+
+    # how big is a point (inch/72) as a proportion of the figsize
+    xpt = 1/72/figsize[0]
+    ypt = 1/72/figsize[1]
+    
+
     if cbar_location == "right":
-        plots_rect = (0.01,0.05,0.84,0.85) #left bottom width height
-        cax_bounds = [0.2,0,0.5,1]
-        cbar_rect = [0.91, 0.2, 0.06, 0.5]
+        # height might be a bit too much for figures with only one line of titles
+        #left bottom width height
+        plots_rect = (padding*xpt, 
+                      (padding+3*fontsize_footnote)*ypt,
+                      1-(2*padding+70)*xpt, 
+                      1-(2*padding + 3*fontsize_footnote + 2*fontsize_title + 2*fontsize_subtitle)*ypt) 
+        # cbar_rect = [1-(50)*xpt, 0.2, 30*xpt, 0.5]
+        cbar_rect = [1-(padding+70)*xpt,
+                     0.2,
+                     30*xpt,
+                     0.5] 
+        cax_bounds = [0.3,0,0.5,1]
+        
         
     elif cbar_location == "bottom":
-        plots_rect = (0.01,0.15,0.98,0.75) #left bottom width height
-        cax_bounds = [0, 0.50, 1, 0.50]
-        cbar_rect = [0.2, 0.05, 0.6, 0.05]
+        plots_rect = (padding*xpt, 
+                      (padding+3*fontsize_footnote+30+fontsize_cbar)*ypt, 
+                      1-(2*padding)*xpt,
+                      1-(2*padding + 3*fontsize_footnote+30+fontsize_cbar + 2*fontsize_title+ 2*fontsize_subtitle)*ypt)
+        cbar_rect = [0.2, (padding+3*fontsize_footnote)*ypt, 0.6, 30*ypt]
+        cax_bounds = [0, 0.5, 1, 0.5]
 
     else:
         # cbar for each plot
         pass
 
     # text annotation xy locations for multi-panel plot
-    text_xy = {"title": (0.5, 0.96),
-               "date_range": (0.5, 0.95),
+    text_xy = {"title": (0.5, 1-(padding+2*fontsize_title)*ypt),
+               "date_range": (0.5, 1-(padding+2*fontsize_title+4)*ypt),
                "watermark": (0.45, 0.41),}
-    subtitle_xy = None
-  
-
-    if figsize is None:
-        figsize=(6.7, 4.5)
+    subtitle_xy = None  
 
     if regions is None:
         try:
@@ -3656,6 +3798,12 @@ def plot_acs_hazard_multi(
         station_df = station_dfs[i]
         stippling = stippling_list[i]
         subtitle = subplot_titles[i]
+
+        try:
+            axi=axs.flatten()[i]
+        except:
+            axi=axs
+        
         ax, _norm, _cont, _middle_ticks = plot_data(regions=regions,
                                               data=ds,
                                                  station_df=station_df,
@@ -3668,7 +3816,7 @@ def plot_acs_hazard_multi(
                                               tick_labels=tick_labels,
                                               contourf=contourf,
                                               contour=contour,
-                                              ax=axs.flatten()[i],
+                                              ax=axi,
                                               subtitle=subtitle,
                                                  subtitle_xy=subtitle_xy,
                                               facecolor=facecolor,
@@ -3721,7 +3869,7 @@ def plot_acs_hazard_multi(
     
     
     # plot border and annotations -----------------
-    ax111 = fig.add_axes([0.01,0.01,0.98,0.98], xticks=[], yticks=[]) #(left, bottom, width, height)
+    ax111 = fig.add_axes([0.,0.,1.,1.], xticks=[], yticks=[]) #(left, bottom, width, height)
     
     
     ax111 = plot_titles(title=title,
@@ -3747,5 +3895,5 @@ def plot_acs_hazard_multi(
     
     if savefig:
         plt.savefig(outfile, dpi=300,)
-    return fig, ax
+    return fig, axs
 
