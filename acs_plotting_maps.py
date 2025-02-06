@@ -866,15 +866,11 @@ def plot_cbar(cont=None,
     
     # Label colorbar
     if cbar is not None:
-        if len(cbar_label)>35 and "\n" not in cbar_label:
-            fontstretch = "condensed"
-        else:
-            fontstretch = "normal"
         cbar.ax.set_title(cbar_label, 
                           zorder=10,
                           loc="center",
                           fontsize=fontsize_cbar,
-                          fontstretch=fontstretch,
+                          fontstretch="normal",
                           verticalalignment="bottom",
                          wrap=True)
 
