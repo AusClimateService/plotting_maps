@@ -16,7 +16,7 @@ Figures have been developed to align with ACS design guidelines and IPCC standar
 
 This work was developed with advice from ACS, CSIRO, BOM scientists, ACS communication teams, and stakeholders.
 
-This repo has been developed by Gen Tolhurst (gentolhurst@gmail.com or Gen.Tolhurst@bom.gov.au) and supervised by Mitch Black (Mitchell.Black@bom.gov.au). Work has been undertaken from May 2024 to December 2024.\
+This repo has been developed by Gen Tolhurst (gentolhurst@gmail.com or Gen.Tolhurst@bom.gov.au) and supervised by Mitch Black (Mitchell.Black@bom.gov.au). Work has been undertaken from May 2024 to Feburary 2025.\
 Funded by ACS.
 
 
