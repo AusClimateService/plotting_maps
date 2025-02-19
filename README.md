@@ -34,11 +34,11 @@ There are many possibilities built into this function. ```plot_acs_hazard``` is 
 
 To access docstrings and learn about input arguments, use ```plot_acs_hazard?```. This will describe each parameter you can give to the function to customise your plot.
 
- - Basic usage: Single plot of Australia eg temperature  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb) and [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb)
-<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/ch_report/Annual-maximum-daily%0Amaximum-temperature.png" width="300">
+ - Basic usage: Single plot of Australia eg temperature [minimal_plotting_example_tx.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_tx.ipynb),  [story_map_plots.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/reports/story_map_plots.ipynb) and [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb)
+<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/Maximum-Temperature-of-Hottest-Heatwave.png" width="300">
 
- - Plot ocean data: Plots of ocean data eg marine heat waves [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb), and  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
-<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/Ocean-acidification.png" width="300">
+ - Plot ocean data: Plots of ocean data eg marine heat waves [story_map_plots.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/reports/story_map_plots.ipynb), [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb), and  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
+<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/story_map_plots/story_map_plots_MHWduration_gwl12.png" width="300">
 
  - Plot data from anywhere in the world eg Antarctica or Europe [FAQ_example_antarctica.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_antarctica.ipynb)
 
@@ -48,12 +48,12 @@ To access docstrings and learn about input arguments, use ```plot_acs_hazard?```
 
 - Plot atmospheric data above ocean and land, for example, Tropical Cyclones [FAQ_example_TCs.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_TCs.ipynb)
 
-<img src="https://github.com/user-attachments/assets/b5f21e58-831e-4016-8992-e612060c04da" width="600">
+<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/Frequency-of-tropical-cyclones.png" width="600">
 
 
  - Plot stations data: Single plot of station data eg coastal flooding [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb), [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb) and [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
 
-<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/ch_report/Change-in-frequency-of-flood-days.png" width="300">
+<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/ch_report/Change-in-frequency-of-coastal-flood-days.png" width="300">
   
  - Plot multiple data types in one figure. Gridded data and station data can be plotted on the same plot: eg ocean data and station data (station and gridded data on the same plot) [minimal_plotting_example_station.ipynb]((https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_station.ipynb)
 
@@ -564,8 +564,10 @@ plot_acs_hazard_1plus3(ds_gwl12=ds_gwl12[var],
 ### How can I change the orientation (eg from vertical to horizontal) of the figures in a multipaneled plot?
 <details>
  <summary> Expand </summary>
+
+Use `ncols` and `nrows` in  the `plot_acs_hazard_multi` function to control a multipanelled figure's number of rows and columns.
  
-For multi-panelled plots, we have provided a keyword `orientation` to easily change `"vertical"` stacked plots to `"horizontal"` aligned subplots. For four panelled plots there is also a `"square"` option for a 2-by-2 arrangement. 
+For 2, 3, and 4 multi-panelled plots , we have provided a keyword `orientation` to easily change `"vertical"` stacked plots to `"horizontal"` aligned subplots. For four panelled plots there is also a `"square"` option for a 2-by-2 arrangement. 
 
 These options specify the axes grid, figsize, and location of titles etc.
 
@@ -885,13 +887,10 @@ See for current issues: https://github.com/AusClimateService/plotting_maps/issue
 -	Possibly automate the arrows of the colourbar. (I don’t think the arrows on the colorbar should be determined by the data in the plot, I think they should be only limited by possible physical values of that metric so that all colourbars of that metric are comparable. Determine if you want the arrows to be determined by the plotting data or the metric’s possible physical values.)
 -	Use a keyword to make plots appropriate for different uses eg journal, report, powerpoint, poster etc similar to https://seaborn.pydata.org/generated/seaborn.set_context.html
 -	Simplify stored shapefiles or masks. Current masks are 1mm precision, this means that calculations with these regions are more intense than necessary. Most climate data is in the order of ~10 km (rarely ~100 m). Simplifying the geometries of the shapefiles can save lots of resources for no loss in results.
--	Improve the aesthetics and proportions of plotting, especially with dataset/date_range/baseline annotations. Design aesthetics were focused on vertical orientations for 4-panel plots without these annotations for a particular report.
+-	Improve the aesthetics and proportions of plotting, especially with dataset/date_range/baseline annotations for plot_acs_hazard_1plus3, as has been done for plot_acs_hazard_multi. Design aesthetics were focused on vertical orientations for 4-panel plots without these annotations for a particular report.
 -	Improve the aesthetics of plotting select_area. Eg remove boundaries of neighbouring regions (if desired)
--	Forest mask for forested areas. For example, FFDI is not useful in places where there is not connected vegetation/fuel. This is probably particularly for arid desert areas of central Australia. Changes in climate and land use may cause changes over time.
+-	Forest mask for forested areas. For example, FFDI is not useful in places where there is not connected vegetation/fuel. This is probably particularly for arid desert areas of central Australia. Changes in climate and land use may cause changes over time. (see https://github.com/AusClimateService/plotting_maps/blob/main/reports/holistic-australian-bushfire-risk-assessment.ipynb for a possible solution)
 -	Improve colormap for fire climate classes. This colour scheme is not completely colourblind-friendly. Perhaps modify the colours to increase the contrast. 
-
-**New plotting function:**
--	Fully flexible custom n x m grid of plots. At the moment, minor modifications within multiplot are needed to make a custom plot for new layouts. It may be possible to make a function that can take in dimensions and a list of dataarrays to make a figure of many plots. This should use a similar format to the existing multi-panel plots and allow plotting gridded data, station data, stippling, ocean data, etc. (in progress issue #29)
 
 **Stats functions:**
 -	Optimise workflow to enable area-averaged time series (stats or just area mean). This function can be very memory intensive. Need to apply a strategy or strategies to reduce memory use. A possible option may be to calculate and save area averages for every year. Saving outputs in annual files is a common practice for climate models. 
