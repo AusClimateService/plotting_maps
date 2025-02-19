@@ -983,7 +983,7 @@ def plot_titles(title="title",
                 ax=None,
                 text_xy = None,
                 title_ha = "left",
-               orientation = "none",):
+                show_copyright = True,):
     """
     Set the plot title and axis labels
     
@@ -1037,11 +1037,10 @@ def plot_titles(title="title",
     title_ha: {"left", "center", "right"}
         Title horizontal alignment.
         Default "left"
-    
-    orientation: {"vertical", "horizontal"}
-        Orientation of figures, used to control layout of Copywrite text.
-        I.e. vertically stacked, or horizontal side-by-side
-        
+
+    show_copyright: bool
+        Default True
+
     Returns
     -------
     matplotlib.axes.Axes with text for titles etc.
@@ -1088,21 +1087,22 @@ def plot_titles(title="title",
             transform=ax.transAxes,
             zorder=10,
         )
-    # print copyright outside bottom left corner
-    if figsize[0]<5.3:
-        string = f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, \nAustralian Climate Service"
-    else:
-        string = f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, Australian Climate Service"
-    ax.text(
-        x=padding*xpt,
-        y=(padding+2*fontsize_footnote)*ypt,
-        s=string,
-        fontsize=fontsize_footnote,
-        transform=ax.transAxes,
-        verticalalignment="top",
-        zorder=10,
-        wrap=True,
-    )
+    if show_copyright:
+        # print copyright outside bottom left corner
+        if figsize[0]<5.3:
+            string = f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, \nAustralian Climate Service"
+        else:
+            string = f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, Australian Climate Service"
+        ax.text(
+            x=padding*xpt,
+            y=(padding+2*fontsize_footnote)*ypt,
+            s=string,
+            fontsize=fontsize_footnote,
+            transform=ax.transAxes,
+            verticalalignment="top",
+            zorder=10,
+            wrap=True,
+        )
     if dataset_name is not None:
         # print data source inside bottom right
         ax.text(
@@ -1211,6 +1211,7 @@ def plot_acs_hazard_multi(
                 savefig=True,
                 tick_rotation=None,
                 vcentre=None,
+                show_copyright=True,
             ):
     """
     m-by-n panel plot with shared projection and titles etc. 
@@ -1446,6 +1447,9 @@ def plot_acs_hazard_multi(
         around the centre, eg for future temperature anomalies with a larger
         positive range compared to the negative range.
 
+    show_copyright: bool
+        Default True
+        
     Returns
     -------
     A multi panel plot saved as a png in a "figures" file in your working directory.
@@ -1703,6 +1707,7 @@ def plot_acs_hazard_multi(
                         ax=ax111,
                         text_xy = text_xy,
                         title_ha = "center",
+                        show_copyright=show_copyright,
                    )
     # draw border
     # ax111.axis(True)
@@ -1762,6 +1767,7 @@ def plot_acs_hazard(
     savefig=True,
     tick_rotation=None,
     vcentre=None,
+    show_copyright=True,
 ):
     """This function takes gridded data or station_df dataframe and shapefiles 
     to visualise hazard data from a 2D Xarray data array
@@ -1955,6 +1961,9 @@ def plot_acs_hazard(
         around the centre, eg for future temperature anomalies with a larger
         positive range compared to the negative range.
 
+    show_copyright: bool
+        Default True
+
     Returns
     -------
     The map is saved as a png in a "figures" file in your working directory.
@@ -2085,6 +2094,7 @@ def plot_acs_hazard(
                         ax=ax111,
                         text_xy = text_xy_1pp,
                         title_ha = "left",
+                        show_copyright=show_copyright,
                         )
     # -----------------------------------------------
 
@@ -2144,6 +2154,7 @@ def plot_acs_hazard_1pp(
     savefig=True,
     tick_rotation=None,
     vcentre=None,
+    show_copyright=True,
 ):
     """This function takes gridded data or station_df dataframe and shapefiles 
     to visualise hazard data from a 2D Xarray data array
@@ -2341,6 +2352,9 @@ def plot_acs_hazard_1pp(
         around the centre, eg for future temperature anomalies with a larger
         positive range compared to the negative range.
 
+    show_copyright: bool
+        Default True
+
     Returns
     -------
     The map is saved as a png in a "figures" file in your working directory.
@@ -2405,7 +2419,9 @@ def plot_acs_hazard_1pp(
                                 outfile=outfile,
                                 savefig=savefig,
                                 tick_rotation=tick_rotation,
-                                vcentre=vcentre,)
+                                vcentre=vcentre,
+                                show_copyright=show_copyright,
+                                )
     
 
 def plot_acs_hazard_2pp(
@@ -2456,6 +2472,7 @@ def plot_acs_hazard_2pp(
     orientation="horizontal",
     tick_rotation=None,
     vcentre=None,
+    show_copyright=True,
 ):
     """
     Two panel plot with shared cmap and titles etc. 
@@ -2694,6 +2711,9 @@ def plot_acs_hazard_2pp(
         around the centre, eg for future temperature anomalies with a larger
         positive range compared to the negative range.
 
+    show_copyright: bool
+        Default True
+
     Returns
     -------
     A two panel plot saved as a png in a "figures" file in your working directory.
@@ -2772,7 +2792,9 @@ def plot_acs_hazard_2pp(
                                 outfile=outfile,
                                 savefig=savefig,
                                 tick_rotation=tick_rotation,
-                                vcentre=vcentre,)
+                                vcentre=vcentre,
+                                show_copyright=show_copyright,
+                                )
     
 
 
@@ -2829,7 +2851,8 @@ def plot_acs_hazard_3pp(
     orientation="horizontal",
     tick_rotation=None,
     vcentre=None,
-):
+    show_copyright=True,
+    ):
     """
     Three panel plot with shared cmap and titles etc. 
     As with plot_acs_hazard, but takes three xarray data arrays:
@@ -3082,6 +3105,9 @@ def plot_acs_hazard_3pp(
         around the centre, eg for future temperature anomalies with a larger
         positive range compared to the negative range.
 
+    show_copyright: bool
+        Default True
+
     Returns
     -------
     A three panel plot saved as a png in a "figures" file in your working directory.
@@ -3158,7 +3184,9 @@ def plot_acs_hazard_3pp(
                                 outfile=outfile,
                                 savefig=savefig,
                                 tick_rotation=tick_rotation,
-                                vcentre=vcentre,)
+                                vcentre=vcentre,
+                                show_copyright=show_copyright,
+                                )
 
 
 def plot_acs_hazard_4pp(
@@ -3218,6 +3246,7 @@ def plot_acs_hazard_4pp(
                 orientation="vertical",
                 tick_rotation=None,
                 vcentre=None,
+                show_copyright=True,
             ):
     """
     Four panel plot with shared cmap and titles etc. 
@@ -3494,6 +3523,9 @@ def plot_acs_hazard_4pp(
         around the centre, eg for future temperature anomalies with a larger
         positive range compared to the negative range.
 
+    show_copyright: bool
+        Default True
+
     Returns
     -------
     A four panel plot saved as a png in a "figures" file in your working directory.
@@ -3584,7 +3616,9 @@ def plot_acs_hazard_4pp(
                                 outfile=outfile,
                                 savefig=savefig,
                                 tick_rotation=tick_rotation,
-                                vcentre=vcentre,)
+                                vcentre=vcentre,
+                                show_copyright=show_copyright,
+                                )
 
     
 
@@ -3652,6 +3686,7 @@ def plot_acs_hazard_1plus3(
                 orientation="vertical",
                 tick_rotation=None,
                 vcentre=None,
+                show_copyright=True,
             ):
     """
     Four panel plot with 1 baseline plot and 3 future scenario 
@@ -3971,6 +4006,9 @@ def plot_acs_hazard_1plus3(
         around the centre, eg for future temperature anomalies with a larger
         positive range compared to the negative range.
 
+    show_copyright: bool
+        Default True
+
     Returns
     -------
     A four panel plot (one baseline and three anomalies) saved as a png 
@@ -4184,7 +4222,7 @@ def plot_acs_hazard_1plus3(
                         ax=ax111,
                         text_xy = text_xy,
                         title_ha = "center",
-                        orientation = orientation,
+                        show_copyright=show_copyright,
                    )
     # draw border
     # ax111.axis(True)
