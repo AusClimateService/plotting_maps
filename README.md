@@ -21,7 +21,7 @@ Funded by ACS.
 
 If you use this software please cite it as :
 
-Tolhurst, G., & Black, M. (2025) plotting_maps. GitHub. Accessed [Date], from https://github.com/AusClimateService/plotting_maps
+Tolhurst, G., & Black, M. (2025). plotting_maps (Version 1.0.0) [Computer software]. https://doi.org/10.5281/zenodo.1234
 
 ## What's possible?
 
