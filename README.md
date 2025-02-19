@@ -878,7 +878,7 @@ See for current issues: https://github.com/AusClimateService/plotting_maps/issue
 -	Lightning plot. For the Climate Hazards report, recreate the lightning observations plot using the plot_acs_hazards function so that it is in the consistent format.
 
 **Documentation:**
--	“release” this version of the code as v1.0.0. It is in wide use and care is being taken to keep backward compatibility while adding features. Eg see https://github.com/AusClimateService/plotting_maps/releases/new
+-	Examples and FAQ for using plot_acs_hazard_multi
 
 **Improve plotting function and axillaries:**
 -	If hazard data had consistent file naming practices (DRS) and consistent attribute labels, then the plotting functions could be further automated. At the moment, the data files are named in different patterns, the files might have different names for coordinates (eg “time”, “lat”, “lon”)
