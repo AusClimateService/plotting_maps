@@ -34,11 +34,11 @@ There are many possibilities built into this function. ```plot_acs_hazard``` is 
 
 To access docstrings and learn about input arguments, use ```plot_acs_hazard?```. This will describe each parameter you can give to the function to customise your plot.
 
- - Basic usage: Single plot of Australia eg temperature  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb) and [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb)
-<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/ch_report/Annual-maximum-daily%0Amaximum-temperature.png" width="300">
+ - Basic usage: Single plot of Australia eg temperature [minimal_plotting_example_tx.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_tx.ipynb),  [story_map_plots.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/reports/story_map_plots.ipynb) and [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb)
+<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/Maximum-Temperature-of-Hottest-Heatwave.png" width="300">
 
- - Plot ocean data: Plots of ocean data eg marine heat waves [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb), and  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
-<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/Ocean-acidification.png" width="300">
+ - Plot ocean data: Plots of ocean data eg marine heat waves [story_map_plots.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/reports/story_map_plots.ipynb), [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb), and  [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
+<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/story_map_plots/story_map_plots_MHWduration_gwl12.png" width="300">
 
  - Plot data from anywhere in the world eg Antarctica or Europe [FAQ_example_antarctica.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_antarctica.ipynb)
 
@@ -48,12 +48,12 @@ To access docstrings and learn about input arguments, use ```plot_acs_hazard?```
 
 - Plot atmospheric data above ocean and land, for example, Tropical Cyclones [FAQ_example_TCs.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/FAQ_example_TCs.ipynb)
 
-<img src="https://github.com/user-attachments/assets/b5f21e58-831e-4016-8992-e612060c04da" width="600">
+<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/Frequency-of-tropical-cyclones.png" width="600">
 
 
  - Plot stations data: Single plot of station data eg coastal flooding [acs_plotting_maps_examples.ipynb](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/acs_plotting_maps_examples.ipynb), [multi_plots](https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/multi_plots.ipynb) and [Climate_and_hazards_report](https://github.com/AusClimateService/plotting_maps/blob/main/reports/Climate_and_hazards_report.ipynb)
 
-<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/ch_report/Change-in-frequency-of-flood-days.png" width="300">
+<img src="https://github.com/AusClimateService/plotting_maps/blob/main/figures/ch_report/Change-in-frequency-of-coastal-flood-days.png" width="300">
   
  - Plot multiple data types in one figure. Gridded data and station data can be plotted on the same plot: eg ocean data and station data (station and gridded data on the same plot) [minimal_plotting_example_station.ipynb]((https://github.com/AusClimateService/plotting_maps/blob/main/example_notebooks/minimal_plotting_example_station.ipynb)
 
