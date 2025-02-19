@@ -19,7 +19,9 @@ This work was developed with advice from ACS, CSIRO, BOM scientists, ACS communi
 This repo has been developed by Gen Tolhurst (gentolhurst@gmail.com or Gen.Tolhurst@bom.gov.au) and supervised by Mitch Black (Mitchell.Black@bom.gov.au). Work has been undertaken from May 2024 to Feburary 2025.\
 Funded by ACS.
 
+If you use this software please cite it as :
 
+Tolhurst, G., & Black, M. (2025) plotting_maps. GitHub. Accessed [Date], from https://github.com/AusClimateService/plotting_maps
 
 ## What's possible?
 
