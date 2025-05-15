@@ -1090,9 +1090,9 @@ def plot_titles(title="title",
         )
     # print copyright outside bottom left corner
     if figsize[0]<5.3:
-        string = f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, \nAustralian Climate Service"
+        string =""# f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, \nAustralian Climate Service"
     else:
-        string = f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, Australian Climate Service"
+        string = ""#f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, Australian Climate Service"
     ax.text(
         x=padding*xpt,
         y=(padding+2*fontsize_footnote)*ypt,
