@@ -23,6 +23,8 @@ If you use this software please cite it as :
 
 Tolhurst, G., & Black, M. (2025). plotting_maps (Version 1.0.0) [Computer software]. https://doi.org/10.5281/zenodo.1234
 
+For ongoing issues or support please contact Mitchell Black (mitchell.black@bom.gov.au)
+
 ## What's possible?
 
 <details>
