@@ -189,7 +189,7 @@ See the github “issues” https://github.com/AusClimateService/plotting_maps/i
  
 ### Python environment
 
-This code is designed to work with hh5 analysis3-24.04 virtual environment.
+This code is designed to work with hh5 analysis3-24.04 virtual environment. It should also work on the xp65 virtual environment however this has not been fully tested.
 
 In your terminal, this may look like:
 
