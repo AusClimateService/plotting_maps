@@ -1087,7 +1087,7 @@ def plot_titles(title="title",
             transform=ax.transAxes,
             zorder=10,
         )
-   if show_copyright:
+    if show_copyright:
         # print copyright outside bottom left corner
         if figsize[0]<5.3:
             string = f"\u00A9 Commonwealth of Australia {datetime.datetime.now().year}, \nAustralian Climate Service"
