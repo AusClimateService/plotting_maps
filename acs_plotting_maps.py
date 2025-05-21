@@ -1103,7 +1103,7 @@ def plot_titles(title="title",
             zorder=10,
             wrap=True,
         )
-   if dataset_name is not None:
+    if dataset_name is not None:
         # print data source inside bottom right
         ax.text(
             x=1- padding*xpt,
